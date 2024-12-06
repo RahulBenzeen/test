@@ -6,7 +6,7 @@ import { Sheet, SheetContent, SheetTrigger } from "../../components/ui/sheet"
 import Search from '../search/Search'
 import Cart from '../cart/Cart'
 import { Link, useNavigate } from 'react-router-dom'
-import { checkAuthToken, logoutUserThunk } from '../../store/authSlice'
+import { logoutUserThunk, checkAuthToken } from '../../store/authSlice'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 
 const categories = [
@@ -32,16 +32,23 @@ export default function Header() {
   const navigate = useNavigate()
   const dispatch = useAppDispatch()
   const { isAuthenticated, user } = useAppSelector((state) => state.auth)
-  const [isMounted, setIsMounted] = useState(false)
-
+  const [isMounted, setIsMounted] = useState(false);
+  
   useEffect(() => {
-    setIsMounted(true);
-    dispatch(checkAuthToken())
+    const initAuth = async () => {
+      setIsMounted(true)
+      await dispatch(checkAuthToken()).unwrap()
+    }
+    initAuth()
   }, [dispatch])
 
-  const handleLogout = () => {
-    dispatch(logoutUserThunk())
-    navigate('/')
+  const handleLogout = async () => {
+    try {
+      await dispatch(logoutUserThunk()).unwrap()
+      navigate('/')
+    } catch (error) {
+      console.error('Logout failed:', error)
+    }
   }
 
   if (!isMounted) {
@@ -116,6 +123,12 @@ export default function Header() {
                     <Package className="mr-2 h-4 w-4" />
                     <span>Orders</span>
                   </DropdownMenuItem>
+                  {user.role === "admin" && (
+                    <DropdownMenuItem onClick={() => navigate('/admin')}>
+                      <Package className="mr-2 h-4 w-4" />
+                      <span>Admin</span>
+                    </DropdownMenuItem>
+                  )}
                   <DropdownMenuItem onClick={() => navigate('/addresses')}>
                     <MapPin className="mr-2 h-4 w-4" />
                     <span>Addresses</span>

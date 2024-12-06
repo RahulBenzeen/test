@@ -1,35 +1,34 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginUserThunk } from '../../store/authSlice';
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
-import {
-  Card,
-  CardContent,
-  CardDescription,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card";
+import {Card,CardContent,CardDescription,CardFooter,CardHeader,CardTitle} from "../../components/ui/card";
 import { useGoogleLogin } from '@react-oauth/google';
 import axios from 'axios';
 import { FcGoogle } from 'react-icons/fc';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import showToast from '../../utils/toast/toastUtils';
+
 export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { status, error } = useAppSelector(state => state.auth);
+  const { status, error, isAuthenticated } = useAppSelector(state => state.auth);
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      navigate('/');
+    }
+  }, [isAuthenticated, navigate]);
 
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const resultAction = await dispatch(loginUserThunk({ email, password }));
       if (loginUserThunk.fulfilled.match(resultAction)) {
-        navigate('/');
         showToast("Sign In Successful", 'success');
       } else {
         throw new Error(resultAction.error.message);
@@ -47,11 +46,9 @@ export default function SignIn() {
         });
         const { sub: id, email, name } = userInfo.data;
 
-        const resultAction = await dispatch(loginUserThunk({ email, password: id })); // Using Google ID as password
+        const resultAction = await dispatch(loginUserThunk({ email, password: id }));
         if (loginUserThunk.fulfilled.match(resultAction)) {
-          navigate('/');
-          showToast("Google Sign In Successful",'success')
-
+          showToast("Google Sign In Successful",'success');
         } else {
           throw new Error(resultAction.error.message);
         }
@@ -65,6 +62,10 @@ export default function SignIn() {
       showToast( "Google Sign In Failed",'error' );
     },
   });
+
+  if (isAuthenticated) {
+    return null; // or a loading spinner
+  }
 
   return (
     <div className="flex justify-center items-center min-h-screen bg-gray-100">

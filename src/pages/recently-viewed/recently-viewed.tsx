@@ -1,7 +1,22 @@
 import { Clock } from 'lucide-react'
 import { Card, CardContent } from "../../components/ui/card"
+// import { useAppDispatch, useAppSelector } from '../../store/hooks'
+// import { useEffect } from 'react'
+// import { fetchRecentlyViewedProducts } from '../../store/productDetailSlice'
 
 export default function RecentlyViewed() {
+
+//   const { recentlyViewed, status } = useAppSelector(state => state.productDetails);
+//   const dispatch = useAppDispatch();
+//   console.log({recentlyViewed})
+
+// useEffect(() => {
+  
+//     dispatch(fetchRecentlyViewedProducts());
+  
+// }, [dispatch, status]);
+
+
   return (
     <section className="py-16 container mx-auto px-4">
       <div className="flex items-center gap-2 mb-8">

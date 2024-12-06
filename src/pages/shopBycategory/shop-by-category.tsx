@@ -3,6 +3,10 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Smartphone, Laptop, Shirt, Coffee } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent, CardFooter } from '../../components/ui/card'
+import books from '../../assets/images/books.jpg'
+import clothings from '../../assets/images/clothing.jpg'
+import homeanddecor from '../../assets/images/homeanddecor.jpg'
+import electronics from '../../assets/images/electronics.jpg'
 
 const categories = [
   { 
@@ -11,7 +15,7 @@ const categories = [
     description: 'Cutting-edge gadgets and devices',
     icon: Smartphone,
     featured: ['Smartphones', 'Laptops', 'Accessories'],
-    image: 'https://placehold.co/600x400?text=Electronics'
+    image: electronics
   },
   { 
     id: 2, 
@@ -19,7 +23,7 @@ const categories = [
     description: 'Stylish apparel for every occasion',
     icon: Shirt,
     featured: ['Men\'s Wear', 'Women\'s Fashion', 'Kids\' Clothing'],
-    image: 'https://placehold.co/600x400?text=Clothing'
+    image: clothings
   },
   { 
     id: 3, 
@@ -27,7 +31,7 @@ const categories = [
     description: 'Beautiful items for your living spaces',
     icon: Coffee,
     featured: ['Furniture', 'Decor', 'Gardening Tools'],
-    image: 'https://placehold.co/600x400?text=Home+%26+Garden'
+    image: homeanddecor
   },
   { 
     id: 4, 
@@ -35,7 +39,7 @@ const categories = [
     description: 'Expand your knowledge and imagination',
     icon: Laptop,
     featured: ['Fiction', 'Non-Fiction', 'Educational'],
-    image: 'https://placehold.co/600x400?text=Books'
+    image: books
   }
 ]
 

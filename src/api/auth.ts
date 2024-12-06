@@ -6,11 +6,15 @@ export const loginUser = (credentials: { email: string; password: string }) =>
 
 // API call for logging out the user
 export const logoutUser = () => 
-  api.post('/logout');  // Replace with your actual logout API endpoint
+  api.post('api/userr/logout');  // Replace with your actual logout API endpoint
 
 // API call for fetching the logged-in user's data (if needed)
-export const getUserData = (userId: string) => 
-  api.get(`/user/${userId}`);  // Replace with your actual API endpoint to get user details
+export const getUserData = (token: string) =>
+  api.get('api/users/verify', {
+    headers: {
+      Authorization: `Bearer ${token}`,
+    },
+  });  // Replace with your actual API endpoint to get user details
 
 // API call for registering a new user
 export const registerUser = (userData: { email: string; name: string; password: string }) =>

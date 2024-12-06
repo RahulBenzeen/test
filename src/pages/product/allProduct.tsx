@@ -1,98 +1,81 @@
-
-import { useNavigate } from 'react-router-dom'
-import { useAppDispatch, useAppSelector } from '../../store/hooks'
-import { addToCart } from '../../store/cartSlice'
-import { setCurrentPage, setItemsPerPage, setView } from '../../store/filterSlice'
-import { Button } from "../../components/ui/button"
-import {
-  Card,
-  CardContent,
-  CardFooter,
-  CardHeader,
-  CardTitle,
-} from "../../components/ui/card"
-import { ToggleGroup, ToggleGroupItem } from "../../components/ui/toggle-group"
-import { Grid, List } from 'lucide-react'
-import ProductFilter from '../filterProduct/filterProduct'
-import Paginator from '../paginator/paginator'
-
-
-// This would typically come from an API or database
-const products = [
-  { id: 1, name: 'Smartphone X', category: 'Electronics', brand: 'TechCo', price: 999.99, rating: 4.5, image: 'https://placehold.co/300x200?text=Smartphone+X' },
-  { id: 2, name: 'Laptop Pro', category: 'Electronics', brand: 'TechCo', price: 1499.99, rating: 4.7, image: 'https://placehold.co/300x200?text=Laptop+Pro' },
-  { id: 3, name: 'Men\'s T-Shirt', category: 'Clothing', brand: 'FashionBrand', price: 29.99, rating: 4.2, image: 'https://placehold.co/300x200?text=Men\'s+T-Shirt' },
-  { id: 4, name: 'Coffee Table', category: 'Home & Garden', brand: 'HomeCo', price: 199.99, rating: 4.0, image: 'https://placehold.co/300x200?text=Coffee+Table' },
-  { id: 5, name: 'Wireless Earbuds', category: 'Electronics', brand: 'AudioTech', price: 129.99, rating: 4.6, image: 'https://placehold.co/300x200?text=Wireless+Earbuds' },
-  { id: 6, name: 'Yoga Mat', category: 'Sports & Outdoors', brand: 'FitLife', price: 39.99, rating: 4.3, image: 'https://placehold.co/300x200?text=Yoga+Mat' },
-  { id: 7, name: 'Blender', category: 'Home & Kitchen', brand: 'KitchenPro', price: 79.99, rating: 4.1, image: 'https://placehold.co/300x200?text=Blender' },
-  { id: 8, name: 'Novel: "The Great Adventure"', category: 'Books', brand: 'BookHouse', price: 14.99, rating: 4.4, image: 'https://placehold.co/300x200?text=Novel' },
-  // Add more products here to test pagination
-]
-
-const categories = [...new Set(products.map(p => p.category))]
-const brands = [...new Set(products.map(p => p.brand))]
+import { useEffect } from 'react';
+import { useNavigate } from 'react-router-dom';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { setCurrentPage, setItemsPerPage, setView } from '../../store/filterSlice';
+import { fetchProducts } from '../../store/productSlice';
+import { Button } from "../../components/ui/button";
+import {Card,CardContent,CardFooter,CardHeader,CardTitle} from "../../components/ui/card";
+import { ToggleGroup, ToggleGroupItem } from "../../components/ui/toggle-group";
+import { Grid, List } from 'lucide-react';
+import ProductFilter from '../filterProduct/filterProduct';
+import Paginator from '../paginator/paginator';
+import { addToCartAsync } from '../../store/cartSlice';
+import { Product } from '../../store/productSlice';
 
 export default function ProductPage() {
-  const dispatch = useAppDispatch()
-  const navigate = useNavigate()
-  const filters = useAppSelector((state) => state.filters)
+  const dispatch = useAppDispatch();
+  const navigate = useNavigate();
+  const filters = useAppSelector((state) => state.filters);
+  const { items: products, status, error, pagination } = useAppSelector((state) => state.products);
 
-  const handleAddToCart = (product: typeof products[0]) => {
-    dispatch(addToCart({ ...product, quantity: 1 }))
-  }
+  useEffect(() => {
+    dispatch(fetchProducts({ page: filters.currentPage, limit: filters.itemsPerPage }));
+  }, [dispatch, filters.currentPage, filters.itemsPerPage]);
+  
+  const handleAddToCart = (product: Product) => {
+    dispatch(addToCartAsync(product));
+};
 
-  const handleProductClick = (productId: number) => {
-    navigate(`/product/${productId}`)
-  }
+  const handleProductClick = (productId: string) => {
+    navigate(`/product/${productId}`);
+  };
 
-  const filteredProducts = products.filter(product => 
-    (filters.category === 'all' || product.category === filters.category) &&
-    (filters.brand === 'all' || product.brand === filters.brand) &&
-    product.price <= filters.priceRange[1] &&
-    product.rating >= filters.rating
-  )
-
-  const totalPages = Math.ceil(filteredProducts.length / filters.itemsPerPage)
-  const paginatedProducts = filteredProducts.slice(
-    (filters.currentPage - 1) * filters.itemsPerPage,
-    filters.currentPage * filters.itemsPerPage
-  )
+  const categories = [...new Set(products.map((p) => p.category))];
+  const brands = [...new Set(products.map((p) => p.brand).filter(Boolean))];
 
   const handlePageChange = (page: number) => {
-    dispatch(setCurrentPage(page))
-  }
+    dispatch(setCurrentPage(page));
+  };
 
   const handleItemsPerPageChange = (items: number) => {
-    dispatch(setItemsPerPage(items))
-  }
+    dispatch(setItemsPerPage(items));
+    dispatch(setCurrentPage(1)); // Reset to first page when changing items per page
+  };
 
-  const ProductCard = ({ product }: { product: typeof products[0] }) => (
+  const ProductCard = ({ product }: { product: Product }) => (
     <Card className={filters.view === 'grid' ? 'flex flex-col' : 'flex flex-row'}>
       <CardHeader className={filters.view === 'grid' ? 'p-0' : 'p-4'}>
         <img
-          src={product.image}
+          src={product.images[0]}
           alt={product.name}
           className={filters.view === 'grid' ? 'w-full h-48 object-cover rounded-t-lg cursor-pointer' : 'w-40 h-40 object-cover rounded-lg cursor-pointer'}
-          onClick={() => handleProductClick(product.id)}
+          onClick={() => handleProductClick(product._id)}
         />
       </CardHeader>
       <CardContent className={`flex-grow p-4 ${filters.view === 'list' ? 'flex-1' : ''}`}>
-        <CardTitle className="text-lg mb-2 cursor-pointer" onClick={() => handleProductClick(product.id)}>
+        <CardTitle className="text-lg mb-2 cursor-pointer" onClick={() => handleProductClick(product._id)}>
           {product.name}
         </CardTitle>
         <p className="text-sm text-muted-foreground mb-2">{product.category}</p>
-        <p className="text-sm text-muted-foreground mb-2">{product.brand}</p>
+        {product.brand && <p className="text-sm text-muted-foreground mb-2">{product.brand}</p>}
         <p className="text-lg font-semibold">${product.price.toFixed(2)}</p>
-        <p className="text-sm text-yellow-500">★ {product.rating.toFixed(1)}</p>
+        <p className="text-sm text-yellow-500">★ {product.rating?.toFixed(1)}</p>
       </CardContent>
       <CardFooter className={`p-4 ${filters.view === 'list' ? 'self-end' : 'pt-0'}`}>
-        <Button className="w-full" onClick={() => handleAddToCart(product)}>
-          Add to Cart
+        <Button className="w-full" onClick={() => handleAddToCart(product)} disabled={product.stock === 0}>
+          {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
         </Button>
       </CardFooter>
     </Card>
-  )
+  );
+
+  if (status === 'loading') {
+    return <div>Loading...</div>;
+  }
+
+  if (status === 'failed') {
+    return <div>Error: {error}</div>;
+  }
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -105,7 +88,11 @@ export default function ProductPage() {
         </div>
         <div className="lg:w-3/4">
           <div className="flex justify-between items-center mb-4">
-            <ToggleGroup type="single" value={filters.view} onValueChange={(value:string) => value && dispatch(setView(value as 'grid' | 'list'))}>
+            <ToggleGroup
+              type="single"
+              value={filters.view}
+              onValueChange={(value: string) => value && dispatch(setView(value as 'grid' | 'list'))}
+            >
               <ToggleGroupItem value="grid" aria-label="Grid view">
                 <Grid className="h-4 w-4" />
               </ToggleGroupItem>
@@ -114,18 +101,18 @@ export default function ProductPage() {
               </ToggleGroupItem>
             </ToggleGroup>
             <p className="text-sm text-muted-foreground">
-              Showing {paginatedProducts.length} of {filteredProducts.length} products
+              Showing {products.length} of {pagination.totalItems} products
             </p>
           </div>
           <div className={filters.view === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
-            {paginatedProducts.map((product) => (
-              <ProductCard key={product.id} product={product} />
+            {products.map((product) => (
+              <ProductCard key={product._id || product.name} product={product} />
             ))}
           </div>
           <div className="mt-8">
             <Paginator
-              currentPage={filters.currentPage}
-              totalPages={totalPages}
+              currentPage={pagination.currentPage}
+              totalPages={pagination.totalPages}
               onPageChange={handlePageChange}
               itemsPerPage={filters.itemsPerPage}
               onItemsPerPageChange={handleItemsPerPageChange}
@@ -134,5 +121,5 @@ export default function ProductPage() {
         </div>
       </div>
     </div>
-  )
+  );
 }
