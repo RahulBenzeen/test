@@ -10,22 +10,10 @@ import { logoutUserThunk, checkAuthToken } from '../../store/authSlice'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 
 const categories = [
-  {
-    name: 'Electronics',
-    subcategories: ['Smartphones', 'Laptops', 'Accessories'],
-  },
-  {
-    name: 'Clothing',
-    subcategories: ['Men', 'Women', 'Kids'],
-  },
-  {
-    name: 'Home & Garden',
-    subcategories: ['Furniture', 'Decor', 'Kitchen'],
-  },
-  {
-    name: 'Books',
-    subcategories: ['Fiction', 'Non-fiction', 'Educational'],
-  },
+  { value: 'electronics', name: 'Electronics', subcategories: ['Smartphones', 'Laptops', 'Accessories'] },
+  { value: 'clothing', name: 'Clothing', subcategories: ['Men', 'Women', 'Kids'] },
+  { value: 'home', name: 'Home & Garden', subcategories: ['Furniture', 'Decor', 'Kitchen'] },
+  { value: 'books', name: 'Books', subcategories: ['Fiction', 'Non-fiction', 'Educational'] },
 ]
 
 export default function Header() {
@@ -34,6 +22,7 @@ export default function Header() {
   const { isAuthenticated, user } = useAppSelector((state) => state.auth)
   const [isMounted, setIsMounted] = useState(false);
   
+
   useEffect(() => {
     const initAuth = async () => {
       setIsMounted(true)
@@ -50,6 +39,11 @@ export default function Header() {
       console.error('Logout failed:', error)
     }
   }
+
+  const handleCategoryClick = (category: string, subcategory: string) => {
+    navigate(`/product?category=${encodeURIComponent(category.toLowerCase())}&subcategory=${encodeURIComponent(subcategory.toLowerCase())}`);
+  };
+  
 
   if (!isMounted) {
     return null // or a loading spinner
@@ -68,13 +62,18 @@ export default function Header() {
             <SheetContent side="left">
               <nav className="flex flex-col gap-4">
                 {categories.map((category) => (
-                  <Link
-                    key={category.name}
-                    to={`/category/${category.name.toLowerCase()}`}
-                    className="text-lg font-medium"
-                  >
-                    {category.name}
-                  </Link>
+                  <div key={category.name}>
+                    <h3 className="text-lg font-medium mb-2">{category.name}</h3>
+                    {category.subcategories.map((subcategory) => (
+                      <Link
+                        key={subcategory}
+                        to={`/products?category=${category.name.toLowerCase()}&subcategory=${subcategory.toLowerCase()}`}
+                        className="block text-sm py-1"
+                      >
+                        {subcategory}
+                      </Link>
+                    ))}
+                  </div>
                 ))}
               </nav>
             </SheetContent>
@@ -91,10 +90,8 @@ export default function Header() {
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 {category.subcategories.map((subcategory) => (
-                  <DropdownMenuItem key={subcategory}>
-                    <Link to={`/category/${subcategory.toLowerCase()}`}>
-                      {subcategory}
-                    </Link>
+                  <DropdownMenuItem key={subcategory} onSelect={() => handleCategoryClick(category.name, subcategory)}>
+                    {subcategory}
                   </DropdownMenuItem>
                 ))}
               </DropdownMenuContent>

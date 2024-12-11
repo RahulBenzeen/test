@@ -1,11 +1,12 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { handleApiError } from '../api/apiErrorHandler';
-import { Product } from './productSlice';
-import { getProductsById, getRecentlyViewedProducts } from '../api/product';
+import { FetchProductsParams, Product } from './productSlice';
+import { getProducts, getProductsById, getRecentlyViewedProducts } from '../api/product';
 
 interface ProductDetailState {
   item: Product | null;
   recentlyViewed: Product[];
+  searchResults: Product[];
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
 }
@@ -13,9 +14,23 @@ interface ProductDetailState {
 const initialState: ProductDetailState = {
   item: null,
   recentlyViewed: [],
+  searchResults: [],
   status: 'idle',
   error: null,
 };
+
+export const searchProducts = createAsyncThunk(
+  'productDetail/searchProducts',
+  async (params: FetchProductsParams, { rejectWithValue }) => {
+    try {
+      const response = await getProducts(params);
+      return response.data.data;
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return rejectWithValue(apiError.message);
+    }
+  }
+);
 
 export const fetchProductDetails = createAsyncThunk(
   'productDetail/fetchProductDetails',
@@ -68,7 +83,19 @@ const productDetailSlice = createSlice({
       })
       .addCase(fetchRecentlyViewedProducts.rejected, (state, action) => {
         state.error = action.payload as string;
-      });
+      })
+      builder
+      .addCase(searchProducts.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(searchProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
+        state.status = 'succeeded';
+        state.searchResults = action.payload;
+      })
+      .addCase(searchProducts.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload as string;
+      })
   },
 });
 

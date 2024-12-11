@@ -3,16 +3,10 @@ import { Button } from '../../components/ui/button';
 import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
-// Import all your hero images here
-import hero1 from '../../assets/images/heroes.png';
-import hero2 from '../../assets/images/hero.png';
-import home from '../../assets/images/home.png';
-// import hero3 from '../../assets/images/hero3.jpg';
-
 const images = [
-  { src: hero1, alt: "Luxury Shopping" },
-  { src: hero2, alt: "Premium Collection" },
-  { src: home, alt: "Exclusive Deals" },
+  { src: 'https://res.cloudinary.com/dkii6mubi/image/upload/f_auto,q_auto/v1/ecommerce/nbbaa29z6wtwep84urb0', alt: "Luxury Shopping" },
+  { src: 'https://res.cloudinary.com/dkii6mubi/image/upload/f_auto,q_auto/v1/ecommerce/ddul5ud64r174pdtiid0', alt: "Premium Collection" },
+  { src: 'https://res.cloudinary.com/dkii6mubi/image/upload/f_auto,q_auto/v1/ecommerce/t1rourjmvhcf1nt2al3w', alt: "Exclusive Deals" },
 ];
 
 export default function Banner() {

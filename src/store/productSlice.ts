@@ -8,10 +8,15 @@ export interface Product {
   description: string;
   price: number;
   category: string;
+  subcategory: string;
   images: string[];
   stock: number;
-  brand:string;
-  rating?:number
+  brand?: string;
+  rating?: number;
+  sku?: string;
+  weight?: number;
+  dimensions?: string;
+  createdAt?: Date;
 }
 
 interface ProductState {
@@ -36,16 +41,26 @@ const initialState: ProductState = {
   },
 };
 
-interface FetchProductsParams {
+export interface FetchProductsParams {
   page: number;
   limit: number;
+  category?: string;
+  subcategory?: string;
+  brand?: string;
+  minPrice?: number;
+  maxPrice?: number;
+  rating?: number;
+  search?:string,
+  sortBy?:string
 }
 
 export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
-  async ({ page, limit }: FetchProductsParams, { rejectWithValue }) => {
+  async (params: FetchProductsParams, { rejectWithValue }) => {
+
+    console.log({params})
     try {
-      const response = await getProducts(page, limit);
+      const response = await getProducts(params);
       return response.data;
     } catch (error) {
       const apiError = handleApiError(error);

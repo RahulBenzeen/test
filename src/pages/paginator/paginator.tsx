@@ -28,8 +28,7 @@ const Paginator: React.FC<PaginatorProps> = ({
       <div className="flex items-center space-x-2">
         <Button
           onClick={() => onPageChange(currentPage - 1)}
-          disabled={currentPage === 1}
-        >
+          disabled={currentPage === 1}>
           Previous
         </Button>
         <span>
@@ -37,8 +36,7 @@ const Paginator: React.FC<PaginatorProps> = ({
         </span>
         <Button
           onClick={() => onPageChange(currentPage + 1)}
-          disabled={currentPage === totalPages}
-        >
+          disabled={currentPage === totalPages}>
           Next
         </Button>
       </div>
@@ -46,13 +44,12 @@ const Paginator: React.FC<PaginatorProps> = ({
         <span>Items per page:</span>
         <Select
           value={itemsPerPage.toString()}
-          onValueChange={(value) => onItemsPerPageChange(Number(value))}
-        >
+          onValueChange={(value) => onItemsPerPageChange(Number(value))}>
           <SelectTrigger className="w-[70px]">
             <SelectValue placeholder={itemsPerPage.toString()} />
           </SelectTrigger>
           <SelectContent>
-            {[9, 18, 27, 36].map((number) => (
+            {[3, 5, 8, 10].map((number) => (
               <SelectItem key={number} value={number.toString()}>
                 {number}
               </SelectItem>

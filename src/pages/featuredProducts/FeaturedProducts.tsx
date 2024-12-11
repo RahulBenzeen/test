@@ -3,12 +3,14 @@ import { Button } from '../../components/ui/button';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import {  fetchProducts, Product } from '../../store/productSlice';
 import { addToCartAsync } from '../../store/cartSlice';
-import { Link } from 'react-router-dom';
+import { Link, useNavigate} from 'react-router-dom';
 import { Loader2 } from 'lucide-react';
 
 export default function FeaturedProducts() {
   const dispatch = useAppDispatch();
   const { items: products, status, error } = useAppSelector((state) => state.products);
+  const { isAuthenticated} = useAppSelector((state) => state.auth);
+  const navigate = useNavigate()
 
   useEffect(() => {
     dispatch(fetchProducts({page:1, limit:4})); // Fetch top 4 recent products
@@ -49,9 +51,18 @@ export default function FeaturedProducts() {
                 </div>
               </Link>
               <div className="px-4 pb-4">
-                <Button onClick={() => handleAddToCart(product)} className="w-full">
-                  Add to Cart
-                </Button>
+                { 
+                  isAuthenticated ? 
+                  
+                  <Button onClick={() => handleAddToCart(product)} className="w-full">
+                    Add to Cart
+                  </Button> 
+                  :
+                 < Button onClick={() => navigate('/signin')} className="w-full">
+                    Buy Now
+                  </Button>
+                }
+             
               </div>
             </div>
           ))}

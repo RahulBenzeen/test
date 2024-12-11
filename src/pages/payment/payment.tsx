@@ -1,50 +1,109 @@
+import  { useState } from 'react'
+import api from '../../api'
+import { useNavigate, useLocation } from 'react-router-dom'
+import { Button } from "../../components/ui/button"
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
-import { useNavigate } from 'react-router-dom'
-import { Button } from "../../components/ui/button"
-import { Input } from "../../components/ui/input"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../../components/ui/form"
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
 import { RadioGroup, RadioGroupItem } from "../../components/ui/radio-group"
 import { Label } from "../../components/ui/label"
+import { Input } from "../../components/ui/input"
+import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../../components/ui/form"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card"
+import { useRazorpay, RazorpayOrderOptions } from "react-razorpay"
+import showToast from '../../utils/toast/toastUtils'
+import { Loader2 } from 'lucide-react'
 
 const formSchema = z.object({
-  cardNumber: z.string().regex(/^\d{16}$/, {
-    message: "Card number must be 16 digits.",
-  }),
-  cardName: z.string().min(2, {
-    message: "Card name must be at least 2 characters.",
-  }),
-  expiryDate: z.string().regex(/^(0[1-9]|1[0-2])\/\d{2}$/, {
-    message: "Expiry date must be in MM/YY format.",
-  }),
-  cvv: z.string().regex(/^\d{3,4}$/, {
-    message: "CVV must be 3 or 4 digits.",
-  }),
-  paymentMethod: z.enum(["credit", "debit", "paypal"], {
-    required_error: "Please select a payment method.",
-  }),
+  paymentMethod: z.enum(['upi', 'phonePe', 'googlePay', 'netbanking']),
+  upiId: z.string().optional(),
+  bankName: z.string().optional(),
 })
 
 export default function PaymentPage() {
   const redirect = useNavigate()
+  const location = useLocation()
+  const orderData = location.state || {}
+  const { error, isLoading, Razorpay } = useRazorpay()
+  const [selectedMethod, setSelectedMethod] = useState<string | undefined>()
+  const [isProcessing, setIsProcessing] = useState(false)
+
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
     defaultValues: {
-      cardNumber: "",
-      cardName: "",
-      expiryDate: "",
-      cvv: "",
-      paymentMethod: "credit",
+      paymentMethod: undefined,
+      upiId: '',
+      bankName: '',
     },
   })
 
-  function onSubmit(values: z.infer<typeof formSchema>) {
-    console.log(values)
-    // Here you would typically process the payment
-    // For this example, we'll just redirect to the confirmation page
-    redirect('/order-confirmation')
+  console.log('my order data!')
+  console.log(orderData)
+
+  async function onSubmit(values: z.infer<typeof formSchema>) {
+    setIsProcessing(true)
+    try {
+      const response = await api.post('/api/payment/create', {
+        orderId: orderData.order.orderId,
+        paymentMethod: orderData.order.paymentMethod,
+      })
+      console.log('Payment Order Created:', response.data)
+
+      if (response.data && response.data.orderId && response.data.paymentId) {
+        const { orderId, paymentId } = response.data
+
+        const options: RazorpayOrderOptions = {
+          key: 'rzp_test_Bs8cNGqoVFMPB6',
+          amount: orderData.amount * 100,
+          currency: 'INR',
+          order_id: orderId,
+          name: "Nothing",
+          description: "Test Transaction",
+          image: "https://yourdomain.com/your-logo.png",
+          handler: function (response: any) {
+            const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = response;
+            console.log({ razorpay_payment_id, razorpay_order_id, razorpay_signature })
+
+            api.post('/api/payment/confirm', {
+              razorpay_payment_id,
+              razorpay_order_id,
+              razorpay_signature,
+            }).then((verifyResponse) => {
+              redirect('/thank-you', {
+                state: { orderId, paymentId }
+              })
+            }).catch((error) => {
+              showToast('Payment verification failed.', 'error')
+            })
+          },
+          prefill: {
+            name: "User Name", // Replace with actual user name
+            email: "rahulbhardwaj@benzeenautoparts.com",
+            contact: "8545983083",
+          },
+          theme: {
+            color: "#F37254",
+          },
+          modal: {
+            ondismiss: function() {
+              setIsProcessing(false)
+            }
+          }
+        }
+
+        const rzp = new Razorpay(options)
+        rzp.open()
+      } else {
+        throw new Error('Missing orderId or paymentId in response.')
+      }
+    } catch (error: any) {
+      console.error('Error creating payment order:', error)
+      if (error.response) {
+        console.error('Error response data:', error.response.data)
+      }
+      showToast('Failed to process payment. Please try again.', 'error')
+      setIsProcessing(false)
+    }
   }
 
   return (
@@ -52,6 +111,7 @@ export default function PaymentPage() {
       <Card className="max-w-lg mx-auto">
         <CardHeader>
           <CardTitle>Payment Details</CardTitle>
+          <CardDescription>Choose your preferred payment method</CardDescription>
         </CardHeader>
         <CardContent>
           <Form {...form}>
@@ -64,21 +124,28 @@ export default function PaymentPage() {
                     <FormLabel>Payment Method</FormLabel>
                     <FormControl>
                       <RadioGroup
-                        onValueChange={field.onChange}
+                        onValueChange={(value) => {
+                          field.onChange(value)
+                          setSelectedMethod(value)
+                        }}
                         defaultValue={field.value}
                         className="flex flex-col space-y-1"
                       >
                         <div className="flex items-center space-x-3 space-y-0">
-                          <RadioGroupItem value="credit" id="credit" />
-                          <Label htmlFor="credit">Credit Card</Label>
+                          <RadioGroupItem value="upi" id="upi" />
+                          <Label htmlFor="upi">UPI</Label>
                         </div>
                         <div className="flex items-center space-x-3 space-y-0">
-                          <RadioGroupItem value="debit" id="debit" />
-                          <Label htmlFor="debit">Debit Card</Label>
+                          <RadioGroupItem value="phonePe" id="phonePe" />
+                          <Label htmlFor="phonePe">PhonePe</Label>
                         </div>
                         <div className="flex items-center space-x-3 space-y-0">
-                          <RadioGroupItem value="paypal" id="paypal" />
-                          <Label htmlFor="paypal">PayPal</Label>
+                          <RadioGroupItem value="googlePay" id="googlePay" />
+                          <Label htmlFor="googlePay">Google Pay</Label>
+                        </div>
+                        <div className="flex items-center space-x-3 space-y-0">
+                          <RadioGroupItem value="netbanking" id="netbanking" />
+                          <Label htmlFor="netbanking">Netbanking</Label>
                         </div>
                       </RadioGroup>
                     </FormControl>
@@ -86,64 +153,52 @@ export default function PaymentPage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={form.control}
-                name="cardNumber"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Card Number</FormLabel>
-                    <FormControl>
-                      <Input placeholder="1234 5678 9012 3456" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <FormField
-                control={form.control}
-                name="cardName"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Name on Card</FormLabel>
-                    <FormControl>
-                      <Input placeholder="John Doe" {...field} />
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              <div className="grid grid-cols-2 gap-4">
+              {selectedMethod === 'upi' && (
                 <FormField
                   control={form.control}
-                  name="expiryDate"
+                  name="upiId"
                   render={({ field }) => (
                     <FormItem>
-                      <FormLabel>Expiry Date</FormLabel>
+                      <FormLabel>UPI ID</FormLabel>
                       <FormControl>
-                        <Input placeholder="MM/YY" {...field} />
-                      </FormControl>
-                      <FormMessage />
-                    </FormItem>
-                  )}
-                />
-                <FormField
-                  control={form.control}
-                  name="cvv"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>CVV</FormLabel>
-                      <FormControl>
-                        <Input type="password" placeholder="123" {...field} />
+                        <Input placeholder="yourname@upi" {...field} />
                       </FormControl>
                       <FormDescription>
-                        The 3 or 4 digit number on the back of your card.
+                        Enter your UPI ID (e.g., yourname@upi)
                       </FormDescription>
                       <FormMessage />
                     </FormItem>
                   )}
                 />
-              </div>
-              <Button type="submit" className="w-full">Process Payment</Button>
+              )}
+              {selectedMethod === 'netbanking' && (
+                <FormField
+                  control={form.control}
+                  name="bankName"
+                  render={({ field }) => (
+                    <FormItem>
+                      <FormLabel>Bank Name</FormLabel>
+                      <FormControl>
+                        <Input placeholder="Enter your bank name" {...field} />
+                      </FormControl>
+                      <FormDescription>
+                        Enter the name of your bank for netbanking
+                      </FormDescription>
+                      <FormMessage />
+                    </FormItem>
+                  )}
+                />
+              )}
+              <Button type="submit" className="w-full" disabled={isProcessing}>
+                {isProcessing ? (
+                  <>
+                    <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                    Processing...
+                  </>
+                ) : (
+                  'Process Payment'
+                )}
+              </Button>
             </form>
           </Form>
         </CardContent>

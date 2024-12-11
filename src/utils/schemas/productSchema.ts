@@ -20,9 +20,22 @@ export const productSchema = z.object({
   category: z.string({
     required_error: "Please select a category.",
   }),
+  subcategory: z.string({
+    required_error: "Please select a subcategory.",
+  }),
   stock: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
     message: "Stock must be a non-negative number.",
   }),
+  sku: z.string().min(1, {
+    message: "SKU is required.",
+  }),
+  weight: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
+    message: "Weight must be a positive number.",
+  }),
+  dimensions: z.string().regex(/^\d+(\.\d+)?\s*[x*]\s*\d+(\.\d+)?\s*[x*]\s*\d+(\.\d+)?$/, {
+    message: "Dimensions must be in the format 'L x W x H' or 'L * W * H' (e.g., '10 x 5 x 2' or '10 * 5 * 2').",
+  }),
+  
   images: z
     .custom<FileList>((val) => val instanceof FileList, "Please upload at least one image.")
     .refine((files) => files.length > 0, "At least one image is required.")
@@ -38,4 +51,3 @@ export const productSchema = z.object({
 })
 
 export type ProductFormValues = z.infer<typeof productSchema>;
-

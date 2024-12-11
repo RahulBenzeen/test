@@ -1,46 +1,34 @@
-import { useState } from 'react'
+import { useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import * as z from 'zod'
 import { Button } from "../../components/ui/button"
 import { Input } from "../../components/ui/input"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../../components/ui/form"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../../components/ui/form"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
+import { Avatar, AvatarFallback } from "../../components/ui/avatar"
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "../../components/ui/table"
 import { ScrollArea } from "../../components/ui/scroll-area"
-
-import { User, Package, MapPin, CreditCard, ChevronRight } from 'lucide-react'
+import { UserIcon, Package, MapPin, CreditCard, ChevronRight, Edit, Trash2 } from 'lucide-react'
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle } from "../../components/ui/dialog"
 import showToast from '../../utils/toast/toastUtils'
+import { useAppDispatch, useAppSelector } from '../../store/hooks'
+import { User } from '../../store/authSlice'
+import { fetchAddresses } from '../../store/addressSlice'
+import { fetchOrdersByUser } from '../../store/orderSlice'
 
-// Mock user data
-const mockUser = {
-  id: '1',
-  name: 'Rahul',
-  email: 'rahul@example.com',
-  avatar: 'https://api.dicebear.com/6.x/avataaars/svg?seed=all',
-  phone: '(555) 123-4567'
+interface Address {
+  _id: string;
+  type: string;
+  address: string;
+  city: string;
+  zipCode: string;
+  country: string;
 }
-
-// Mock order data
-const mockOrders = [
-  { id: '1001', date: '2023-05-15', total: 129.99, status: 'Delivered' },
-  { id: '1002', date: '2023-06-02', total: 79.95, status: 'Shipped' },
-  { id: '1003', date: '2023-06-10', total: 249.99, status: 'Processing' },
-  { id: '1004', date: '2023-06-15', total: 59.99, status: 'Pending' },
-  { id: '1005', date: '2023-06-20', total: 149.99, status: 'Shipped' },
-]
-
-// Mock address data
-const mockAddresses = [
-  { id: '1', type: 'Home', street: '123 Main St', city: 'Anytown', state: 'AN', zip: '12345' },
-  { id: '2', type: 'Work', street: '456 Office Blvd', city: 'Workville', state: 'WK', zip: '67890' },
-]
 
 const profileSchema = z.object({
   name: z.string().min(2, { message: "Name must be at least 2 characters." }),
   email: z.string().email({ message: "Please enter a valid email address." }),
-  phone: z.string().regex(/^$$\d{3}$$ \d{3}-\d{4}$/, { message: "Phone number must be in the format (xxx) xxx-xxxx" }),
 })
 
 const addressSchema = z.object({
@@ -52,18 +40,34 @@ const addressSchema = z.object({
 })
 
 export default function ProfilePage() {
-  const [user, setUser] = useState(mockUser)
-  const [addresses, setAddresses] = useState(mockAddresses)
+  const userData = useAppSelector((state) => state.auth.user) as User;
+  const { addresses, status } = useAppSelector((state) => state.address);
+  const {orders} = useAppSelector((state) => state.order)
+
+
+  const dispatch = useAppDispatch()
+
+  useEffect(() => {
+    if (status === "idle") {
+      dispatch(fetchAddresses());
+      dispatch(fetchOrdersByUser());
+    }
+  }, [dispatch, status])
+
+
+
+  const [user, setUser] = useState<User>(userData)
   const [isEditing, setIsEditing] = useState(false)
   const [isAddingAddress, setIsAddingAddress] = useState(false)
+  const [editingAddress, setEditingAddress] = useState<Address | null>(null)
   const [activeTab, setActiveTab] = useState('profile')
+  const [deleteConfirmation, setDeleteConfirmation] = useState<string | null>(null)
 
   const profileForm = useForm<z.infer<typeof profileSchema>>({
     resolver: zodResolver(profileSchema),
     defaultValues: {
-      name: user.name,
+      name: user.name || '',
       email: user.email,
-      phone: user.phone,
     },
   })
 
@@ -81,15 +85,59 @@ export default function ProfilePage() {
   function onProfileSubmit(values: z.infer<typeof profileSchema>) {
     setUser({ ...user, ...values })
     setIsEditing(false)
-    showToast('Profile updated successfully!','success')
+    showToast('Profile updated successfully!', 'success')
   }
 
   function onAddressSubmit(values: z.infer<typeof addressSchema>) {
-    setAddresses([...addresses, { id: Date.now().toString(), ...values }])
+    // Here you would typically dispatch an action to add the address
     setIsAddingAddress(false)
     addressForm.reset()
-    showToast('Address Added Successfully !', 'success')
+    showToast('Address Added Successfully!', 'success')
   }
+
+  function handleEditAddress(address: Address) {
+    setEditingAddress(address)
+    addressForm.reset({
+      type: address.type,
+      street: address.address,
+      city: address.city,
+      state: '', // You might need to split this from city if not available separately
+      zip: address.zipCode,
+    })
+    setIsAddingAddress(true)
+  }
+
+  function handleDeleteAddress(addressId: string) {
+    setDeleteConfirmation(addressId)
+  }
+
+  function confirmDeleteAddress() {
+    if (deleteConfirmation) {
+      // Here you would typically dispatch an action to delete the address
+      showToast('Address deleted successfully!', 'success')
+      setDeleteConfirmation(null)
+    }
+  }
+
+  const AddressCard = ({ address }: { address: Address }) => (
+    <div className="flex items-start space-x-4 p-4 rounded-lg bg-muted group relative">
+      <MapPin className="w-5 h-5 mt-1 text-muted-foreground" />
+      <div>
+        <h3 className="font-semibold">{address.type || 'Home'}</h3>
+        <p className="text-sm text-muted-foreground">{address.address}</p>
+        <p className="text-sm text-muted-foreground">{address.city}, {address.zipCode}</p>
+        <p className="text-sm text-muted-foreground">{address.country}</p>
+      </div>
+      <div className="absolute top-2 right-2 opacity-0 group-hover:opacity-100 transition-opacity">
+        <Button variant="ghost" size="icon" onClick={() => handleEditAddress(address)}>
+          <Edit className="h-4 w-4" />
+        </Button>
+        <Button variant="ghost" size="icon" onClick={() => handleDeleteAddress(address._id)}>
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    </div>
+  )
 
   const tabContent = {
     profile: (
@@ -97,11 +145,10 @@ export default function ProfilePage() {
         <CardHeader>
           <div className="flex items-center space-x-4">
             <Avatar className="w-20 h-20">
-              <AvatarImage src={user.avatar} alt={user.name} />
-              <AvatarFallback>{user.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
+              <AvatarFallback>{user.name ? user.name.split(' ').map(n => n[0]).join('').toUpperCase() : 'U'}</AvatarFallback>
             </Avatar>
             <div>
-              <CardTitle className="text-2xl">{user.name}</CardTitle>
+              <CardTitle className="text-2xl">{user.name || 'User'}</CardTitle>
               <CardDescription>{user.email}</CardDescription>
             </div>
           </div>
@@ -135,22 +182,6 @@ export default function ProfilePage() {
                   </FormItem>
                 )}
               />
-              <FormField
-                control={profileForm.control}
-                name="phone"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Phone</FormLabel>
-                    <FormControl>
-                      <Input {...field} disabled={!isEditing} />
-                    </FormControl>
-                    <FormDescription>
-                      Format: (xxx) xxx-xxxx
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
               {isEditing && (
                 <Button type="submit">Save Changes</Button>
               )}
@@ -178,23 +209,33 @@ export default function ProfilePage() {
                   <TableHead className="w-[100px]">Order ID</TableHead>
                   <TableHead>Date</TableHead>
                   <TableHead>Total</TableHead>
-                  <TableHead>Status</TableHead>
+                  <TableHead>Order Status</TableHead>
+                  <TableHead>Payment Status</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {mockOrders.map((order) => (
-                  <TableRow key={order.id}>
-                    <TableCell className="font-medium">{order.id}</TableCell>
-                    <TableCell>{order.date}</TableCell>
-                    <TableCell>${order.total.toFixed(2)}</TableCell>
+                {orders.map((order) => (
+                  <TableRow key={order._id}>
+                    <TableCell className="font-medium">{order._id}</TableCell>
+                    <TableCell>{order.createdAt}</TableCell>
+                    <TableCell>${order.totalPrice.toFixed(2)}</TableCell>
                     <TableCell>
                       <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
-                        order.status === 'Delivered' ? 'bg-green-100 text-green-800' :
-                        order.status === 'Shipped' ? 'bg-blue-100 text-blue-800' :
-                        order.status === 'Processing' ? 'bg-yellow-100 text-yellow-800' :
+                        order.orderStatus === 'delivered' ? 'bg-green-100 text-green-800' :
+                        order.orderStatus === 'shipped' ? 'bg-blue-100 text-blue-800' :
+                        order.orderStatus === 'pending' ? 'bg-yellow-100 text-yellow-800' :
                         'bg-gray-100 text-gray-800'
                       }`}>
-                        {order.status}
+                        {order.orderStatus}
+                      </span>
+                    </TableCell>
+                    <TableCell>
+                      <span className={`px-2 py-1 rounded-full text-xs font-semibold ${
+                        order.paymentStatus === 'completed' ? 'bg-green-100 text-green-800' :
+                        order.paymentStatus === 'pending' ? 'bg-blue-100 text-blue-800' :
+                        order.paymentStatus === 'failed' ? 'bg-yellow-100 text-yellow-800' :'bg-gray-100 text-gray-800'
+                      }`}>
+                        {order.paymentStatus}
                       </span>
                     </TableCell>
                   </TableRow>
@@ -214,14 +255,7 @@ export default function ProfilePage() {
         <CardContent>
           <div className="space-y-4">
             {addresses.map((address) => (
-              <div key={address.id} className="flex items-start space-x-4 p-4 rounded-lg bg-muted">
-                <MapPin className="w-5 h-5 mt-1 text-muted-foreground" />
-                <div>
-                  <h3 className="font-semibold">{address.type}</h3>
-                  <p className="text-sm text-muted-foreground">{address.street}</p>
-                  <p className="text-sm text-muted-foreground">{address.city}, {address.state} {address.zip}</p>
-                </div>
-              </div>
+              <AddressCard key={address._id} address={address} />
             ))}
           </div>
           {isAddingAddress ? (
@@ -294,7 +328,7 @@ export default function ProfilePage() {
                     </FormItem>
                   )}
                 />
-                <Button type="submit">Add Address</Button>
+                <Button type="submit">{editingAddress ? 'Update' : 'Add'} Address</Button>
               </form>
             </Form>
           ) : (
@@ -336,7 +370,7 @@ export default function ProfilePage() {
                     } ${index !== 0 ? 'border-t' : ''}`}
                     onClick={() => setActiveTab(tab)}
                   >
-                    {tab === 'profile' && <User className="mr-2 h-4 w-4" />}
+                    {tab === 'profile' && <UserIcon className="mr-2 h-4 w-4" />}
                     {tab === 'orders' && <Package className="mr-2 h-4 w-4" />}
                     {tab === 'addresses' && <MapPin className="mr-2 h-4 w-4" />}
                     {tab === 'payment' && <CreditCard className="mr-2 h-4 w-4" />}
@@ -352,6 +386,21 @@ export default function ProfilePage() {
           {tabContent[activeTab as keyof typeof tabContent]}
         </div>
       </div>
+
+      <Dialog open={!!deleteConfirmation} onOpenChange={() => setDeleteConfirmation(null)}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Confirm Deletion</DialogTitle>
+            <DialogDescription>
+              Are you sure you want to delete this address? This action cannot be undone.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={() => setDeleteConfirmation(null)}>Cancel</Button>
+            <Button variant="destructive" onClick={confirmDeleteAddress}>Delete</Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </div>
   )
 }

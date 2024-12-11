@@ -1,8 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { loginUser, getUserData, registerUser } from '../api/auth';
 
-// Define more specific types
-interface User {
+export interface User {
   id: string;
   email: string;
   name?: string;
@@ -17,12 +16,12 @@ interface AuthState {
   error: string | null;
 }
 
-// Define types for API responses
 interface AuthResponse {
   email: string;
   id: string;
   token: string;
   success: boolean;
+  role?: 'user' | 'admin';
 }
 
 const initialState: AuthState = {
@@ -151,7 +150,8 @@ const authSlice = createSlice({
         state.status = 'succeeded';
         state.user = {
           id: action.payload.id,
-          email: action.payload.email
+          email: action.payload.email,
+          role: action.payload.role
         };
         state.token = action.payload.token;
         state.isAuthenticated = true;

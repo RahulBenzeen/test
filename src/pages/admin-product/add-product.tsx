@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { zodResolver } from '@hookform/resolvers/zod'
 import { Button } from "../../components/ui/button"
@@ -20,9 +20,17 @@ interface AddProductPageProps {
   onCancel: () => void;
 }
 
+const categories = [
+  { value: 'electronics', label: 'Electronics', subcategories: ['Smartphones', 'Laptops', 'Accessories'] },
+  { value: 'clothing', label: 'Clothing', subcategories: ['Men', 'Women', 'Kids'] },
+  { value: 'home', label: 'Home & Garden', subcategories: ['Furniture', 'Decor', 'Kitchen'] },
+  { value: 'books', label: 'Books', subcategories: ['Fiction', 'Non-fiction', 'Educational'] },
+]
+
 export default function AddProductPage({ onAddProduct, onCancel }: AddProductPageProps) {
   const [previewImages, setPreviewImages] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
+  const [selectedCategory, setSelectedCategory] = useState('')
  
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
@@ -32,26 +40,36 @@ export default function AddProductPage({ onAddProduct, onCancel }: AddProductPag
       description: "",
       price: "",
       category: "",
-      stock: ""
+      subcategory: "",
+      stock: "",
+      sku: "",
+      weight: "",
+      dimensions: "",
     },
   })
 
   const dispatch = useAppDispatch();
 
-  function onSubmit(values: ProductFormValues) {
+  async function onSubmit(values: ProductFormValues) {
     setIsSubmitting(true)
     const product = {
       ...values,
       price: parseFloat(values.price),
       stock: parseInt(values.stock), 
+      weight: parseInt(values.weight), 
       images: previewImages,
     };
-    dispatch(addProductThunk(product))
-    showToast("Product Added Successfully", "success")
-    onAddProduct(product);
-    setIsSubmitting(false);
-    form.reset();
-    setPreviewImages([]);
+    try {
+      await dispatch(addProductThunk(product)).unwrap();
+      showToast("Product Added Successfully", "success")
+      onAddProduct(product);
+      form.reset();
+      setPreviewImages([]);
+    } catch (error) {
+      showToast("Failed to add product", "error")
+    } finally {
+      setIsSubmitting(false);
+    }
   }
 
   const handleImageUpload = (files: FileList | null) => {
@@ -81,6 +99,15 @@ export default function AddProductPage({ onAddProduct, onCancel }: AddProductPag
       form.setValue('images', dataTransfer.files)
     }
   }
+
+  useEffect(() => {
+    if (selectedCategory) {
+      const subcategories = categories.find(cat => cat.value === selectedCategory)?.subcategories || [];
+      if (subcategories.length > 0) {
+        form.setValue('subcategory', subcategories[0]);
+      }
+    }
+  }, [selectedCategory, form]);
 
   return (
     <Card className="w-full max-w-4xl mx-auto">
@@ -148,17 +175,49 @@ export default function AddProductPage({ onAddProduct, onCancel }: AddProductPag
               render={({ field }) => (
                 <FormItem>
                   <FormLabel>Category</FormLabel>
-                  <Select onValueChange={field.onChange} defaultValue={field.value}>
+                  <Select 
+                    onValueChange={(value) => {
+                      field.onChange(value);
+                      setSelectedCategory(value);
+                      form.setValue('subcategory', '');
+                    }} 
+                    defaultValue={field.value}
+                  >
                     <FormControl>
                       <SelectTrigger>
                         <SelectValue placeholder="Select a category" />
                       </SelectTrigger>
                     </FormControl>
                     <SelectContent>
-                      <SelectItem value="electronics">Electronics</SelectItem>
-                      <SelectItem value="clothing">Clothing</SelectItem>
-                      <SelectItem value="home">Home & Garden</SelectItem>
-                      <SelectItem value="books">Books</SelectItem>
+                      {categories.map((category) => (
+                        <SelectItem key={category.value} value={category.value}>
+                          {category.label}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="subcategory"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Subcategory</FormLabel>
+                  <Select onValueChange={field.onChange} value={field.value}>
+                    <FormControl>
+                      <SelectTrigger>
+                        <SelectValue placeholder="Select a subcategory" />
+                      </SelectTrigger>
+                    </FormControl>
+                    <SelectContent>
+                      {categories.find((cat) => cat.value === selectedCategory)?.subcategories.map((sub) => (
+                          <SelectItem key={sub} value={sub}>
+                            {sub}
+                          </SelectItem>
+                        ))}
                     </SelectContent>
                   </Select>
                   <FormMessage />
@@ -178,6 +237,45 @@ export default function AddProductPage({ onAddProduct, onCancel }: AddProductPag
                       min="0"
                       {...field}
                     />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="sku"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>SKU</FormLabel>
+                  <FormControl>
+                    <Input placeholder="Enter SKU" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="weight"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Weight (in kg)</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" placeholder="Enter weight" {...field} />
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            <FormField
+              control={form.control}
+              name="dimensions"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Dimensions (L x W x H in cm)</FormLabel>
+                  <FormControl>
+                    <Input placeholder="e.g., 10 x 5 x 2" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -252,4 +350,3 @@ export default function AddProductPage({ onAddProduct, onCancel }: AddProductPag
     </Card>
   )
 }
-

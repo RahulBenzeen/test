@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react'
-import { useParams } from 'react-router-dom'
+import { useParams, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { Button } from "../../components/ui/button"
 import { Card, CardContent } from "../../components/ui/card"
@@ -12,26 +12,40 @@ import { Product } from '../../store/productSlice'
 import { fetchProductDetails } from '../../store/productDetailSlice'
 import { addToCartAsync } from '../../store/cartSlice'
 
+
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>()
   const dispatch = useAppDispatch()
-  const { item: product, status, error } = useAppSelector((state) => state.productDetails)
+  const { item: product, status, error } = useAppSelector((state) => state.productDetails);
+  const { isAuthenticated } = useAppSelector((state) => state.auth);
+
   const [quantity, setQuantity] = useState(1)
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
-  console.log({product})
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const navigate = useNavigate()
+
   useEffect(() => {
     if (id) {
       dispatch(fetchProductDetails(id))
     }
   }, [dispatch, id])
-
-  const handleAddToCart = (product: Product) => {
+  
+  const handleAddToCart = async (product: Product) => {
     if (product) {
-      dispatch(addToCartAsync(product))
-      showToast("Product added to cart successfully!", "success")
+      try {
+        const resultAction = await dispatch(addToCartAsync(product));
+        if (addToCartAsync.fulfilled.match(resultAction)) {
+          showToast("Product added to cart successfully!", "success");
+        } else {
+          showToast("Failed to add product to cart. Please try again.", "error");
+        }
+      } catch (error) {
+        console.error("Unexpected error:", error);
+        showToast("An unexpected error occurred. Please try again.", "error");
+      }
     }
-  }
-
+  };
+  
+  
   if (status === 'loading') {
     return (
       <div className="flex justify-center items-center h-screen">
@@ -106,9 +120,12 @@ export default function ProductDetailPage() {
                     {product.stock} available
                   </span>
                 </div>
-                <Button onClick={() => handleAddToCart(product)} className="w-full mb-4">
+                {
+                  isAuthenticated ? (<Button onClick={() => handleAddToCart(product)} className="w-full mb-4">
                   Add to Cart
-                </Button>
+                  </Button>) : <Button  onClick={() => navigate('/signin')}>Buy now</Button>
+                }
+                
                 <Separator className="my-4" />
                 <div className="flex justify-between text-sm text-gray-600">
                   <div className="flex items-center">

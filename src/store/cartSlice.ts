@@ -1,8 +1,7 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from 'axios';
-import { addToCart, getCart, removeFromCart, updateQuantity } from "../api/cart";
+import { addToCart, clearCart, getCart, removeFromCart, updateQuantity } from "../api/cart";
 import { Product } from "./productSlice";
-
+import { AxiosError } from "axios";
 export interface CartItem {
     _id: string;
     quantity: number;
@@ -56,18 +55,34 @@ export const removeFromCartAsync = createAsyncThunk(
 
 export const updateQuantityAsync = createAsyncThunk(
     'cart/updateQuantity',
-    async ({ id, quantity }: { id: string; quantity: number }) => {
-        await updateQuantity(id, quantity);
-        // Fetch the updated cart after quantity update
-        const updatedCart = await getCart();
-        return updatedCart.data.data;
+    async ({ id, quantity }: { id: string; quantity: number }, { rejectWithValue }) => {
+        try {
+            // Update quantity, make sure to handle out-of-stock or any other errors
+            const response = await updateQuantity(id, quantity);
+            
+            // Check if the response indicates the product is out of stock
+            if (response.data.error) {
+                return rejectWithValue(response.data.error); // return the error message
+            }
+            
+            // Fetch the updated cart after the quantity update
+            const updatedCart = await getCart();
+            return updatedCart.data.data;
+        } catch (error) {
+            // Check if the error is an AxiosError
+            if (error instanceof AxiosError) {
+                return rejectWithValue(error.response?.data?.message || "Something went wrong");
+            }
+            // Handle other types of errors
+            return rejectWithValue('An unexpected error occurred');
+        }
     }
 );
 
 export const clearCartAsync = createAsyncThunk(
     'cart/clearCart', 
     async () => {
-        await axios.delete('/api/cart');
+        await clearCart();
         return null;
     }
 );

@@ -1,12 +1,12 @@
 import { useEffect, useState } from 'react';
-import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { useAppDispatch } from '../../store/hooks';
 import { checkAuthToken } from '../../store/authSlice';
 import LoadingSpinner from '../loading-spinner/LoadingSpinner';
 
 export default function AuthCheck({ children }: { children: React.ReactNode }) {
   const dispatch = useAppDispatch();
   const [isChecking, setIsChecking] = useState(true);
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+
 
   useEffect(() => {
     const checkAuth = async () => {

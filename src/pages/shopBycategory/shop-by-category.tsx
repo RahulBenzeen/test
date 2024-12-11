@@ -3,11 +3,8 @@ import { Link } from 'react-router-dom'
 import { ArrowRight, Smartphone, Laptop, Shirt, Coffee } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent, CardFooter } from '../../components/ui/card'
-import books from '../../assets/images/books.jpg'
-import clothings from '../../assets/images/clothing.jpg'
-import homeanddecor from '../../assets/images/homeanddecor.jpg'
-import electronics from '../../assets/images/electronics.jpg'
 
+import { useNavigate } from 'react-router-dom'
 const categories = [
   { 
     id: 1, 
@@ -15,7 +12,7 @@ const categories = [
     description: 'Cutting-edge gadgets and devices',
     icon: Smartphone,
     featured: ['Smartphones', 'Laptops', 'Accessories'],
-    image: electronics
+    image: 'https://res.cloudinary.com/dkii6mubi/image/upload/v1733893374/ecommerce/mhfwwrc2buj3cgugvzkb'
   },
   { 
     id: 2, 
@@ -23,15 +20,15 @@ const categories = [
     description: 'Stylish apparel for every occasion',
     icon: Shirt,
     featured: ['Men\'s Wear', 'Women\'s Fashion', 'Kids\' Clothing'],
-    image: clothings
+    image: 'https://res.cloudinary.com/dkii6mubi/image/upload/v1733893373/ecommerce/xvph69a7enqwws0uec07'
   },
   { 
     id: 3, 
-    name: 'Home & Garden', 
+    name: 'Home', 
     description: 'Beautiful items for your living spaces',
     icon: Coffee,
     featured: ['Furniture', 'Decor', 'Gardening Tools'],
-    image: homeanddecor
+    image: 'https://res.cloudinary.com/dkii6mubi/image/upload/v1733893373/ecommerce/nph7yjaw6vkri0cct1vr'
   },
   { 
     id: 4, 
@@ -39,11 +36,17 @@ const categories = [
     description: 'Expand your knowledge and imagination',
     icon: Laptop,
     featured: ['Fiction', 'Non-Fiction', 'Educational'],
-    image: books
+    image: 'https://res.cloudinary.com/dkii6mubi/image/upload/v1733893373/ecommerce/xarqudmzihm2dsc9dzpm'
   }
 ]
 
 export default function ShopByCategory() {
+  const navigate = useNavigate();
+  const handleCategoryClick = (category: string) => {
+    navigate(`/product?category=${encodeURIComponent(category.toLowerCase())}`);
+  };
+  
+
   return (
     <section className="bg-muted py-16">
       <div className="container mx-auto px-4">
@@ -59,7 +62,7 @@ export default function ShopByCategory() {
                     className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                   />
                   <div className="absolute inset-0 bg-black bg-opacity-40 transition-opacity duration-300 opacity-0 group-hover:opacity-100 flex items-center justify-center">
-                    <Button variant="secondary" size="sm">
+                    <Button variant="secondary" size="sm" onClick={() =>{handleCategoryClick(category.name?.toLowerCase())}}>
                       Explore {category.name}
                     </Button>
                   </div>
@@ -73,7 +76,7 @@ export default function ShopByCategory() {
                   <ul className="space-y-1">
                     {category.featured.map((item, index) => (
                       <li key={index} className="text-sm">
-                        <Link to={`/category/${category.name.toLowerCase()}/${item.toLowerCase()}`} className="hover:underline">
+                        <Link to={`/product?category=${encodeURIComponent(category.name?.toLowerCase())}`} className="hover:underline">
                           {item}
                         </Link>
                       </li>
@@ -83,7 +86,7 @@ export default function ShopByCategory() {
               </CardContent>
               <CardFooter className="bg-secondary">
                 <Link 
-                  to={`/category/${category.name.toLowerCase()}`} 
+                  to={`/product?category=${encodeURIComponent(category.name?.toLowerCase())}`} 
                   className="text-primary hover:underline inline-flex items-center w-full justify-between"
                 >
                   View All {category.name}

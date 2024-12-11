@@ -23,21 +23,23 @@ export default function SignIn() {
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
-
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
       const resultAction = await dispatch(loginUserThunk({ email, password }));
       if (loginUserThunk.fulfilled.match(resultAction)) {
         showToast("Sign In Successful", 'success');
-      } else {
-        throw new Error(resultAction.error.message);
+      } else if (loginUserThunk.rejected.match(resultAction)) {
+
+        const errorMessage = error || "Sign In Failed. Please try again.";
+
+        showToast(errorMessage, 'error');
       }
     } catch (err) {
-      showToast("Sign In Failed", 'error');
+      showToast("An unexpected error occurred. Please try again.", 'error');
     }
   };
-
+  
   const googleSignIn = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
       try {

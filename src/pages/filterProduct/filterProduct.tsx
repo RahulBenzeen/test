@@ -1,6 +1,7 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { setCategory, setBrand, setPriceRange, setRating, clearFilters } from '../../store/filterSlice'
+import { fetchProducts } from '../../store/productSlice'
 import { Label } from "../../components/ui/label"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
 import { Slider } from "../../components/ui/slider"
@@ -13,7 +14,55 @@ interface ProductFilterProps {
 
 const ProductFilter: React.FC<ProductFilterProps> = ({ categories, brands }) => {
   const dispatch = useAppDispatch()
-  const { category, brand, priceRange, rating } = useAppSelector((state) => state.filters)
+  const filters = useAppSelector((state) => state.filters)
+  const [localFilters, setLocalFilters] = useState({
+    ...filters,
+    category: filters.category || 'all',
+    brand: filters.brand || 'all',
+    priceRange: filters.priceRange as [number, number]
+  })
+
+  const handleFilterChange = (filterName: string, value: unknown) => {
+    setLocalFilters(prev => ({ ...prev, [filterName]: value }))
+  }
+
+  const handleApplyFilters = () => {
+    const filtersToApply = {
+      category: localFilters.category === 'all' ? '' : localFilters.category,
+      subcategory: localFilters.subcategory === 'all' ? '' : localFilters.subcategory, // Add subcategory filter
+      brand: localFilters.brand === 'all' ? '' : localFilters.brand,
+      minPrice: localFilters.priceRange[0],
+      maxPrice: localFilters.priceRange[1],
+      rating: localFilters.rating
+    }
+
+    dispatch(setCategory(filtersToApply.category))
+    dispatch(setBrand(filtersToApply.brand))
+    dispatch(setPriceRange(localFilters.priceRange))
+    dispatch(setRating(filtersToApply.rating))
+    dispatch(fetchProducts({ 
+      ...filtersToApply, 
+      page: 1, 
+      limit: filters.itemsPerPage 
+    }))
+  }
+
+  const handleClearFilters = () => {
+    const defaultFilters = {
+      category: 'all',
+      brand: 'all',
+      subcategory: '',
+      priceRange: [0, 100000] as [number, number],
+      rating: 0,
+      currentPage: 1,
+      itemsPerPage: 3,
+      view: 'grid' as const,
+    }
+    dispatch(clearFilters())
+    setLocalFilters(defaultFilters)
+    dispatch(fetchProducts({ page: 1, limit: filters.itemsPerPage }))
+  }
+
 
   return (
     <div className="bg-card p-6 rounded-lg shadow-md space-y-6">
@@ -22,7 +71,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ categories, brands }) => 
       {/* Category Filter */}
       <div className="space-y-2">
         <Label htmlFor="category">Category</Label>
-        <Select value={category} onValueChange={(value) => dispatch(setCategory(value))}>
+        <Select value={localFilters.category} onValueChange={(value) => handleFilterChange('category', value)}>
           <SelectTrigger id="category">
             <SelectValue placeholder="Select category" />
           </SelectTrigger>
@@ -38,7 +87,7 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ categories, brands }) => 
       {/* Brand Filter */}
       <div className="space-y-2">
         <Label htmlFor="brand">Brand</Label>
-        <Select value={brand} onValueChange={(value) => dispatch(setBrand(value))}>
+        <Select value={localFilters.brand} onValueChange={(value) => handleFilterChange('brand', value)}>
           <SelectTrigger id="brand">
             <SelectValue placeholder="Select brand" />
           </SelectTrigger>
@@ -56,18 +105,23 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ categories, brands }) => 
         <Label>Price Range</Label>
         <Slider
           min={0}
-          max={1000}
+          max={100000}
           step={10}
-          value={[priceRange[1]]}
-          onValueChange={(value) => dispatch(setPriceRange([0, value[0]]))}
+          value={localFilters.priceRange}
+          onValueChange={(value) => handleFilterChange('priceRange', value as [number, number])}
         />
-        <p className="text-sm text-muted-foreground">Up to ${priceRange[1]}</p>
+        <p className="text-sm text-muted-foreground">
+          ${localFilters.priceRange[0]} - ${localFilters.priceRange[1]}
+        </p>
       </div>
 
       {/* Rating Filter */}
       <div className="space-y-2">
         <Label htmlFor="rating">Minimum Rating</Label>
-        <Select value={rating.toString()} onValueChange={(value) => dispatch(setRating(Number(value)))}>
+        <Select 
+          value={localFilters.rating.toString()} 
+          onValueChange={(value) => handleFilterChange('rating', Number(value))}
+        >
           <SelectTrigger id="rating">
             <SelectValue placeholder="Select minimum rating" />
           </SelectTrigger>
@@ -81,7 +135,14 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ categories, brands }) => 
       </div>
 
       <Button
-        onClick={() => dispatch(clearFilters())}
+        onClick={handleApplyFilters}
+        className="w-full mb-2"
+      >
+        Apply Filters
+      </Button>
+
+      <Button
+        onClick={handleClearFilters}
         variant="outline"
         className="w-full"
       >
@@ -91,4 +152,4 @@ const ProductFilter: React.FC<ProductFilterProps> = ({ categories, brands }) => 
   )
 }
 
-export default ProductFilter;
+export default ProductFilter
