@@ -54,8 +54,6 @@ export default function ProfilePage() {
     }
   }, [dispatch, status])
 
-
-
   const [user, setUser] = useState<User>(userData)
   const [isEditing, setIsEditing] = useState(false)
   const [isAddingAddress, setIsAddingAddress] = useState(false)

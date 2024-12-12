@@ -58,7 +58,6 @@ export const fetchProducts = createAsyncThunk(
   'products/fetchProducts',
   async (params: FetchProductsParams, { rejectWithValue }) => {
 
-    console.log({params})
     try {
       const response = await getProducts(params);
       return response.data;
@@ -74,6 +73,7 @@ export const addProductThunk = createAsyncThunk(
   async (productData: Omit<Product, '_id'>, { rejectWithValue }) => {
     try {
       const response = await addProduct(productData);
+      await getProducts({page:1, limit:12});
       return response.data;
     } catch (error) {
       const apiError = handleApiError(error);

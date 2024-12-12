@@ -65,7 +65,7 @@ export default function ProductPage() {
     dispatch(setSortBy(value));
   };
 
-  const ProductCard = ({ product }: { product: Product }) => {
+   const ProductCard = ({ product }: { product: Product }) => {
     const [isHovered, setIsHovered] = useState(false);
 
     return (

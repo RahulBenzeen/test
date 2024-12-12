@@ -7,6 +7,14 @@ import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/ca
 import { Pencil, Trash2, Plus } from 'lucide-react'
 import AddProduct from '../admin-product/add-product'
 import UpdateProductPage from '../admin-product/update-product'
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogFooter,
+  DialogHeader,
+  DialogTitle,
+} from '../../components/ui/dialog'
 
 interface Products {
   id: string
@@ -25,14 +33,29 @@ export default function ProductManagement() {
   const [products, setProducts] = useState<Products[]>(dummyProducts)
   const [editingProduct, setEditingProduct] = useState<Products | null>(null)
   const [view, setView] = useState<'list' | 'add' | 'edit'>('list')
+  const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; productId: string | null }>({
+    isOpen: false,
+    productId: null,
+  })
 
   const handleAddProduct = (newProduct: Omit<Products, 'id'>) => {
     setProducts([...products, { id: Date.now().toString(), ...newProduct }])
     setView('list')
   }
 
-  const handleDeleteProduct = (id: string) => {
-    setProducts(products.filter(product => product.id !== id))
+  const openDeleteConfirmation = (id: string) => {
+    setDeleteConfirmation({ isOpen: true, productId: id })
+  }
+
+  const closeDeleteConfirmation = () => {
+    setDeleteConfirmation({ isOpen: false, productId: null })
+  }
+
+  const handleDeleteProduct = () => {
+    if (deleteConfirmation.productId) {
+      setProducts(products.filter(product => product.id !== deleteConfirmation.productId))
+      closeDeleteConfirmation()
+    }
   }
 
   const handleEditProduct = (product: Products) => {
@@ -78,7 +101,7 @@ export default function ProductManagement() {
                       <Pencil className="h-4 w-4" />
                       <span className="sr-only">Edit</span>
                     </Button>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteProduct(product.id)}>
+                    <Button variant="ghost" size="icon" onClick={() => openDeleteConfirmation(product.id)}>
                       <Trash2 className="h-4 w-4" />
                       <span className="sr-only">Delete</span>
                     </Button>
@@ -97,6 +120,25 @@ export default function ProductManagement() {
           />
         )}
       </CardContent>
+
+      <Dialog open={deleteConfirmation.isOpen} onOpenChange={closeDeleteConfirmation}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Are you sure you want to delete this product?</DialogTitle>
+            <DialogDescription>
+              This action cannot be undone. This will permanently delete the product from our servers.
+            </DialogDescription>
+          </DialogHeader>
+          <DialogFooter>
+            <Button variant="outline" onClick={closeDeleteConfirmation}>
+              Cancel
+            </Button>
+            <Button variant="destructive" onClick={handleDeleteProduct}>
+              Delete
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   )
 }

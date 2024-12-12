@@ -23,3 +23,4 @@ export const getRecentlyViewedProducts = () => api.get(`/api/products/recently-v
 export const addProduct = (productData:Omit <Product, "_id">) => api.post('/api/products/add', productData)
 export const updateProduct = (productData) => api.post('/api/products/add', productData)
 export const deleteProduct = (productId:string) => api.post('/api/products/add', productId)
+export const getSimilarProducts = (id:string) => api.get(`/api/products/similar-products/${id}`)

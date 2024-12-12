@@ -6,7 +6,7 @@ import productReducer from './productSlice';
 import productDetailsReducer from './productDetailSlice';
 import addressReducer from './addressSlice'
 import orderReducer from './orderSlice'
-
+import similarProductReducer from './similarProduct'
 export const store = configureStore({
     reducer:{
         cart:cartReducer,
@@ -15,7 +15,8 @@ export const store = configureStore({
         filters:filterReducer,
         auth:authReducer,
         address: addressReducer,
-        order: orderReducer
+        order: orderReducer,
+        similarProducts: similarProductReducer
     }
 })
 

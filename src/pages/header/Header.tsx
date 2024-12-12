@@ -90,7 +90,7 @@ export default function Header() {
               </DropdownMenuTrigger>
               <DropdownMenuContent>
                 {category.subcategories.map((subcategory) => (
-                  <DropdownMenuItem key={subcategory} onSelect={() => handleCategoryClick(category.name, subcategory)}>
+                  <DropdownMenuItem key={subcategory} onSelect={() => handleCategoryClick(category.value, subcategory)}>
                     {subcategory}
                   </DropdownMenuItem>
                 ))}
@@ -116,24 +116,24 @@ export default function Header() {
                     <User className="mr-2 h-4 w-4" />
                     <span>Profile</span>
                   </DropdownMenuItem>
-                  <DropdownMenuItem onClick={() => navigate('/orders')}>
+                  {/* <DropdownMenuItem onClick={() => navigate('/orders')}>
                     <Package className="mr-2 h-4 w-4" />
                     <span>Orders</span>
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   {user.role === "admin" && (
                     <DropdownMenuItem onClick={() => navigate('/admin')}>
                       <Package className="mr-2 h-4 w-4" />
                       <span>Admin</span>
                     </DropdownMenuItem>
                   )}
-                  <DropdownMenuItem onClick={() => navigate('/addresses')}>
+                  {/* <DropdownMenuItem onClick={() => navigate('/addresses')}>
                     <MapPin className="mr-2 h-4 w-4" />
                     <span>Addresses</span>
                   </DropdownMenuItem>
                   <DropdownMenuItem onClick={() => navigate('/payment-methods')}>
                     <CreditCard className="mr-2 h-4 w-4" />
                     <span>Payment Methods</span>
-                  </DropdownMenuItem>
+                  </DropdownMenuItem> */}
                   <DropdownMenuSeparator />
                   <DropdownMenuItem onClick={handleLogout}>
                     <LogOut className="mr-2 h-4 w-4" />

@@ -45,6 +45,7 @@ export default function UpdateProductPage({ productId }: { productId: string }) 
         ...product,
         price: product.price.toString(),
         stock: product.stock.toString(),
+        weight: product.stock.toString(),
         images: undefined,
       })
       setPreviewImages(product.images)
@@ -55,9 +56,10 @@ export default function UpdateProductPage({ productId }: { productId: string }) 
     setIsSubmitting(true)
     const updatedProduct = {
       ...values,
-      id: productId,
+      _id: productId,
       price: parseFloat(values.price),
       stock: parseInt(values.stock), 
+      weight:parseInt(values.weight), 
       images: previewImages,
     };
   

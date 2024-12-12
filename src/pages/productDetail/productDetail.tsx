@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
-import { useAppDispatch, useAppSelector } from '../../store/hooks'
+import { useAppDispatch, useAppSelector } from '../../store/hooks' 
 import { Button } from "../../components/ui/button"
 import { Card, CardContent } from "../../components/ui/card"
 import { Input } from "../../components/ui/input"
@@ -8,19 +8,20 @@ import { Label } from "../../components/ui/label"
 import { Separator } from "../../components/ui/separator"
 import { Star, Truck, RefreshCcw, Loader2 } from 'lucide-react'
 import showToast from '../../utils/toast/toastUtils'
-import { Product } from '../../store/productSlice'
-import { fetchProductDetails } from '../../store/productDetailSlice'
-import { addToCartAsync } from '../../store/cartSlice'
+import { Product } from '../../store/productSlice' 
+import { fetchProductDetails } from '../../store/productDetailSlice' 
+import { addToCartAsync } from '../../store/cartSlice' 
+import SimilarProducts from '../similarProduct/similarProduct'
 
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>()
   const dispatch = useAppDispatch()
-  const { item: product, status, error } = useAppSelector((state) => state.productDetails);
-  const { isAuthenticated } = useAppSelector((state) => state.auth);
+  const { item: product, status, error } = useAppSelector((state) => state.productDetails)
+  const { isAuthenticated } = useAppSelector((state) => state.auth)
 
   const [quantity, setQuantity] = useState(1)
-  const [selectedImageIndex, setSelectedImageIndex] = useState(0);
+  const [selectedImageIndex, setSelectedImageIndex] = useState(0)
   const navigate = useNavigate()
 
   useEffect(() => {
@@ -32,19 +33,18 @@ export default function ProductDetailPage() {
   const handleAddToCart = async (product: Product) => {
     if (product) {
       try {
-        const resultAction = await dispatch(addToCartAsync(product));
+        const resultAction = await dispatch(addToCartAsync(product))
         if (addToCartAsync.fulfilled.match(resultAction)) {
-          showToast("Product added to cart successfully!", "success");
+          showToast("Product added to cart successfully!", "success")
         } else {
-          showToast("Failed to add product to cart. Please try again.", "error");
+          showToast("Failed to add product to cart. Please try again.", "error")
         }
       } catch (error) {
-        console.error("Unexpected error:", error);
-        showToast("An unexpected error occurred. Please try again.", "error");
+        console.error("Unexpected error:", error)
+        showToast("An unexpected error occurred. Please try again.", "error")
       }
     }
-  };
-  
+  }
   
   if (status === 'loading') {
     return (
@@ -121,9 +121,13 @@ export default function ProductDetailPage() {
                   </span>
                 </div>
                 {
-                  isAuthenticated ? (<Button onClick={() => handleAddToCart(product)} className="w-full mb-4">
-                  Add to Cart
-                  </Button>) : <Button  onClick={() => navigate('/signin')}>Buy now</Button>
+                  isAuthenticated ? (
+                    <Button onClick={() => handleAddToCart(product)} className="w-full mb-4">
+                      Add to Cart
+                    </Button>
+                  ) : (
+                    <Button onClick={() => navigate('/signin')}>Buy now</Button>
+                  )
                 }
                 
                 <Separator className="my-4" />
@@ -142,6 +146,9 @@ export default function ProductDetailPage() {
           </div>
         </CardContent>
       </Card>
+      
+      {/* Add the SimilarProducts component here */}
+      <SimilarProducts currentProductId={product._id} />
     </div>
   )
 }

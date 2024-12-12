@@ -42,7 +42,6 @@ export default function AddProductPage({ onAddProduct, onCancel }: AddProductPag
       category: "",
       subcategory: "",
       stock: "",
-      sku: "",
       weight: "",
       dimensions: "",
     },
@@ -242,19 +241,7 @@ export default function AddProductPage({ onAddProduct, onCancel }: AddProductPag
                 </FormItem>
               )}
             />
-            <FormField
-              control={form.control}
-              name="sku"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>SKU</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter SKU" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
+
             <FormField
               control={form.control}
               name="weight"

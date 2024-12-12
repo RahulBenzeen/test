@@ -26,9 +26,6 @@ export const productSchema = z.object({
   stock: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
     message: "Stock must be a non-negative number.",
   }),
-  sku: z.string().min(1, {
-    message: "SKU is required.",
-  }),
   weight: z.string().refine((val) => !isNaN(Number(val)) && Number(val) > 0, {
     message: "Weight must be a positive number.",
   }),
