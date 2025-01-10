@@ -13,6 +13,8 @@ import AuthCheck from '../auth/AuthCheck';
 import NonAuthRoute from '../../utils/ProtectedRoute/NonAuthRoute';
 import 'react-toastify/dist/ReactToastify.css';
 import AdminDashboard from '../admin/AdminDashboard';
+import { ReactNode } from 'react';
+
 
 // Lazy-loaded components
 const Banner = lazy(() => import('../banner/Banner'));
@@ -31,8 +33,11 @@ const ThankYouPage = lazy(() => import('../thank-you/thank-you'));
 const OrderPage = lazy(() => import('../my-orders/my-order'));
 const NotFound = lazy(() => import('../pageNotfound/pageNotFound'));
 const Profile = lazy(() => import('../user-profile/Profile'));
+const ResetPassword = lazy(() => import('../auth/resetPassword'));
+const AllSpecialOffers  = lazy(() => import('../special-offer/all-special-offers'));
 
-function Layout({ children }) {
+
+function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
   const isAdminRoute = location.pathname.startsWith('/admin');
 
@@ -73,6 +78,7 @@ export default function Home() {
                 <Route element={<NonAuthRoute />}>
                   <Route path="/signin" element={<SignIn />} />
                   <Route path="/register" element={<Register />} />
+                  <Route path="/reset-password/:token" element={<ResetPassword />} />
                 </Route>
 
                 {/* Admin Routes (only accessible by admin) */}

@@ -1,11 +1,13 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
-import { loginUser, getUserData, registerUser } from '../api/auth';
+import { loginUser, getUserData, registerUser, updateUserProfileAPI, initiatePasswordResetAPI, confirmPasswordResetAPI } from '../api/auth';
 
 export interface User {
   id: string;
+  _id?: string;
   email: string;
-  name?: string;
+  name: string;
   role?: 'user' | 'admin';
+  profilePicture?: string;
 }
 
 interface AuthState {
@@ -18,10 +20,13 @@ interface AuthState {
 
 interface AuthResponse {
   email: string;
+  name: string;
   id: string;
+  _id: string;
   token: string;
   success: boolean;
   role?: 'user' | 'admin';
+  profilePicture?: string;
 }
 
 const initialState: AuthState = {
@@ -32,7 +37,7 @@ const initialState: AuthState = {
   error: null,
 };
 
-export const checkAuthToken = createAsyncThunk<User, void, { rejectValue: string }>(
+export const checkAuthToken = createAsyncThunk<AuthResponse, void, { rejectValue: string }>(
   'auth/checkAuthToken',
   async (_, { rejectWithValue }) => {
     try {
@@ -106,6 +111,96 @@ export const fetchUserData = createAsyncThunk<User, string, { rejectValue: strin
   }
 );
 
+export const updateUserProfile = createAsyncThunk<User, { name: string; email: string}, { rejectValue: string }>(
+  'auth/updateUserProfile',
+  async (userData, { rejectWithValue, getState }) => {
+
+    try {
+      // Get current user ID and token from Redux state
+      const state = getState();
+      const userId = (state as { auth: AuthState }).auth.user?.id;
+      const token = (state as { auth: AuthState }).auth.token;
+
+      // If userId or token is not available, throw an error
+      if (!userId || !token) {
+        throw new Error('User not authenticated');
+      }
+
+      // Assuming you have an API function `updateUserProfileAPI` to handle the request
+      const response = await updateUserProfileAPI(userData);
+
+      // Return the updated user data (assuming it comes in response.data.data)
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue((error as Error).message);
+    }
+  }
+);
+
+
+
+export const updateUserProfilePicture = createAsyncThunk<
+  User,
+  { profilePicture: string },
+  { rejectValue: string }
+>(
+  'auth/updateUserProfilePicture',
+  async ({ profilePicture }, { rejectWithValue, getState }) => {
+  
+    try {
+      // Get current user ID and token from Redux state
+      const state = getState();
+      const userId = (state as { auth: AuthState }).auth.user?.id;
+      const token = (state as { auth: AuthState }).auth.token;
+      console.log('state', state)
+
+      // If userId or token is not available, throw an error
+      if (!userId || !token) {
+        console.log('userId', userId)
+        console.log('token', token)
+        throw new Error('User not authenticated');
+      }
+
+      // API call to update profile picture
+      const response = await updateUserProfileAPI({ profilePicture });
+
+      // Return the updated user data (assuming it comes in response.data.data)
+      return response.data.data;
+    } catch (error) {
+      return rejectWithValue((error as Error).message);
+    }
+  }
+);
+
+
+export const initiatePasswordReset = createAsyncThunk<
+  { message: string },
+  { email: string },
+  { rejectValue: string }
+>('auth/initiatePasswordReset', async ({ email }, { rejectWithValue }) => {
+  try {
+    const response = await initiatePasswordResetAPI(email);
+    return response.data;
+  } catch (error) {
+    return rejectWithValue((error as Error).message);
+  }
+});
+
+export const confirmPasswordReset = createAsyncThunk<
+  { message: string },
+  { token: string; newPassword: string },
+  { rejectValue: string }
+>('auth/confirmPasswordReset', async ({ token, newPassword }, { rejectWithValue }) => {
+  try {
+    const response = await confirmPasswordResetAPI(token, newPassword);
+    return response.data;
+  } catch (error) {
+    return rejectWithValue((error as Error).message);
+  }
+});
+
+
+
 const authSlice = createSlice({
   name: 'auth',
   initialState,
@@ -132,7 +227,8 @@ const authSlice = createSlice({
         state.status = 'succeeded';
         state.user = {
           id: action.payload.id,
-          email: action.payload.email
+          email: action.payload.email,
+          name: action.payload.name
         };
         state.token = action.payload.token;
         state.isAuthenticated = true;
@@ -151,11 +247,17 @@ const authSlice = createSlice({
         state.user = {
           id: action.payload.id,
           email: action.payload.email,
-          role: action.payload.role
+          role: action.payload.role,
+          name: action.payload.name,
+          profilePicture: action.payload.profilePicture
         };
         state.token = action.payload.token;
         state.isAuthenticated = true;
         state.error = null;
+
+              // Persist to localStorage
+      localStorage.setItem('user', JSON.stringify(state.user));
+      localStorage.setItem('authToken', action.payload.token);
       })
       .addCase(loginUserThunk.rejected, (state, action) => {
         state.status = 'failed';
@@ -170,6 +272,9 @@ const authSlice = createSlice({
         state.isAuthenticated = false;
         state.status = 'idle';
         state.error = null;
+              // Clear from localStorage
+      localStorage.removeItem('user');
+      localStorage.removeItem('authToken');
       })
       .addCase(logoutUserThunk.rejected, (state, action) => {
         state.status = 'failed';
@@ -192,7 +297,14 @@ const authSlice = createSlice({
       })
       .addCase(checkAuthToken.fulfilled, (state, action) => {
         state.status = 'succeeded';
-        state.user = action.payload;
+        state.user = {
+          id: action.payload._id ,
+          email: action.payload.email,
+          role: action.payload.role,
+          name: action.payload.name,
+          profilePicture: action.payload.profilePicture
+        };
+        state.token = action.payload.token;
         state.isAuthenticated = true;
         state.error = null;
       })
@@ -202,6 +314,60 @@ const authSlice = createSlice({
         state.token = null;
         state.isAuthenticated = false;
         state.error = action.payload || 'Failed to authenticate';
+      })
+      .addCase(updateUserProfile.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(updateUserProfile.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        // Update the user's profile with the new data
+        state.user = action.payload;
+        state.error = null;
+      })
+      .addCase(updateUserProfile.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload || 'Failed to update profile';
+      })
+
+      .addCase(updateUserProfilePicture.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(updateUserProfilePicture.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        if (state.user) {
+          state.user.profilePicture = action.payload.profilePicture;
+        }
+        state.error = null;
+      })
+      .addCase(updateUserProfilePicture.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload || 'Failed to update profile picture';
+      })
+      .addCase(initiatePasswordReset.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(initiatePasswordReset.fulfilled, (state) => {
+        state.status = 'succeeded';
+        state.error = null;
+      })
+      .addCase(initiatePasswordReset.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload || 'Failed to initiate password reset';
+      })
+      .addCase(confirmPasswordReset.pending, (state) => {
+        state.status = 'loading';
+        state.error = null;
+      })
+      .addCase(confirmPasswordReset.fulfilled, (state) => {
+        state.status = 'succeeded';
+        state.error = null;
+      })
+      .addCase(confirmPasswordReset.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload || 'Failed to reset password';
       });
   },
 });

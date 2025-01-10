@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { getOrderByUserId, placeOrder } from '../api/order';
+import { deleteOrder, getOrderByUserId, placeOrder } from '../api/order';
 import { Product } from './productSlice';
 
 
@@ -87,10 +87,10 @@ export const updateOrder = createAsyncThunk(
 );
 
 // Async thunk for deleting an order
-export const deleteOrder = createAsyncThunk(
+export const deleteOrders = createAsyncThunk(
   'orders/deleteOrder',
   async (orderId: string) => {
-    await axios.delete(`/api/orders/${orderId}`);
+    await deleteOrder(orderId);
     return orderId;
   }
 );
@@ -148,14 +148,14 @@ const orderSlice = createSlice({
         state.error = action.error.message || null;
       })
       // Delete Order
-      .addCase(deleteOrder.pending, (state) => {
+      .addCase(deleteOrders.pending, (state) => {
         state.status = 'loading';
       })
-      .addCase(deleteOrder.fulfilled, (state, action) => {
+      .addCase(deleteOrders.fulfilled, (state, action) => {
         state.status = 'succeeded';
         state.orders = state.orders.filter(order => order._id !== action.payload);
       })
-      .addCase(deleteOrder.rejected, (state, action) => {
+      .addCase(deleteOrders.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.error.message || null;
       })

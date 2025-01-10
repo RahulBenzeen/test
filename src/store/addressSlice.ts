@@ -1,6 +1,5 @@
 import { createSlice, createAsyncThunk } from "@reduxjs/toolkit";
-import axios from "axios";
-import { getAllAddress, saveAddress } from "../api/address";
+import { deleteAddress, getAllAddress, saveAddress, updateAddress } from "../api/address";
 
 // Renaming the Address interface to ShippingAddress
 export interface ShippingAddress {
@@ -46,19 +45,22 @@ export const saveNewAddress = createAsyncThunk("address/saveAddress",
 );
 
 // Update an existing address
-export const updateAddress = createAsyncThunk(
+export const updateAddresses = createAsyncThunk(
   "address/updateAddress",
   async (address: ShippingAddress) => { // Updated type here
-    const response = await axios.put(`/api/addresses/${address._id}`, address);
-    return response.data;
+    if (!address._id) {
+      throw new Error("Address ID is required");
+    }
+    const response = await updateAddress(address._id, address);
+    return response.data.address;
   }
 );
 
 // Delete an address
-export const deleteAddress = createAsyncThunk(
+export const deleteAddresses = createAsyncThunk(
   "address/deleteAddress",
   async (addressId: string) => {
-    await axios.delete(`/api/addresses/${addressId}`);
+    await deleteAddress(addressId);
     return addressId;
   }
 );
@@ -95,10 +97,10 @@ const addressSlice = createSlice({
         state.error = action.error.message || null;
       })
       // Update Address
-      .addCase(updateAddress.pending, (state) => {
+      .addCase(updateAddresses.pending, (state) => {
         state.status = "loading";
       })
-      .addCase(updateAddress.fulfilled, (state, action) => {
+      .addCase(updateAddresses.fulfilled, (state, action) => {
         state.status = "succeeded";
         const index = state.addresses.findIndex(
           (address) => address._id === action.payload._id
@@ -107,21 +109,21 @@ const addressSlice = createSlice({
           state.addresses[index] = action.payload; // Update the address in the state
         }
       })
-      .addCase(updateAddress.rejected, (state, action) => {
+      .addCase(updateAddresses.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.error.message || null;
       })
       // Delete Address
-      .addCase(deleteAddress.pending, (state) => {
+      .addCase(deleteAddresses.pending, (state) => {
         state.status = "loading";
       })
-      .addCase(deleteAddress.fulfilled, (state, action) => {
+      .addCase(deleteAddresses.fulfilled, (state, action) => {
         state.status = "succeeded";
         state.addresses = state.addresses.filter(
           (address) => address._id !== action.payload
         ); // Remove the address from the state
       })
-      .addCase(deleteAddress.rejected, (state, action) => {
+      .addCase(deleteAddresses.rejected, (state, action) => {
         state.status = "failed";
         state.error = action.error.message || null;
       });

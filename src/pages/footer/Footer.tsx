@@ -40,7 +40,7 @@ export default function Footer() {
           </div>
         </div>
         <div className="border-t mt-12 pt-8 text-center text-sm text-muted-foreground">
-          © 2024 LuxeMarket. All rights reserved.
+          © 2024 Nothing. All rights reserved.
         </div>
       </div>
     </footer>

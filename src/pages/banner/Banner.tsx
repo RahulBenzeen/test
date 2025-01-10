@@ -44,7 +44,7 @@ export default function Banner() {
         ))}
       </div>
       <div className="relative z-20 container mx-auto px-4 h-full flex flex-col justify-center items-center text-center">
-        <h1 className="text-4xl md:text-6xl font-bold mb-4">Welcome to LuxeMarket</h1>
+        <h1 className="text-4xl md:text-6xl font-bold mb-4">There something in Nothing.</h1>
         <p className="text-xl md:text-2xl mb-8 max-w-2xl">
           Discover our curated collection of premium products
         </p>

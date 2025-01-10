@@ -1,4 +1,5 @@
 import { FetchProductsParams, Product } from "../store/productSlice";
+import { FetchSpecialOffersParams } from "../store/specialProductSlice";
 import api from "./index";
 
 
@@ -18,9 +19,21 @@ export const getProducts = (params: FetchProductsParams) => {
   return api.get(url);
 };
 
+export const getSpecialOfferProducts = (params: FetchSpecialOffersParams) => {
+  const { page, limit, minPrice, maxPrice, sortBy } = params;
+
+  let url = `/api/products/special-offers?page=${page}&limit=${limit}`;
+  if (minPrice !== undefined) url += `&minPrice=${minPrice}`;
+  if (maxPrice !== undefined) url += `&maxPrice=${maxPrice}`;
+  if (sortBy) url += `&sortBy=${sortBy}`;
+
+  return api.get(url);
+};
+
+
 export const getProductsById = (id:string) => api.get(`/api/products/${id}`);
 export const getRecentlyViewedProducts = () => api.get(`/api/products/recently-viewed`);
 export const addProduct = (productData:Omit <Product, "_id">) => api.post('/api/products/add', productData)
 export const updateProduct = (productData) => api.post('/api/products/add', productData)
-export const deleteProduct = (productId:string) => api.post('/api/products/add', productId)
+export const deleteProduct = (productId:string) => api.delete(`/api/admin/products/${productId}`)
 export const getSimilarProducts = (id:string) => api.get(`/api/products/similar-products/${id}`)

@@ -1,4 +1,4 @@
-import  { useState } from 'react'
+import { useState } from 'react'
 import api from '../../api'
 import { useNavigate, useLocation } from 'react-router-dom'
 import { Button } from "../../components/ui/button"
@@ -13,6 +13,8 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../..
 import { useRazorpay, RazorpayOrderOptions } from "react-razorpay"
 import showToast from '../../utils/toast/toastUtils'
 import { Loader2 } from 'lucide-react'
+import { fetchCart } from '../../store/cartSlice'  // Import your cartSlice's fetchCart action
+import { useAppDispatch } from '../../store/hooks'
 
 const formSchema = z.object({
   paymentMethod: z.enum(['upi', 'phonePe', 'googlePay', 'netbanking']),
@@ -24,9 +26,10 @@ export default function PaymentPage() {
   const redirect = useNavigate()
   const location = useLocation()
   const orderData = location.state || {}
-  const { error, isLoading, Razorpay } = useRazorpay()
+  const { Razorpay } = useRazorpay()
   const [selectedMethod, setSelectedMethod] = useState<string | undefined>()
   const [isProcessing, setIsProcessing] = useState(false)
+  const dispatch = useAppDispatch()
 
   const form = useForm<z.infer<typeof formSchema>>({
     resolver: zodResolver(formSchema),
@@ -37,9 +40,6 @@ export default function PaymentPage() {
     },
   })
 
-  console.log('my order data!')
-  console.log(orderData)
-
   async function onSubmit(values: z.infer<typeof formSchema>) {
     setIsProcessing(true)
     try {
@@ -47,7 +47,6 @@ export default function PaymentPage() {
         orderId: orderData.order.orderId,
         paymentMethod: orderData.order.paymentMethod,
       })
-      console.log('Payment Order Created:', response.data)
 
       if (response.data && response.data.orderId && response.data.paymentId) {
         const { orderId, paymentId } = response.data
@@ -62,17 +61,20 @@ export default function PaymentPage() {
           image: "https://yourdomain.com/your-logo.png",
           handler: function (response: any) {
             const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = response;
-            console.log({ razorpay_payment_id, razorpay_order_id, razorpay_signature })
 
             api.post('/api/payment/confirm', {
               razorpay_payment_id,
               razorpay_order_id,
               razorpay_signature,
-            }).then((verifyResponse) => {
+            }).then(() => {
+              // Dispatch fetchCart action to update the cart after successful payment
+              dispatch(fetchCart())
+
+              // Redirect to the Thank You page
               redirect('/thank-you', {
                 state: { orderId, paymentId }
               })
-            }).catch((error) => {
+            }).catch(() => {
               showToast('Payment verification failed.', 'error')
             })
           },
@@ -96,10 +98,10 @@ export default function PaymentPage() {
       } else {
         throw new Error('Missing orderId or paymentId in response.')
       }
-    } catch (error: any) {
-      console.error('Error creating payment order:', error)
+    } catch (error) {
+      showToast('Error creating payment order:', 'error')
       if (error.response) {
-        console.error('Error response data:', error.response.data)
+        showToast('Error response data:', 'error')
       }
       showToast('Failed to process payment. Please try again.', 'error')
       setIsProcessing(false)

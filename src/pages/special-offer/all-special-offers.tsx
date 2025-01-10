@@ -1,4 +1,4 @@
-import { ArrowRight } from 'lucide-react'
+import { ArrowLeft } from 'lucide-react'
 import { Button } from "../../components/ui/button"
 import { Badge } from "../../components/ui/badge"
 import { Card, CardContent, CardFooter } from "../../components/ui/card"
@@ -8,13 +8,13 @@ import { useEffect } from 'react'
 import { fetchSpecialOffers } from '../../store/specialProductSlice' // Import the correct thunk
 import { useNavigate } from 'react-router-dom'
 
-export default function SpecialOffers() {
+export default function AllSpecialOffers() {
   const { items, status, error } = useAppSelector((state) => state.specialOffers) // Assuming specialOffers slice
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
 
   useEffect(() => {
-    dispatch(fetchSpecialOffers({ page: 1, limit: 3 })) // Fetching the special offers
+    dispatch(fetchSpecialOffers({ page: 1, limit: 100 })) // Fetch all special offers
   }, [dispatch])
 
   // Handle loading state
@@ -50,8 +50,8 @@ export default function SpecialOffers() {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center mb-8">
           <h2 className="text-3xl font-bold">Special Offers</h2>
-          <Button variant="ghost" onClick={() => navigate('/special-offers')}>
-            View All <ArrowRight className="ml-2 h-4 w-4" />
+          <Button variant="ghost" onClick={() => navigate('/')}>
+            <ArrowLeft className="ml-2 h-4 w-4" /> Back to Home
           </Button>
         </div>
         <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

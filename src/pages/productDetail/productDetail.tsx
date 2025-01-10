@@ -12,7 +12,7 @@ import { Product } from '../../store/productSlice'
 import { fetchProductDetails } from '../../store/productDetailSlice' 
 import { addToCartAsync } from '../../store/cartSlice' 
 import SimilarProducts from '../similarProduct/similarProduct'
-
+import ReviewPage from '../ReviewPage/ReviewPage'
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -64,7 +64,7 @@ export default function ProductDetailPage() {
 
   return (
     <div className="container mx-auto px-4 py-8">
-      <Card className="overflow-hidden">
+      <Card className="overflow-hidden mb-8">
         <CardContent className="p-0">
           <div className="grid md:grid-cols-2 gap-8">
             <div className="p-6">
@@ -147,9 +147,15 @@ export default function ProductDetailPage() {
         </CardContent>
       </Card>
       
+      {/* Add the ReviewPage component here */}
+      <Card className="mb-8">
+        <CardContent>
+          <ReviewPage />
+        </CardContent>
+      </Card>
+
       {/* Add the SimilarProducts component here */}
       <SimilarProducts currentProductId={product._id} />
     </div>
   )
 }
-

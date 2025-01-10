@@ -158,7 +158,7 @@ export default function Cart() {
                         </Button>
                       </div>
                       <p className="text-sm font-medium mt-2">
-                        Subtotal: ${(item.price * item.quantity).toFixed(2)}
+                        Subtotal: ${(item.price * item.quantity)?.toFixed(2) || 0}
                       </p>
                     </div>
                   </li>

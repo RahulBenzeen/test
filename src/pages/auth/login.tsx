@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useState, useEffect } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { loginUserThunk } from '../../store/authSlice';
@@ -14,6 +16,7 @@ import showToast from '../../utils/toast/toastUtils';
 export default function SignIn() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [isForgotPasswordLoading, setIsForgotPasswordLoading] = useState(false);
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const { status, error, isAuthenticated } = useAppSelector(state => state.auth);
@@ -23,6 +26,7 @@ export default function SignIn() {
       navigate('/');
     }
   }, [isAuthenticated, navigate]);
+
   const handleSignIn = async (e: React.FormEvent) => {
     e.preventDefault();
     try {
@@ -30,12 +34,10 @@ export default function SignIn() {
       if (loginUserThunk.fulfilled.match(resultAction)) {
         showToast("Sign In Successful", 'success');
       } else if (loginUserThunk.rejected.match(resultAction)) {
-
         const errorMessage = error || "Sign In Failed. Please try again.";
-
         showToast(errorMessage, 'error');
       }
-    } catch (err) {
+    } catch  {
       showToast("An unexpected error occurred. Please try again.", 'error');
     }
   };
@@ -46,7 +48,7 @@ export default function SignIn() {
         const userInfo = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         });
-        const { sub: id, email, name } = userInfo.data;
+        const { sub: id, email } = userInfo.data;
 
         const resultAction = await dispatch(loginUserThunk({ email, password: id }));
         if (loginUserThunk.fulfilled.match(resultAction)) {
@@ -64,6 +66,28 @@ export default function SignIn() {
       showToast( "Google Sign In Failed",'error' );
     },
   });
+
+  const handleForgotPassword = async (e: React.MouseEvent) => {
+    e.preventDefault();
+    if (!email) {
+      showToast("Please enter your email address", 'error');
+      return;
+    }
+    setIsForgotPasswordLoading(true);
+    try {
+      // Replace 'YOUR_API_ENDPOINT' with the actual endpoint for password reset
+      const response = await axios.post('http://localhost:5000/api/users/forgot-password', { email });
+      if (response.data.success) {
+        showToast("Password reset instructions have been sent to your email", 'success');
+      } else {
+        throw new Error(response.data.message || "Failed to send reset instructions");
+      }
+    } catch {
+      showToast( "Failed to send reset instructions. Please try again.", 'error');
+    } finally {
+      setIsForgotPasswordLoading(false);
+    }
+  };
 
   if (isAuthenticated) {
     return null; // or a loading spinner
@@ -100,6 +124,16 @@ export default function SignIn() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                 />
+              </div>
+              <div className="text-right">
+                <Button
+                  variant="link"
+                  className="p-0 h-auto font-normal text-sm text-primary hover:underline"
+                  onClick={handleForgotPassword}
+                  disabled={isForgotPasswordLoading}
+                >
+                  {isForgotPasswordLoading ? 'Sending...' : 'Forgot password?'}
+                </Button>
               </div>
             </div>
             <Button className="w-full mt-4" type="submit" disabled={status === 'loading'}>

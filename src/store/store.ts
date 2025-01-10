@@ -7,6 +7,10 @@ import productDetailsReducer from './productDetailSlice';
 import addressReducer from './addressSlice'
 import orderReducer from './orderSlice'
 import similarProductReducer from './similarProduct'
+import reviewReducer from './reviewSlice'
+import userReducer from './adminSlice'
+import allOrderReducer from './allOrdersSlice'
+import specialOfferProduct from './specialProductSlice'
 export const store = configureStore({
     reducer:{
         cart:cartReducer,
@@ -16,7 +20,11 @@ export const store = configureStore({
         auth:authReducer,
         address: addressReducer,
         order: orderReducer,
-        similarProducts: similarProductReducer
+        similarProducts: similarProductReducer,
+        reviews: reviewReducer,
+        users:userReducer,
+        allOrders:allOrderReducer,
+        specialOffers: specialOfferProduct
     }
 })
 

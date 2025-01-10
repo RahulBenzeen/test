@@ -1,43 +1,67 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { useForm } from 'react-hook-form'
-import { zodResolver } from '@hookform/resolvers/zod'
-import { Button } from "../../components/ui/button"
-import { Input } from "../../components/ui/input"
-import { Textarea } from "../../components/ui/textarea"
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
-import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../../components/ui/form"
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
-import { X, Loader2 } from 'lucide-react'
-import showToast from '../../utils/toast/toastUtils'
-import { updateProductThunk } from '../../store/productSlice'
-import { useAppDispatch, useAppSelector } from '../../store/hooks'
-import { ProductFormValues, productSchema } from '../../utils/schemas/productSchema'
-import { fetchProductDetails } from '../../store/productDetailSlice'
+import { useState, useEffect, useCallback } from 'react';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { Button } from '../../components/ui/button';
+import { Input } from '../../components/ui/input';
+import { Textarea } from '../../components/ui/textarea';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '../../components/ui/select';
+import {
+  FormControl,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+  Form
+} from '../../components/ui/form';
+import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Loader2 } from 'lucide-react';
+import showToast from '../../utils/toast/toastUtils';
+import { updateProductThunk } from '../../store/productSlice';
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { ProductFormValues, productSchema } from '../../utils/schemas/productSchema';
+import { fetchProductDetails } from '../../store/productDetailSlice';
+import { useNavigate } from 'react-router-dom';
 
 export default function UpdateProductPage({ productId }: { productId: string }) {
-  const [previewImages, setPreviewImages] = useState<string[]>([])
-  const [isSubmitting, setIsSubmitting] = useState(false)
-  const dispatch = useAppDispatch()
-  const { item: product, status, error } = useAppSelector((state) => state.productDetails)
+  const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const dispatch = useAppDispatch();
+  const router = useNavigate();
+  const { item: product, status, error } = useAppSelector((state) => state.productDetails);
 
+  // Initialize the form
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
-      name: "",
-      brand: "",
-      description: "",
-      price: "",
-      category: "",
-      stock: "",
+      name: '',
+      brand: '',
+      description: '',
+      price: '',
+      category: '',
+      stock: '',
+      weight: '',
       images: undefined,
     },
-  })
+  });
+
+  // Fetch product details
+  const fetchDetails = useCallback(() => {
+    console.log("Fetching product details...");
+    dispatch(fetchProductDetails(productId));
+  }, [dispatch, productId]);
 
   useEffect(() => {
-    dispatch(fetchProductDetails(productId))
-  }, [dispatch, productId])
+    console.log('Fetching product details for ID:', productId);
+    fetchDetails();
+  }, [fetchDetails, productId]);
 
   useEffect(() => {
     if (product) {
@@ -45,75 +69,57 @@ export default function UpdateProductPage({ productId }: { productId: string }) 
         ...product,
         price: product.price.toString(),
         stock: product.stock.toString(),
-        weight: product.stock.toString(),
-        images: undefined,
-      })
-      setPreviewImages(product.images)
+        weight: product.weight?.toString(),
+        images: undefined, // Reset images to avoid validation
+      });
+      setPreviewImages(product.images || []);
     }
-  }, [product, form])
+  }, [product, form.reset]);
 
-  function onSubmit(values: ProductFormValues) {
-    setIsSubmitting(true)
+  // Submit handler
+  const onSubmit = async (values: ProductFormValues) => {
+    console.log("onSubmit called");
+
+    if (isSubmitting) return; // Prevent multiple submissions
+    setIsSubmitting(true);
+
     const updatedProduct = {
       ...values,
       _id: productId,
       price: parseFloat(values.price),
-      stock: parseInt(values.stock), 
-      weight:parseInt(values.weight), 
-      images: previewImages,
+      stock: parseInt(values.stock, 10),
+      weight: parseInt(values.weight, 10),
+      images: product?.images || [], // Use existing images if not updated
     };
-  
-    dispatch(updateProductThunk(updatedProduct))
-      .unwrap()
-      .then(() => {
-        showToast("Product updated successfully!", 'success');
-      })
-      .catch((error) => {
-        showToast(`Failed to update product: ${error}`, 'error');
-      })
-      .finally(() => {
-        setIsSubmitting(false);
-      });
-  }
 
-  const handleImageUpload = (files: FileList | null) => {
-    if (files) {
-      const newPreviewImages: string[] = []
-      Array.from(files).forEach((file) => {
-        const reader = new FileReader()
-        reader.onloadend = () => {
-          newPreviewImages.push(reader.result as string)
-          if (newPreviewImages.length === files.length) {
-            setPreviewImages((prev) => [...prev, ...newPreviewImages].slice(0, 5))
-          }
-        }
-        reader.readAsDataURL(file)
-      })
+    try {
+      console.log("Dispatching update...");
+      await dispatch(updateProductThunk(updatedProduct)).unwrap();
+      showToast('Product updated successfully!', 'success');
+      setIsSubmitting(false);
+      router('/products');
+    } catch (err) {
+      console.error("Error during dispatch:", err);
+      setIsSubmitting(false);
+      showToast(`Failed to update product: ${err}`, 'error');
     }
-  }
+  };
 
-  const removeImage = (index: number) => {
-    setPreviewImages((prev) => prev.filter((_, i) => i !== index))
-    const currentImages = form.getValues('images')
-    if (currentImages instanceof FileList) {
-      const dataTransfer = new DataTransfer()
-      Array.from(currentImages).forEach((file, i) => {
-        if (i !== index) dataTransfer.items.add(file)
-      })
-      form.setValue('images', dataTransfer.files)
-    }
-  }
-
+  // Handle loading, error, and no product found states
   if (status === 'loading') {
-    return <div className="flex justify-center items-center h-screen"><Loader2 className="h-8 w-8 animate-spin" /></div>
+    return (
+      <div className="flex justify-center items-center h-screen">
+        <Loader2 className="h-8 w-8 animate-spin" />
+      </div>
+    );
   }
 
   if (status === 'failed') {
-    return <div className="text-center text-red-500 mt-8">Error: {error}</div>
+    return <div className="text-center text-red-500 mt-8">Error: {error}</div>;
   }
 
   if (!product) {
-    return <div className="text-center mt-8">Product not found</div>
+    return <div className="text-center mt-8">Product not found</div>;
   }
 
   return (
@@ -124,6 +130,7 @@ export default function UpdateProductPage({ productId }: { productId: string }) 
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            {/* Product Name */}
             <FormField
               control={form.control}
               name="name"
@@ -137,6 +144,8 @@ export default function UpdateProductPage({ productId }: { productId: string }) 
                 </FormItem>
               )}
             />
+
+            {/* Brand */}
             <FormField
               control={form.control}
               name="brand"
@@ -150,6 +159,8 @@ export default function UpdateProductPage({ productId }: { productId: string }) 
                 </FormItem>
               )}
             />
+
+            {/* Description */}
             <FormField
               control={form.control}
               name="description"
@@ -163,6 +174,8 @@ export default function UpdateProductPage({ productId }: { productId: string }) 
                 </FormItem>
               )}
             />
+
+            {/* Price */}
             <FormField
               control={form.control}
               name="price"
@@ -176,6 +189,8 @@ export default function UpdateProductPage({ productId }: { productId: string }) 
                 </FormItem>
               )}
             />
+
+            {/* Category */}
             <FormField
               control={form.control}
               name="category"
@@ -199,6 +214,8 @@ export default function UpdateProductPage({ productId }: { productId: string }) 
                 </FormItem>
               )}
             />
+
+            {/* Stock */}
             <FormField
               control={form.control}
               name="stock"
@@ -206,67 +223,46 @@ export default function UpdateProductPage({ productId }: { productId: string }) 
                 <FormItem>
                   <FormLabel>Stock</FormLabel>
                   <FormControl>
-                    <Input
-                      type="number"
-                      placeholder="Enter available stock"
-                      min="0"
-                      {...field}
-                    />
+                    <Input type="number" placeholder="Enter available stock" min="0" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* Weight */}
             <FormField
               control={form.control}
-              name="images"
+              name="weight"
               render={({ field }) => (
                 <FormItem>
-                  <FormLabel>Product Images</FormLabel>
+                  <FormLabel>Weight (in grams)</FormLabel>
                   <FormControl>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={(e) => {
-                        const files = e.target.files;
-                        if (files) {
-                          field.onChange(files);
-                          handleImageUpload(files);
-                        }
-                      }}
-                      name={field.name}
-                      onBlur={field.onBlur}
-                      ref={field.ref}
-                    />
+                    <Input type="number" placeholder="Enter product weight" min="0" {...field} />
                   </FormControl>
-                  <FormDescription>
-                    Upload up to 5 product images (max 5MB each, .jpg, .jpeg, .png, or .webp)
-                  </FormDescription>
                   <FormMessage />
                 </FormItem>
               )}
             />
+
+            {/* Preview Images */}
             {previewImages.length > 0 && (
               <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
                 {previewImages.map((image, index) => (
                   <div key={index} className="relative">
-                    <img src={image} alt={`Preview ${index + 1}`} className="w-full h-32 object-cover rounded-lg" />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2"
-                      onClick={() => removeImage(index)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
+                    <img
+                      src={image}
+                      alt={`Product ${index + 1}`}
+                      className="w-full h-32 object-cover rounded-lg"
+                    />
                   </div>
                 ))}
               </div>
             )}
+
+            {/* Submit Button */}
             <div className="flex justify-between">
-              <Button type="button" variant="outline" onClick={() => window.history.back()}>
+              <Button type="button" variant="outline" onClick={() => router('/products')}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>
@@ -284,6 +280,5 @@ export default function UpdateProductPage({ productId }: { productId: string }) 
         </Form>
       </CardContent>
     </Card>
-  )
+  );
 }
-

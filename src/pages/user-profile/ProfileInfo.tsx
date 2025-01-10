@@ -1,66 +1,286 @@
-import { useState } from 'react'
-import { Button } from "../../components/ui/button"
-import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "../../components/ui/card"
-import { Input } from "../../components/ui/input"
-import { Label } from "../../components/ui/label"
+'use client'
 
-export function ProfileInfo() {
-  const [isEditing, setIsEditing] = useState(false)
-  const [profile, setProfile] = useState({
-    name: 'John Doe',
-    email: 'john@example.com',
-    phone: '1234567890'
-  })
+import { useState, useEffect, useRef } from "react";
+import { useForm } from "react-hook-form";
+import { zodResolver } from "@hookform/resolvers/zod";
+import * as z from "zod";
+import {
+  Card,
+  CardHeader,
+  CardTitle,
+  CardDescription,
+  CardContent,
+  CardFooter,
+} from "../../components/ui/card";
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage,
+} from "../../components/ui/form";
+import { Input } from "../../components/ui/input";
+import { Button } from "../../components/ui/button";
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
 
-  const handleSave = () => {
-    // TODO: Implement save functionality
-    setIsEditing(false)
+import { Loader2, UserCircle, Mail, Check, Camera } from 'lucide-react';
+import showToast from "../../utils/toast/toastUtils";
+import { fetchUserData, updateUserProfile, updateUserProfilePicture } from "../../store/authSlice";
+
+const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+
+const profileSchema = z.object({
+  name: z.string().min(2, "Name must be at least 2 characters"),
+  email: z.string().email("Invalid email address"),
+});
+
+type ProfileFormValues = z.infer<typeof profileSchema>;
+
+export default function UserProfile() {
+  const [isEditing, setIsEditing] = useState(false);
+  const [previewImage, setPreviewImage] = useState<string | null>(null);
+  const [newProfilePicture, setNewProfilePicture] = useState<File | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+  const dispatch = useAppDispatch();
+  const user = useAppSelector((state) => state.auth.user);
+  const {status} = useAppSelector((state) => state.auth);
+
+  const form = useForm<ProfileFormValues>({
+    resolver: zodResolver(profileSchema),
+    defaultValues: {
+      name: user?.name || "",
+      email: user?.email || "",
+    },
+  });
+
+  useEffect(() => {
+
+    if (user) {
+      form.reset({
+        name: user.name,
+        email: user.email,
+      });
+    }
+  }, [user, form]);
+
+  useEffect(() => {
+    if (status === 'idle' && user?.id) {
+      dispatch(fetchUserData(user.id));
+    }
+  }, [status, dispatch, user]);
+  
+
+  const onSubmit = async (data: ProfileFormValues) => {
+    try {
+      const updatedUser = await dispatch(updateUserProfile(data)).unwrap();
+
+      setIsEditing(false);
+      form.reset({
+        name: updatedUser.name,
+        email: updatedUser.email,
+      });
+
+      showToast("Your profile has been successfully updated.", 'success');
+    } catch  {
+      showToast("Failed to update profile. Please try again.", 'error');
+    }
+  };
+
+  const handleAvatarClick = () => {
+    fileInputRef.current?.click();
+  };
+
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > MAX_FILE_SIZE) {
+        showToast("File size exceeds 5MB limit.", 'error');
+        return;
+      }
+      if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
+        showToast("Only .jpg, .jpeg, .png and .webp formats are supported.", 'error');
+        return;
+      }
+      const reader = new FileReader();
+      reader.onloadend = () => {
+        setPreviewImage(reader.result as string);
+      };
+      reader.readAsDataURL(file);
+      setNewProfilePicture(file);
+    }
+  };
+
+  const updateProfilePicture = async () => {
+    console.log("Updating profile picture...1");
+    if (!newProfilePicture) {
+      showToast("No new profile picture selected.", "error");
+      return;
+    }
+  
+    try {
+      // Convert the file to a base64 string
+      const reader = new FileReader();
+      reader.onloadend = async () => {
+        const base64String = reader.result as string;
+  
+        // Dispatch the base64 image string to the store
+        const profilePictureData = { profilePicture: base64String };
+  
+        await dispatch(updateUserProfilePicture(profilePictureData)).unwrap();
+  
+        setNewProfilePicture(null);
+        setPreviewImage(null);
+  
+        showToast("Your profile picture has been successfully updated.", "success");
+      };
+  
+      reader.onerror = () => {
+        showToast("Failed to process the image. Please try again.", "error");
+      };
+  
+      reader.readAsDataURL(newProfilePicture); // Reads the file as a Data URL (base64 encoded)
+    } catch  {
+      showToast("Failed to update profile picture. Please try again.", "error");
+    }
+  };
+  
+
+  if (!user) {
+    return (
+      <div className="flex items-center justify-center h-[400px]">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
   }
 
   return (
-    <Card>
+    <Card className="w-full max-w-2xl mx-auto">
       <CardHeader>
-        <CardTitle>Profile Information</CardTitle>
-        <CardDescription>Manage your personal information</CardDescription>
+        <div className="flex items-center gap-6">
+          <div className="relative">
+            <Avatar 
+              className="w-24 h-24 border-4 border-primary/10 cursor-pointer"
+              onClick={handleAvatarClick}
+            >
+              <AvatarImage src={previewImage || user.profilePicture} />
+              <AvatarFallback className="text-2xl bg-primary/5">
+                {user.name
+                  ? user.name
+                      .split(" ")
+                      .map((n) => n[0])
+                      .join("")
+                      .toUpperCase()
+                  : "U"}
+              </AvatarFallback>
+            </Avatar>
+            <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1">
+              <Camera className="w-4 h-4 text-white" />
+            </div>
+          </div>
+          <input
+            type="file"
+            ref={fileInputRef}
+            onChange={handleFileChange}
+            accept="image/*"
+            className="hidden"
+          />
+          <div className="space-y-1">
+            <CardTitle className="text-3xl">{user.name || "User"}</CardTitle>
+            <CardDescription className="text-lg flex items-center gap-2">
+              <Mail className="w-4 h-4" />
+              {user.email}
+            </CardDescription>
+            {user.role && (
+              <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-primary/10 text-primary">
+                {user.role.charAt(0).toUpperCase() + user.role.slice(1)}
+              </span>
+            )}
+          </div>
+        </div>
+        {newProfilePicture && (
+          <Button onClick={updateProfilePicture} className="mt-4">
+            Update Profile Picture
+          </Button>
+        )}
       </CardHeader>
-      <CardContent className="space-y-4">
-        <div className="space-y-2">
-          <Label htmlFor="name">Name</Label>
-          <Input
-            id="name"
-            value={profile.name}
-            onChange={(e) => setProfile({ ...profile, name: e.target.value })}
-            disabled={!isEditing}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="email">Email</Label>
-          <Input
-            id="email"
-            type="email"
-            value={profile.email}
-            onChange={(e) => setProfile({ ...profile, email: e.target.value })}
-            disabled={!isEditing}
-          />
-        </div>
-        <div className="space-y-2">
-          <Label htmlFor="phone">Phone</Label>
-          <Input
-            id="phone"
-            type="tel"
-            value={profile.phone}
-            onChange={(e) => setProfile({ ...profile, phone: e.target.value })}
-            disabled={!isEditing}
-          />
-        </div>
+
+      <CardContent className="pt-6">
+        <Form {...form}>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+            <FormField
+              control={form.control}
+              name="name"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Full Name</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <UserCircle className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                      <Input
+                        {...field}
+                        disabled={!isEditing}
+                        className={`pl-10 ${!isEditing ? "bg-gray-50/50" : ""}`}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            <FormField
+              control={form.control}
+              name="email"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Email Address</FormLabel>
+                  <FormControl>
+                    <div className="relative">
+                      <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-500" />
+                      <Input
+                        {...field}
+                        type="email"
+                        disabled={!isEditing}
+                        className={`pl-10 ${!isEditing ? "bg-gray-50/50" : ""}`}
+                      />
+                    </div>
+                  </FormControl>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+
+            {isEditing && (
+              <div className="flex gap-4 pt-2">
+                <Button type="submit" className="flex-1">
+                  <Check className="w-4 h-4 mr-2" />
+                  Save Changes
+                </Button>
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => {
+                    setIsEditing(false);
+                    form.reset();
+                  }}
+                  className="flex-1"
+                >
+                  Cancel
+                </Button>
+              </div>
+            )}
+          </form>
+        </Form>
       </CardContent>
-      <CardFooter>
-        {isEditing ? (
-          <Button onClick={handleSave}>Save Changes</Button>
-        ) : (
-          <Button onClick={() => setIsEditing(true)}>Edit Profile</Button>
+
+      <CardFooter className="flex justify-between border-t pt-6">
+        {!isEditing && (
+          <Button
+            onClick={() => setIsEditing(true)}
+            variant="outline"
+            className="w-full"
+          >
+            Edit Profile
+          </Button>
         )}
       </CardFooter>
     </Card>
-  )
+  );
 }
