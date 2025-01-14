@@ -60,7 +60,7 @@ export default function AddProductPage({ onAddProduct, onCancel }: AddProductPag
       stock: parseInt(values.stock), 
       weight: parseFloat(values.weight), 
       images: previewImages,
-      discountPercentage: values.isSpecialOffer ? parseFloat(values.discountPercentage) : undefined,
+      discountPercentage: values.isSpecialOffer && values.discountPercentage ? parseFloat(values.discountPercentage) : undefined,
     };
     try {
       await dispatch(addProductThunk(product)).unwrap();

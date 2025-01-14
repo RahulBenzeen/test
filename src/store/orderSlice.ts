@@ -22,11 +22,31 @@ interface ShippingInfo {
   shippingDate?: string;
 }
 
-// Define the structure of an order
+// // Define the structure of an order
+// export interface Order {
+//   _id?: string;
+//   user?: string; // MongoDB ObjectId as string
+//   products:Product;
+//   totalPrice: number;
+//   shippingAddress: ShippingAddress;
+//   paymentStatus: 'pending' | 'completed' | 'failed';
+//   orderStatus: 'pending' | 'shipped' | 'delivered' | 'cancelled';
+//   paymentMethod?: 'razorpay' | 'creditCard' | 'paypal';
+//   shippingInfo?: ShippingInfo;
+//   createdAt?: string;
+//   updatedAt?: string;
+// }
+
+
 export interface Order {
   _id?: string;
-  user?: string; // MongoDB ObjectId as string
-  products:Product;
+  user?: string; // MongoDB ObjectId as a string
+  products: {
+    product: string; // Reference to the Product ID
+    name: string; // Name of the product
+    price: number; // Unit price
+    quantity: number; // Quantity of this product
+  }[];
   totalPrice: number;
   shippingAddress: ShippingAddress;
   paymentStatus: 'pending' | 'completed' | 'failed';
@@ -55,6 +75,7 @@ const initialState: OrderState = {
 export const createOrder = createAsyncThunk(
   'orders/createOrder',
   async (orderData: { products: Product, shippingAddress: ShippingAddress, paymentMethod: Order['paymentMethod'] }) => {
+    console.log({ orderData });
     const response = await placeOrder(orderData);
     return response.data;
   }

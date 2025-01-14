@@ -17,6 +17,12 @@ export interface Product {
   weight?: number;
   dimensions?: string;
   createdAt?: Date;
+  discountedPrice?: number;
+  discountPercentage?:number;
+  isSpecialOffer?:boolean;
+  features?:string[];
+  specifications?:string[];
+
 }
 
 interface ProductState {
@@ -86,7 +92,7 @@ export const updateProductThunk = createAsyncThunk(
   'products/updateProduct',
   async (productData: Product, { rejectWithValue }) => {
     try {
-      const response = await updateProduct(productData);
+      const response = await updateProduct(productData._id ,productData);
       return response.data;
     } catch (error) {
       const apiError = handleApiError(error);

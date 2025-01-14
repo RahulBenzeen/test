@@ -26,8 +26,8 @@ export function Breadcrumbs({ items = [] }: BreadcrumbsProps) {
   const breadcrumbs = items.length > 0 ? items : generateBreadcrumbs(location.pathname);
 
   return (
-    <nav aria-label="Breadcrumb" className="text-sm">
-      <ol className="flex items-center space-x-2">
+    <nav aria-label="Breadcrumb" className="py-4 px-4 md:px-8 bg-white shadow-sm sticky top-16 z-10">
+      <ol className="flex items-center space-x-3 text-sm md:text-base">
         {/* Home link */}
         <li>
           <Link

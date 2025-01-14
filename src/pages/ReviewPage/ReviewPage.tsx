@@ -3,6 +3,7 @@ import { useParams } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchReviews, addReview, Review, updateReview } from '../../store/reviewSlice';
 import { fetchProductDetails } from '../../store/productDetailSlice';
+import { fetchOrdersByUser } from '../../store/orderSlice'; // Assuming an action to fetch user orders
 import { Button } from "../../components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
 import { Textarea } from "../../components/ui/textarea";
@@ -17,9 +18,12 @@ export default function ReviewPage() {
   const { reviews, status: reviewStatus } = useAppSelector((state) => state.reviews);
   const { item, status: productStatus } = useAppSelector((state) => state.productDetails);
   const { user } = useAppSelector((state) => state.auth);
+  const { orders } = useAppSelector((state) => state.order); // Assuming orders are fetched here
+
   const [rating, setRating] = useState<number>(0);
   const [comment, setComment] = useState<string>('');
   const [isEditing, setIsEditing] = useState<boolean>(false);
+  const [canReview, setCanReview] = useState<boolean>(false);
 
   useEffect(() => {
     if (id) {
@@ -32,8 +36,25 @@ export default function ReviewPage() {
     }
   }, [dispatch, id, reviewStatus, productStatus]);
 
+  useEffect(() => {
+    if (user) {
+      dispatch(fetchOrdersByUser()); // Fetch user orders to check if they've purchased this product
+    }
+  }, [user, dispatch]);
+
+  useEffect(() => {
+    if (orders && user) {
+      const hasPurchased = orders.some(order => 
+        Array.isArray(order.products) && 
+        order.products.some((product) => product.product === id) // Assuming the `productId` is `_id` in the Product object
+      );
+      setCanReview(hasPurchased); // Set canReview based on the purchase check
+    }
+  }, [orders, id, user]);
+  
+
   const existingReview = useMemo(() => {
-    return user && reviews ? reviews.find((review) => review.userId._id === user.id) : null;
+    return user && reviews ? reviews.find((review) => review.userId?._id === user.id) : null;
   }, [user, reviews]);
 
   useEffect(() => {
@@ -85,12 +106,17 @@ export default function ReviewPage() {
     </div>
   );
 
+  // Loading states for product and reviews
   if (productStatus === 'loading' || reviewStatus === 'loading') {
     return (
       <div className="flex justify-center items-center h-screen">
         <Loader2 className="h-8 w-8 animate-spin text-primary" />
       </div>
     );
+  }
+
+  if (productStatus === 'failed' || reviewStatus === 'failed') {
+    return <div className="text-center text-red-500">Failed to load product or reviews. Please try again later.</div>;
   }
 
   if (!item) {
@@ -101,33 +127,41 @@ export default function ReviewPage() {
     <div className="container mx-auto px-4 py-8">
       <h1 className="text-3xl font-bold mb-8">Reviews for {item.name}</h1>
 
-      <Card className="mb-8">
-        <CardHeader>
-          <CardTitle>{isEditing ? "Edit Your Review" : "Write a Review"}</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <form onSubmit={handleSubmitReview} className="space-y-4">
-            <div>
-              <Label htmlFor="rating">Rating</Label>
-              <StarRating rating={rating} onRatingChange={setRating} />
-            </div>
-            <div>
-              <Label htmlFor="comment">Your Review</Label>
-              <Textarea
-                id="comment"
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
-                placeholder="Write your review here..."
-                className="w-full"
-                required
-              />
-            </div>
-            <Button type="submit" disabled={!rating}>
-              {isEditing ? "Update Review" : "Submit Review"}
-            </Button>
-          </form>
-        </CardContent>
-      </Card>
+      {!canReview && user && (
+        <div className="mb-8 text-center text-red-500">
+          You can only review this product after making a purchase.
+        </div>
+      )}
+
+      {canReview && (
+        <Card className="mb-8">
+          <CardHeader>
+            <CardTitle>{isEditing ? "Edit Your Review" : "Write a Review"}</CardTitle>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleSubmitReview} className="space-y-4">
+              <div>
+                <Label htmlFor="rating">Rating</Label>
+                <StarRating rating={rating} onRatingChange={setRating} />
+              </div>
+              <div>
+                <Label htmlFor="comment">Your Review</Label>
+                <Textarea
+                  id="comment"
+                  value={comment}
+                  onChange={(e) => setComment(e.target.value)}
+                  placeholder="Write your review here..."
+                  className="w-full"
+                  required
+                />
+              </div>
+              <Button type="submit" disabled={!rating}>
+                {isEditing ? "Update Review" : "Submit Review"}
+              </Button>
+            </form>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="space-y-4">
         {reviews.map((review: Review) => (
@@ -141,8 +175,8 @@ export default function ReviewPage() {
               <CardContent className="pt-6">
                 <div className="flex justify-between items-start mb-2">
                   <div>
-                    <h3 className="font-semibold">{review.userId.name}</h3>
-                    <p className="text-sm text-gray-500">{new Date(review.createdAt).toLocaleDateString()}</p>
+                    <h3 className="font-semibold">{review.userId?.name}</h3>
+                    <p className="text-sm text-gray-500">{new Date(review?.createdAt).toLocaleDateString()}</p>
                   </div>
                   <StarRating rating={review.rating} />
                 </div>

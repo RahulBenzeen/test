@@ -34,6 +34,6 @@ export const getSpecialOfferProducts = (params: FetchSpecialOffersParams) => {
 export const getProductsById = (id:string) => api.get(`/api/products/${id}`);
 export const getRecentlyViewedProducts = () => api.get(`/api/products/recently-viewed`);
 export const addProduct = (productData:Omit <Product, "_id">) => api.post('/api/products/add', productData)
-export const updateProduct = (productData) => api.post('/api/products/add', productData)
+export const updateProduct = (productId:string , productData:Product) => api.put(`/api/products/${productId}`, productData)
 export const deleteProduct = (productId:string) => api.delete(`/api/admin/products/${productId}`)
 export const getSimilarProducts = (id:string) => api.get(`/api/products/similar-products/${id}`)

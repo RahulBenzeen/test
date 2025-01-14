@@ -14,6 +14,9 @@ export const logoutUser = () =>
 export const getAllUsers = () => 
   api.get('api/admin/users');  // Replace with your actual logout API endpoint
 
+export const deleteUserFromApi = (userId:string) => 
+  api.delete(`api/admin/users/${userId}`);  // Replace with your actual logout API endpoint
+
 export const initiatePasswordResetAPI = (email:string) => 
   api.post('api/users/users', email);  // Replace with your actual logout API endpoint
 

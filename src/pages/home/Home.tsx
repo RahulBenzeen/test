@@ -70,7 +70,7 @@ export default function Home() {
                     <SpecialOffers />
                   </>
                 } />
-
+                <Route path="/special-offers" element={<AllSpecialOffers />} />
                 <Route path="/product/:id" element={<ProductDetailPage />} />
                 <Route path="/product" element={<ProductPage />} />
 

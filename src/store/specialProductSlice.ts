@@ -18,6 +18,8 @@ import { handleApiError } from '../api/apiErrorHandler';
   weight?: number;
   dimensions?: string;
   createdAt?: Date;
+  discountPercentage:number
+  discountedPrice:number
 }
 
 interface SpecialOfferState {
@@ -53,7 +55,6 @@ export  interface FetchSpecialOffersParams {
 export const fetchSpecialOffers = createAsyncThunk(
   'specialOffers/fetchSpecialOffers',
   async (params: FetchSpecialOffersParams, { rejectWithValue }) => {
-    console.log('params', params);
     try {
       const response = await getSpecialOfferProducts(params);
       return response.data;

@@ -5,10 +5,11 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '.
 import { Button } from '../../components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
 import { useAppSelector, useAppDispatch } from '../../store/hooks'
-import { fetchAllUsers } from '../../store/adminSlice'
+import { fetchAllUsers, deleteUser } from '../../store/adminSlice'
 
 import { Dialog, DialogContent, DialogFooter, DialogHeader, DialogTitle, DialogDescription } from '../../components/ui/dialog'
 import { Trash2, Loader2 } from 'lucide-react' // Import Trash2 and Loader2 from lucide-react
+import showToast from '../../utils/toast/toastUtils'
 
 interface Customer {
   id: string
@@ -16,6 +17,7 @@ interface Customer {
   email: string
   numberOfOrders: number
   role?: string
+  _id?: string
 }
 
 export default function CustomerManagement() {
@@ -51,10 +53,11 @@ export default function CustomerManagement() {
 
   const confirmDelete = () => {
     if (deleteConfirmation.customerId) {
-      // You should dispatch delete action here (to remove the customer from the Redux store)
-      // e.g., dispatch(deleteUser(deleteConfirmation.customerId))
-
-      setCustomers(customers.filter(customer => customer.id !== deleteConfirmation.customerId)) // Update the local customers list
+  
+      dispatch(deleteUser(deleteConfirmation.customerId))
+       showToast('Customer deleted successfully', 'success') // Show success toast
+      // Update the local customers list to immediately reflect the deletion
+      setCustomers(customers.filter(customer => customer._id !== deleteConfirmation.customerId))
     }
     closeDeleteConfirmation()
   }
@@ -91,7 +94,7 @@ export default function CustomerManagement() {
                   <TableCell>{customer.email}</TableCell>
                   <TableCell>{customer.numberOfOrders}</TableCell>
                   <TableCell>
-                    <Button variant="ghost" size="icon" onClick={() => handleDeleteCustomer(customer.id)}>
+                    <Button variant="ghost" size="icon" onClick={() => handleDeleteCustomer(customer._id || '')}>
                       <Trash2 className="h-4 w-4" />
                       <span className="sr-only">Delete</span>
                     </Button>

@@ -55,18 +55,17 @@ export default function CheckoutPage() {
     }
 
     const products = cartItems.map((item) => ({
-      product: item._id,
+      product: item.product._id, // Product ID reference
       name: item.product.name,
       price: item.price,
       quantity: item.quantity,
-    }))
-
+    }));
+    
     const orderData = {
-      products: products,
-      shippingAddress: selectedAddress,
-      paymentMethod: 'razorpay',
+      products,
+      shippingAddress: selectedAddress, // Use the selected address object
+      paymentMethod: 'razorpay', // Example payment method
     }
-
     dispatch(createOrder(orderData))
       .then((response) => {
         if (response.payload?.success) {

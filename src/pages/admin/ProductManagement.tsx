@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react'
 import { Button } from '../../components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
-import { Edit, Trash2, Plus, X, ChevronLeft, ChevronRight, ImageIcon, Upload, ArrowLeft, Loader2 } from 'lucide-react'
+import { Edit, Trash2, Plus,  ChevronLeft, ChevronRight, ImageIcon, ArrowLeft, Loader2 } from 'lucide-react'
 import AddProduct from '../admin-product/add-product'
 import UpdateProductPage from '../admin-product/update-product'
 import {
@@ -16,17 +16,10 @@ import {
   DialogTitle,
 } from '../../components/ui/dialog'
 import { useDispatch, useSelector } from 'react-redux'
-import { fetchProducts, deleteProductThunk, updateProductThunk } from '../../store/productSlice'
+import { fetchProducts, deleteProductThunk } from '../../store/productSlice'
 import { RootState, AppDispatch } from '../../store/store'
-import { Input } from '../../components/ui/input'
+import { Product } from '../../store/productSlice'
 
-interface Product {
-  _id: string
-  name: string
-  price: number
-  stock: number
-  images: string[] // Array of base64 encoded images
-}
 
 export default function ProductManagement() {
   const dispatch = useDispatch<AppDispatch>()
@@ -41,7 +34,7 @@ export default function ProductManagement() {
     productId: null,
     index: null,
   })
-  const [isEditingImage, setIsEditingImage] = useState(false)
+
 
   useEffect(() => {
     dispatch(fetchProducts({ page: 1, limit: 12 }))
@@ -49,6 +42,7 @@ export default function ProductManagement() {
 
   const handleAddProduct = (newProduct: Omit<Product, '_id'>) => {
     // handle adding product logic here
+    console.log('Adding product:', newProduct)
   }
 
   const openDeleteConfirmation = (id: string) => {
@@ -72,10 +66,10 @@ export default function ProductManagement() {
     setView('edit')
   }
 
-  const handleUpdateProduct = (updatedProduct: Product) => {
-    dispatch(updateProductThunk(updatedProduct))
-    setView('list')
-    setEditingProduct(null)
+  const handleUpdateProduct = () => {
+    setView('list');
+    dispatch(fetchProducts({ page: 1, limit: 12 }))
+    setEditingProduct(null);
   }
 
   const openImagePreview = (productId: string, index: number = 0) => {
@@ -84,7 +78,6 @@ export default function ProductManagement() {
 
   const closeImagePreview = () => {
     setImagePreview({ productId: null, index: null })
-    setIsEditingImage(false)
   }
 
   const showNextImage = () => {
@@ -111,37 +104,6 @@ export default function ProductManagement() {
     }
   }
 
-  const handleImageEdit = () => {
-    setIsEditingImage(true)
-  }
-
-  const handleImageUpdate = async (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0]
-    if (file && imagePreview.productId && imagePreview.index !== null) {
-      const base64 = await convertToBase64(file)
-      const product = products.find(p => p._id === imagePreview.productId)
-      if (product) {
-        const updatedImages = [...product.images]
-        updatedImages[imagePreview.index] = base64 as string
-        const updatedProduct = { ...product, images: updatedImages }
-        dispatch(updateProductThunk(updatedProduct))
-        setIsEditingImage(false)
-      }
-    }
-  }
-
-  const convertToBase64 = (file: File): Promise<string | ArrayBuffer | null> => {
-    return new Promise((resolve, reject) => {
-      const fileReader = new FileReader()
-      fileReader.readAsDataURL(file)
-      fileReader.onload = () => {
-        resolve(fileReader.result)
-      }
-      fileReader.onerror = (error) => {
-        reject(error)
-      }
-    })
-  }
 
   return (
     <Card>
@@ -261,9 +223,7 @@ export default function ProductManagement() {
         <DialogContent className="max-w-screen-lg max-h-screen flex flex-col items-center justify-center">
           <DialogHeader className="w-full flex justify-between items-center">
             <DialogTitle>Product Images</DialogTitle>
-            <Button variant="ghost" size="icon" onClick={closeImagePreview}>
-              <X className="h-4 w-4" />
-            </Button>
+           
           </DialogHeader>
           <DialogDescription className="w-full">
             {imagePreview.productId !== null && imagePreview.index !== null && (
@@ -303,21 +263,6 @@ export default function ProductManagement() {
                       {index + 1}
                     </Button>
                   ))}
-                </div>
-                <div className="flex justify-center mt-4">
-                  {isEditingImage ? (
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      onChange={handleImageUpdate}
-                      className="w-full max-w-xs"
-                    />
-                  ) : (
-                    <Button onClick={handleImageEdit}>
-                      <Upload className="mr-2 h-4 w-4" />
-                      Edit Image
-                    </Button>
-                  )}
                 </div>
               </>
             )}

@@ -7,6 +7,7 @@ export interface CartItem {
     quantity: number;
     price: number;
     product: Product;
+    discountedPrice?: number;  // Optional field
 }
 
 interface CartState {
@@ -92,47 +93,59 @@ export const cartSlice = createSlice({
     initialState,
     reducers: {},
     extraReducers: (builder) => {
-        builder
-            .addCase(fetchCart.pending, (state) => {
-                state.status = 'loading';
-            })
-            .addCase(fetchCart.fulfilled, (state, action) => {
-                state.status = 'succeeded';
-                if (action.payload && action.payload.items) {
-                    state.items = action.payload.items;
-                }
-            })
-            .addCase(fetchCart.rejected, (state, action) => {
-                state.status = 'failed';
-                state.error = action.error.message || null;
-            })
-            .addCase(addToCartAsync.pending, (state) => {
-                state.status = 'loading';
-            })
-            .addCase(addToCartAsync.fulfilled, (state, action) => {
-                state.status = 'succeeded';
-                if (action.payload && action.payload.items) {
-                    state.items = action.payload.items;
-                }
-            })
-            .addCase(addToCartAsync.rejected, (state, action) => {
-                state.status = 'failed';
-                state.error = action.error.message || null;
-            })
-            .addCase(removeFromCartAsync.fulfilled, (state, action) => {
-                if (action.payload && action.payload.items) {
-                    state.items = action.payload.items;
-                }
-            })
-            .addCase(updateQuantityAsync.fulfilled, (state, action) => {
-                if (action.payload && action.payload.items) {
-                    state.items = action.payload.items;
-                }
-            })
-            .addCase(clearCartAsync.fulfilled, (state) => {
-                state.items = [];
-            });
-    }
-});
+      builder
+        .addCase(fetchCart.pending, (state) => {
+          state.status = 'loading';
+        })
+        .addCase(fetchCart.fulfilled, (state, action) => {
+          state.status = 'succeeded';
+          if (action.payload && action.payload.items) {
+            state.items = action.payload.items;
+          }
+        })
+        .addCase(fetchCart.rejected, (state, action) => {
+          state.status = 'failed';
+          state.error = action.error.message || null;
+        })
+        .addCase(addToCartAsync.pending, (state) => {
+          state.status = 'loading';
+        })
+        .addCase(addToCartAsync.fulfilled, (state, action) => {
+          state.status = 'succeeded';
+          if (action.payload && action.payload.items) {
+            state.items = action.payload.items;
+          }
+        })
+        .addCase(addToCartAsync.rejected, (state, action) => {
+          state.status = 'failed';
+          state.error = action.error.message || 'Failed to add product to cart';
+        })
+        .addCase(removeFromCartAsync.fulfilled, (state, action) => {
+          if (action.payload && action.payload.items) {
+            state.items = action.payload.items;
+          }
+        })
+        .addCase(removeFromCartAsync.rejected, (state, action) => {
+          state.status = 'failed';
+          state.error = action.error.message || 'Failed to remove product from cart';
+        })
+        .addCase(updateQuantityAsync.fulfilled, (state, action) => {
+          if (action.payload && action.payload.items) {
+            state.items = action.payload.items;
+          }
+        })
+        .addCase(updateQuantityAsync.rejected, (state, action) => {
+          state.status = 'failed';
+          state.error = action.error.message || 'Failed to update product quantity';
+        })
+        .addCase(clearCartAsync.fulfilled, (state) => {
+          state.items = [];
+        })
+        .addCase(clearCartAsync.rejected, (state, action) => {
+          state.status = 'failed';
+          state.error = action.error.message || 'Failed to clear cart';
+        });
+    },
+  });
 
 export default cartSlice.reducer;

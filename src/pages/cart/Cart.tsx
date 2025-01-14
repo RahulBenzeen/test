@@ -1,13 +1,13 @@
-import { useEffect, useState } from 'react'
-import { ShoppingCart, X, Minus, Plus, Loader2 } from 'lucide-react'
-import { Button } from "../../components/ui/button"
-import { Sheet, SheetContent, SheetTrigger, SheetClose } from "../../components/ui/sheet"
-import { useAppDispatch, useAppSelector } from '../../store/hooks'
-import { fetchCart, removeFromCartAsync, updateQuantityAsync, clearCartAsync, CartItem } from '../../store/cartSlice'
-import { Link } from 'react-router-dom'
+import { useEffect, useState } from 'react';
+import { ShoppingCart, X, Minus, Plus, Loader2 } from 'lucide-react';
+import { Button } from "../../components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "../../components/ui/sheet";
+import { useAppDispatch, useAppSelector } from '../../store/hooks';
+import { fetchCart, removeFromCartAsync, updateQuantityAsync, clearCartAsync, CartItem } from '../../store/cartSlice';
+import { Link } from 'react-router-dom';
 
 // Assuming showToast is imported from your utils or a toast component
-import showToast from '../../utils/toast/toastUtils'
+import showToast from '../../utils/toast/toastUtils';
 
 export default function Cart() {
   const dispatch = useAppDispatch();
@@ -52,7 +52,7 @@ export default function Cart() {
 
   const getTotalPrice = () => {
     return cartItems?.reduce(
-      (total, item) => total + (item.price || 0) * (item.quantity || 0),
+      (total, item) => total + ((item.discountedPrice || item.price) * (item.quantity || 0)),
       0
     )?.toFixed(2) || '0.00';
   };
@@ -87,16 +87,7 @@ export default function Cart() {
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between pb-4 border-b">
             <h2 className="text-lg font-semibold">Your Cart</h2>
-            <SheetClose asChild>
-              <Button
-                variant="ghost"
-                size="icon"
-                onClick={() => setIsOpen(false)}
-              >
-                <X className="h-4 w-4" />
-                <span className="sr-only">Close</span>
-              </Button>
-            </SheetClose>
+
           </div>
 
           <div className="flex-grow py-6 overflow-auto relative">
@@ -133,9 +124,21 @@ export default function Cart() {
                           <span className="sr-only">Remove</span>
                         </Button>
                       </div>
-                      <p className="text-sm text-muted-foreground mt-1">
-                        ${item.price.toFixed(2)}
-                      </p>
+                      <div className="flex items-center justify-between">
+                        <p className="text-sm text-muted-foreground mt-1">
+                          ${item.discountedPrice ? item.discountedPrice.toFixed(2) : item.price.toFixed(2)}
+                        </p>
+                        {item.discountedPrice && (
+                          <span className="text-xs text-red-500 line-through">
+                            ${item.price.toFixed(2)}
+                          </span>
+                        )}
+                      </div>
+                      {item.discountedPrice && (
+                        <p className="text-xs text-green-500 mt-1">
+                          Save ${(item.price - item.discountedPrice).toFixed(2)}!
+                        </p>
+                      )}
                       <div className="flex items-center mt-2">
                         <Button
                           variant="outline"
@@ -158,7 +161,7 @@ export default function Cart() {
                         </Button>
                       </div>
                       <p className="text-sm font-medium mt-2">
-                        Subtotal: ${(item.price * item.quantity)?.toFixed(2) || 0}
+                        Subtotal: ${(item.discountedPrice ? item.discountedPrice : item.price) * (item.quantity ?? 0)}
                       </p>
                     </div>
                   </li>

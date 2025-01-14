@@ -42,20 +42,7 @@ const Paginator: React.FC<PaginatorProps> = ({
       </div>
       <div className="flex items-center space-x-2">
         <span>Items per page:</span>
-        {/* <Select
-          value={itemsPerPage.toString()}
-          onValueChange={(value) => onItemsPerPageChange(Number(value))}>
-          <SelectTrigger className="w-[70px]">
-            <SelectValue placeholder={itemsPerPage.toString()} />
-          </SelectTrigger>
-          <SelectContent>
-            {[3, 5, 8, 10].map((number) => (
-              <SelectItem key={number} value={number.toString()}>
-                {number}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select> */}
+
         <Select
   value={itemsPerPage.toString()}
   onValueChange={(value) => onItemsPerPageChange(Number(value))}
