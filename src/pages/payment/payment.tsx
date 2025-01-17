@@ -9,12 +9,13 @@ import { RadioGroup, RadioGroupItem } from "../../components/ui/radio-group"
 import { Label } from "../../components/ui/label"
 import { Input } from "../../components/ui/input"
 import { Form, FormControl, FormDescription, FormField, FormItem, FormLabel, FormMessage } from "../../components/ui/form"
-import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "../../components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle, CardDescription, CardFooter } from "../../components/ui/card"
 import { useRazorpay, RazorpayOrderOptions } from "react-razorpay"
 import showToast from '../../utils/toast/toastUtils'
-import { Loader2 } from 'lucide-react'
-import { fetchCart } from '../../store/cartSlice'  // Import your cartSlice's fetchCart action
+import { Loader2, CreditCard } from 'lucide-react'
+import { fetchCart } from '../../store/cartSlice'
 import { useAppDispatch } from '../../store/hooks'
+import { ScrollArea } from "../../components/ui/scroll-area"
 
 const formSchema = z.object({
   paymentMethod: z.enum(['upi', 'phonePe', 'googlePay', 'netbanking']),
@@ -58,7 +59,7 @@ export default function PaymentPage() {
           order_id: orderId,
           name: "Nothing",
           description: "Test Transaction",
-          image: "https://yourdomain.com/your-logo.png",
+          image: "https://res.cloudinary.com/dwjrssdfo/image/upload/f_auto,q_auto/v1/logo/qwy6olne94j65huvdwcp",
           handler: function (response: any) {
             const { razorpay_payment_id, razorpay_order_id, razorpay_signature } = response;
 
@@ -67,11 +68,9 @@ export default function PaymentPage() {
               razorpay_order_id,
               razorpay_signature,
             }).then(() => {
-              // Dispatch fetchCart action to update the cart after successful payment
               dispatch(fetchCart())
-
-              // Redirect to the Thank You page
               redirect('/thank-you', {
+                replace: true,
                 state: { orderId, paymentId }
               })
             }).catch(() => {
@@ -79,7 +78,7 @@ export default function PaymentPage() {
             })
           },
           prefill: {
-            name: "User Name", // Replace with actual user name
+            name: "User Name",
             email: "rahulbhardwaj@benzeenautoparts.com",
             contact: "8545983083",
           },
@@ -109,102 +108,163 @@ export default function PaymentPage() {
   }
 
   return (
-    <div className="container mx-auto px-4 py-8">
-      <Card className="max-w-lg mx-auto">
-        <CardHeader>
-          <CardTitle>Payment Details</CardTitle>
-          <CardDescription>Choose your preferred payment method</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-              <FormField
-                control={form.control}
-                name="paymentMethod"
-                render={({ field }) => (
-                  <FormItem className="space-y-3">
-                    <FormLabel>Payment Method</FormLabel>
-                    <FormControl>
-                      <RadioGroup
-                        onValueChange={(value) => {
-                          field.onChange(value)
-                          setSelectedMethod(value)
-                        }}
-                        defaultValue={field.value}
-                        className="flex flex-col space-y-1"
-                      >
-                        <div className="flex items-center space-x-3 space-y-0">
-                          <RadioGroupItem value="upi" id="upi" />
-                          <Label htmlFor="upi">UPI</Label>
-                        </div>
-                        <div className="flex items-center space-x-3 space-y-0">
-                          <RadioGroupItem value="phonePe" id="phonePe" />
-                          <Label htmlFor="phonePe">PhonePe</Label>
-                        </div>
-                        <div className="flex items-center space-x-3 space-y-0">
-                          <RadioGroupItem value="googlePay" id="googlePay" />
-                          <Label htmlFor="googlePay">Google Pay</Label>
-                        </div>
-                        <div className="flex items-center space-x-3 space-y-0">
-                          <RadioGroupItem value="netbanking" id="netbanking" />
-                          <Label htmlFor="netbanking">Netbanking</Label>
-                        </div>
-                      </RadioGroup>
-                    </FormControl>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-              {selectedMethod === 'upi' && (
-                <FormField
-                  control={form.control}
-                  name="upiId"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>UPI ID</FormLabel>
-                      <FormControl>
-                        <Input placeholder="yourname@upi" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Enter your UPI ID (e.g., yourname@upi)
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
+    <div className="min-h-screen bg-gray-50/50">
+      <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
+        <div className="max-w-2xl mx-auto space-y-8">
+          {/* Order Summary */}
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <CreditCard className="h-5 w-5" />
+                Order Summary
+              </CardTitle>
+              <CardDescription>
+                Review your order details before payment
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <ScrollArea className="h-[200px] rounded-md border p-4">
+                <div className="space-y-4">
+                  {orderData.order?.order.products?.map((product: any, index: number) => (
+                    <div key={index} className="flex justify-between items-center pb-2 border-b">
+                      <div>
+                        <p className="font-medium">{product.name}</p>
+                        <p className="text-sm text-muted-foreground">Qty: {product.quantity}</p>
+                      </div>
+                      <p className="font-medium">₹{product.price * product.quantity}</p>
+                    </div>
+                  ))}
+                </div>
+              </ScrollArea>
+              <div className="mt-4 pt-4 border-t">
+                <div className="flex justify-between items-center font-medium">
+                  <span>Total Amount</span>
+                  <span>₹{orderData.order?.order.products?.reduce((total: number, product: any) => {
+      return total + product.price * product.quantity;
+    }, 0)}</span>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Payment Form */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Payment Method</CardTitle>
+              <CardDescription>Choose your preferred payment option</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <Form {...form}>
+                <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                  <FormField
+                    control={form.control}
+                    name="paymentMethod"
+                    render={({ field }) => (
+                      <FormItem className="space-y-3">
+                        <FormControl>
+                          <RadioGroup
+                            onValueChange={(value) => {
+                              field.onChange(value)
+                              setSelectedMethod(value)
+                            }}
+                            defaultValue={field.value}
+                            className="grid grid-cols-1 sm:grid-cols-2 gap-4"
+                          >
+                            {[
+                              { value: 'upi', label: 'UPI' },
+                              { value: 'phonePe', label: 'PhonePe' },
+                              { value: 'googlePay', label: 'Google Pay' },
+                              { value: 'netbanking', label: 'Netbanking' },
+                            ].map((option) => (
+                              <div
+                                key={option.value}
+                                className={`flex items-center space-x-3 rounded-lg border p-4 cursor-pointer transition-colors ${
+                                  field.value === option.value
+                                    ? 'border-primary bg-primary/5'
+                                    : 'hover:border-primary/50'
+                                }`}
+                              >
+                                <RadioGroupItem value={option.value} id={option.value} />
+                                <Label
+                                  htmlFor={option.value}
+                                  className="flex-1 cursor-pointer"
+                                >
+                                  {option.label}
+                                </Label>
+                              </div>
+                            ))}
+                          </RadioGroup>
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+
+                  {selectedMethod === 'upi' && (
+                    <FormField
+                      control={form.control}
+                      name="upiId"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>UPI ID</FormLabel>
+                          <FormControl>
+                            <Input placeholder="yourname@upi" {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            Enter your UPI ID (e.g., yourname@upi)
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   )}
-                />
-              )}
-              {selectedMethod === 'netbanking' && (
-                <FormField
-                  control={form.control}
-                  name="bankName"
-                  render={({ field }) => (
-                    <FormItem>
-                      <FormLabel>Bank Name</FormLabel>
-                      <FormControl>
-                        <Input placeholder="Enter your bank name" {...field} />
-                      </FormControl>
-                      <FormDescription>
-                        Enter the name of your bank for netbanking
-                      </FormDescription>
-                      <FormMessage />
-                    </FormItem>
+
+                  {selectedMethod === 'netbanking' && (
+                    <FormField
+                      control={form.control}
+                      name="bankName"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Bank Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Enter your bank name" {...field} />
+                          </FormControl>
+                          <FormDescription>
+                            Enter the name of your bank for netbanking
+                          </FormDescription>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
                   )}
-                />
-              )}
-              <Button type="submit" className="w-full" disabled={isProcessing}>
+                </form>
+              </Form>
+            </CardContent>
+            <CardFooter className="flex flex-col gap-4">
+              <Button
+                className="w-full"
+                size="lg"
+                onClick={form.handleSubmit(onSubmit)}
+                disabled={isProcessing || !form.getValues().paymentMethod}
+              >
                 {isProcessing ? (
                   <>
                     <Loader2 className="mr-2 h-4 w-4 animate-spin" />
                     Processing...
                   </>
                 ) : (
-                  'Process Payment'
+                  `Pay ₹${orderData.order?.order.products?.reduce((total: number, product: any) => {
+                    return total + product.price * product.quantity;
+                  }, 0)}`
                 )}
               </Button>
-            </form>
-          </Form>
-        </CardContent>
-      </Card>
+              <p className="text-sm text-muted-foreground text-center">
+                By proceeding with the payment, you agree to our Terms of Service
+              </p>
+            </CardFooter>
+          </Card>
+        </div>
+      </div>
     </div>
   )
 }

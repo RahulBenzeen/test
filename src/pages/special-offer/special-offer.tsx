@@ -1,39 +1,68 @@
-import { ArrowRight } from 'lucide-react';
+import { useEffect } from "react";
+import { ArrowRight } from "lucide-react";
 import { Button } from "../../components/ui/button";
 import { Badge } from "../../components/ui/badge";
 import { Card, CardContent, CardFooter } from "../../components/ui/card";
-import { useAppDispatch, useAppSelector } from '../../store/hooks'; // Combined imports
-import { useEffect } from 'react';
-import { fetchSpecialOffers } from '../../store/specialProductSlice'; // Import the correct thunk
-import { useNavigate } from 'react-router-dom';
+import { Skeleton } from "../../components/ui/skeleton";
+import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { fetchSpecialOffers } from "../../store/specialProductSlice";
+import { useNavigate } from "react-router-dom";
 
 export default function AllSpecialOffers() {
-  const { items, status, error } = useAppSelector((state) => state.specialOffers); // Assuming specialOffers slice
+  const { items, status, error, lastFetched } = useAppSelector(
+    (state) => state.specialOffers
+  );
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
 
   useEffect(() => {
-    dispatch(fetchSpecialOffers({ page: 1, limit: 100 })); // Fetch all special offers
-  }, [dispatch]);
+    const currentTime = Date.now();
+    const cacheTime = 5 * 60 * 1000; // 5 minutes
 
-  // Handle loading state
-  if (status === 'loading') {
-    return (
-      <section className="bg-gray-100 py-16">
-        <div className="container mx-auto px-4">
-          <h2 className="text-3xl font-bold">Special Offers</h2>
-          <div className="text-center">Loading...</div>
-        </div>
-      </section>
-    );
-  }
+    if (!lastFetched || currentTime - lastFetched > cacheTime) {
+      dispatch(fetchSpecialOffers({ page: 1, limit: 100 }));
+    }
+  }, [dispatch, lastFetched]);
 
   const shopNow = (id: string) => {
     navigate(`/product/${id}`);
   };
 
-  // Handle error state
-  if (status === 'failed') {
+  if (status === "loading") {
+    return (
+      <section className="bg-gray-100 py-16">
+        <div className="container mx-auto px-4">
+          <div className="flex flex-col sm:flex-row justify-between items-center mb-8 space-y-4 sm:space-y-0">
+            <h2 className="text-2xl sm:text-3xl font-bold">Special Offers</h2>
+            <Skeleton className="h-10 w-40" />
+          </div>
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
+            {[...Array(3)].map((_, index) => (
+              <Card key={index}>
+                <CardContent className="p-4">
+                  <div className="mb-2">
+                    <Skeleton className="h-6 w-24" />
+                  </div>
+                  <Skeleton className="w-full h-48 rounded-lg mb-4" />
+                  <Skeleton className="h-6 w-3/4 mb-2" />
+                  <Skeleton className="h-4 w-1/2 mb-2" />
+                  <div className="mt-2 flex items-center space-x-2">
+                    <Skeleton className="h-6 w-24" />
+                    <Skeleton className="h-4 w-16" />
+                  </div>
+                </CardContent>
+                <CardFooter>
+                  <Skeleton className="h-10 w-full" />
+                </CardFooter>
+              </Card>
+            ))}
+          </div>
+        </div>
+      </section>
+    );
+  }
+
+  if (status === "failed") {
     return (
       <section className="bg-gray-100 py-16">
         <div className="container mx-auto px-4">
@@ -47,13 +76,17 @@ export default function AllSpecialOffers() {
   return (
     <section className="bg-gray-100 py-16">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center mb-8">
-          <h2 className="text-3xl font-bold">Special Offers</h2>
-          <Button variant="ghost" onClick={() => navigate('/special-offers')}>
-            <ArrowRight className="ml-2 h-4 w-4" /> View All Special Offers
+        <div className="flex flex-col sm:flex-row justify-between items-center mb-8 space-y-4 sm:space-y-0">
+          <h2 className="text-2xl sm:text-3xl font-bold">Special Offers</h2>
+          <Button
+            variant="ghost"
+            onClick={() => navigate("/special-offers")}
+            className="flex items-center gap-2"
+          >
+            View All Special Offers <ArrowRight className="h-4 w-4" />
           </Button>
         </div>
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
           {items?.map((product) => (
             <Card key={product._id}>
               <CardContent className="p-4">
@@ -63,7 +96,10 @@ export default function AllSpecialOffers() {
                   </Badge>
                 )}
                 <img
-                  src={product?.images[0] || "/placeholder.svg?height=300&width=400"}
+                  src={
+                    product?.images[0].secure_url ||
+                    "/placeholder.svg?height=300&width=400"
+                  }
                   alt={product.name}
                   className="w-full h-48 object-cover rounded-lg mb-4"
                 />
@@ -87,7 +123,10 @@ export default function AllSpecialOffers() {
                 </div>
               </CardContent>
               <CardFooter>
-                <Button className="w-full" onClick={() => shopNow(product._id)}>
+                <Button
+                  className="w-full"
+                  onClick={() => shopNow(product._id)}
+                >
                   Shop Now
                 </Button>
               </CardFooter>

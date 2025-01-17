@@ -15,7 +15,7 @@ export function Breadcrumbs({ items = [] }: BreadcrumbsProps) {
   const location = useLocation();
 
   // Paths where breadcrumbs should not be displayed
-  const excludedPaths = ['/', '/signin', '/register'];
+  const excludedPaths = ['/', '/signin', '/register', '/reset-password'];
 
   // Hide breadcrumbs for excluded paths
   if (excludedPaths.includes(location.pathname)) {

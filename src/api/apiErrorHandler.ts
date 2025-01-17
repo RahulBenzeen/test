@@ -11,7 +11,7 @@ interface APIError {
       const { status, data } = error.response || {};
       return {
         status: status || 0,
-        message: data?.message || 'An error occurred on the server.',
+        message: typeof data?.message === 'string' ? data.message : 'An error occurred on the server.',
         data,
       };
     } else if (error instanceof Error) {

@@ -161,7 +161,7 @@ export default function ProductDetailPage() {
             <div className="p-6">
               <div className="relative mb-4 group rounded-lg overflow-hidden">
                 <motion.img 
-                  src={product.images[selectedImageIndex]} 
+                  src={product.images[selectedImageIndex].secure_url} 
                   alt={`${product.name} - View ${selectedImageIndex + 1}`} 
                   className="w-full h-auto object-cover rounded-lg"
                   whileHover={{ scale: 1.1 }}
@@ -177,8 +177,8 @@ export default function ProductDetailPage() {
               <div className="flex gap-2 justify-center">
                 {product.images.map((image, index) => (
                   <motion.img 
-                    key={index}
-                    src={image} 
+                    key={image.public_id}
+                    src={image.secure_url} 
                     alt={`${product.name} - Thumbnail ${index + 1}`} 
                     className={`w-16 h-16 object-cover rounded-md cursor-pointer border-2 ${
                       index === selectedImageIndex ? 'border-primary scale-105' : 'border-gray-200'

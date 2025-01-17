@@ -73,7 +73,7 @@ export const registerUserThunk = createAsyncThunk<
 
 export const loginUserThunk = createAsyncThunk<
   AuthResponse,
-  { email: string; password: string },
+  { email: string; password: string; googleId?: string; tokens?:string },  // Add googleId as optional
   { rejectValue: string }
 >('auth/loginUser', async (credentials, { rejectWithValue }) => {
   try {
@@ -230,8 +230,8 @@ const authSlice = createSlice({
           email: action.payload.email,
           name: action.payload.name
         };
-        state.token = action.payload.token;
-        state.isAuthenticated = true;
+        state.token = null;
+        state.isAuthenticated = false;
         state.error = null;
       })
       .addCase(registerUserThunk.rejected, (state, action) => {

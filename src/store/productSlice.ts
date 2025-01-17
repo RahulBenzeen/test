@@ -9,7 +9,7 @@ export interface Product {
   price: number;
   category: string;
   subcategory: string;
-  images: string[];
+  images: { secure_url: string; public_id: string }[]; // Updated type
   stock: number;
   brand?: string;
   rating?: number;
@@ -18,15 +18,15 @@ export interface Product {
   dimensions?: string;
   createdAt?: Date;
   discountedPrice?: number;
-  discountPercentage?:number;
-  isSpecialOffer?:boolean;
-  features?:string[];
-  specifications?:string[];
-
+  discountPercentage?: number;
+  isSpecialOffer?: boolean;
+  features?: string[];
+  specifications?: string[];
 }
 
 interface ProductState {
   items: Product[];
+  featuredProducts: Product[];
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
   pagination: {
@@ -38,6 +38,7 @@ interface ProductState {
 
 const initialState: ProductState = {
   items: [],
+  featuredProducts: [],
   status: 'idle',
   error: null,
   pagination: {
@@ -67,6 +68,19 @@ export const fetchProducts = createAsyncThunk(
     try {
       const response = await getProducts(params);
       return response.data;
+    } catch (error) {
+      const apiError = handleApiError(error);
+      return rejectWithValue(apiError.message);
+    }
+  }
+);
+
+export const fetchFeaturedProducts = createAsyncThunk(
+  'products/fetchFeaturedProducts',
+  async (params: FetchProductsParams, { rejectWithValue }) => {
+    try {
+      const response = await getProducts(params);
+      return response.data.data;
     } catch (error) {
       const apiError = handleApiError(error);
       return rejectWithValue(apiError.message);
@@ -177,6 +191,17 @@ const productSlice = createSlice({
       .addCase(deleteProductThunk.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload as string;
+      })
+      .addCase(fetchFeaturedProducts.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(fetchFeaturedProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
+        state.status = 'succeeded';
+        state.featuredProducts = action.payload;
+      })
+      .addCase(fetchFeaturedProducts.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.error.message || 'Failed to fetch featured products';
       });
   },
 });

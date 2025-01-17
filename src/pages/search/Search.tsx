@@ -1,5 +1,5 @@
 import { useState, useEffect, useCallback } from 'react';
-import { useNavigate } from 'react-router-dom'; // Import useNavigate
+import { useNavigate } from 'react-router-dom';
 import { SearchIcon } from 'lucide-react';
 import { Input } from '../../components/ui/input';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
@@ -12,10 +12,9 @@ export default function Search() {
   const [isSearchOpen, setIsSearchOpen] = useState(false);
 
   const dispatch = useAppDispatch();
-  const navigate = useNavigate(); // Initialize useNavigate
-  const { searchResults, status } = useAppSelector((state) => state.productDetails);
+  const navigate = useNavigate();
+  const { searchResults, searchStatus } = useAppSelector((state) => state.productDetails);
 
-  // Debounced search function
   const debouncedSearch = useCallback(
     debounce((query: string) => {
       if (query.trim()) {
@@ -26,7 +25,6 @@ export default function Search() {
     [dispatch]
   );
 
-  // Trigger search on query change
   useEffect(() => {
     if (searchQuery) {
       debouncedSearch(searchQuery);
@@ -48,31 +46,35 @@ export default function Search() {
         onFocus={() => setIsSearchOpen(true)}
         onBlur={() => setTimeout(() => setIsSearchOpen(false), 200)}
       />
-      {isSearchOpen && searchResults?.length > 0 && (
+      {isSearchOpen && searchQuery && (
         <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-50 max-h-[300px] overflow-y-auto">
-          {searchResults.map((product) => (
-            <div
-              key={product._id}
-              className="p-2 flex items-center gap-4 hover:bg-muted cursor-pointer"
-              onClick={() => navigate(`/product/${product._id}`)} // Navigate to product detail page
-            >
-              {/* Product Image */}
-              <img
-                src={product.images[0] || '/placeholder.jpg'}
-                alt={product.name}
-                className="w-12 h-12 object-cover rounded-md"
-              />
-              <div>
-                <div className="font-medium">{product.name}</div>
-                <div className="text-sm text-muted-foreground">{product.category}</div>
-              </div>
+          {searchStatus === 'loading' ? (
+            <div className="p-2 text-center text-muted-foreground">
+              Searching...
             </div>
-          ))}
-        </div>
-      )}
-      {status === 'loading' && (
-        <div className="absolute top-full left-0 right-0 mt-1 bg-background border rounded-md shadow-lg z-50 p-2 text-center">
-          Loading...
+          ) : searchResults?.length > 0 ? (
+            searchResults.map((product) => (
+              <div
+                key={product._id}
+                className="p-2 flex items-center gap-4 hover:bg-muted cursor-pointer"
+                onClick={() => navigate(`/product/${product._id}`)}
+              >
+                <img
+                  src={product.images[0].secure_url || '/placeholder.jpg'}
+                  alt={product.name}
+                  className="w-12 h-12 object-cover rounded-md"
+                />
+                <div>
+                  <div className="font-medium">{product.name}</div>
+                  <div className="text-sm text-muted-foreground">{product.category}</div>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="p-2 text-center text-muted-foreground">
+              No results found
+            </div>
+          )}
         </div>
       )}
     </div>

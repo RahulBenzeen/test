@@ -58,7 +58,7 @@ export default function ResetPassword() {
   useEffect(() => {
     if (!token) {
       showToast("Invalid or missing reset token", 'error');
-      navigate('/sigin');
+      navigate('/signin');
     }
   }, [token, navigate]);
 
@@ -69,7 +69,7 @@ export default function ResetPassword() {
     try {
       await dispatch(confirmPasswordReset({ token, newPassword: data.password })).unwrap();
       showToast("Your password has been successfully reset", 'success');
-      navigate('/sigin');
+      navigate('/signin');
     } catch {
       showToast("Failed to reset password. Please try again.", 'error');
     } finally {
@@ -133,7 +133,7 @@ export default function ResetPassword() {
         </CardContent>
         <CardFooter className="flex justify-center">
           <p className="text-sm text-muted-foreground">
-            Remember your password? <a href="/login" className="text-primary hover:underline">Sign in</a>
+            Remember your password? <a href="/signin" className="text-primary hover:underline">Sign in</a>
           </p>
         </CardFooter>
       </Card>

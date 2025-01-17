@@ -6,17 +6,38 @@ import { fetchProducts } from '../../store/productSlice'
 import { Button } from "../../components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader } from "../../components/ui/card"
 import { ToggleGroup, ToggleGroupItem } from "../../components/ui/toggle-group"
-import { Grid, List, Star, ShoppingCart, Eye, Percent, Share2, Heart, Filter, ArrowUpRight } from 'lucide-react'
+import { 
+  Grid, 
+  List, 
+  Star, 
+  ShoppingCart, 
+  Eye, 
+  Percent, 
+  Share2, 
+  Heart, 
+  ArrowUpRight,
+  Truck,
+  Shield,
+  Clock,
+  Package,
+  RefreshCcw,
+  SlidersHorizontal,
+  X
+} from 'lucide-react'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "../../components/ui/select"
-import { motion, AnimatePresence } from "framer-motion"
+import { motion } from "framer-motion"
 import { Badge } from "../../components/ui/badge"
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../components/ui/tooltip"
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "../../components/ui/dialog"
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "../../components/ui/sheet"
 import ProductFilter from '../filterProduct/filterProduct'
 import Paginator from '../paginator/paginator'
 import { addToCartAsync } from '../../store/cartSlice'
 import { Product } from '../../store/productSlice'
 import { Skeleton } from "../../components/ui/skeleton"
 import showToast from '../../utils/toast/toastUtils'
+import { addToWishlist, removeFromWishlist } from '../../store/whislistSlice'
+import { useMediaQuery } from '../../hooks/useMediaQuery'
 
 export default function ProductPage() {
   const dispatch = useAppDispatch()
@@ -24,9 +45,15 @@ export default function ProductPage() {
   const location = useLocation()
   const filters = useAppSelector((state) => state.filters)
   const { items: products, status, error, pagination } = useAppSelector((state) => state.products)
+  const { wishlists }: { wishlists: { _id: string }[] } = useAppSelector((state) => state.whishlist)
   const { isAuthenticated } = useAppSelector((state) => state.auth)
-  const [isFilterOpen, setIsFilterOpen] = useState(false)
+  // const [isFilterOpen, setIsFilterOpen] = useState(false)
   const [wishlist, setWishlist] = useState<Set<string>>(new Set())
+  const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null)
+  const [selectedFilters, setSelectedFilters] = useState<string[]>([])
+
+  const isMobile = useMediaQuery('(max-width: 768px)')
+  const isTablet = useMediaQuery('(max-width: 1024px)')
 
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search)
@@ -41,13 +68,25 @@ export default function ProductPage() {
       limit: filters.itemsPerPage,
       category,
       subcategory,
-      sortBy: filters.sortBy
+      sortBy: filters.sortBy,
     }))
   }, [dispatch, filters.currentPage, filters.itemsPerPage, filters.sortBy, location.search])
 
-  const handleAddToCart = (product: Product, e: React.MouseEvent) => {
+  const handleAddToCart = async (product: Product, e: React.MouseEvent) => {
     e.stopPropagation()
-    dispatch(addToCartAsync(product))
+    try {
+      const resultAction = await dispatch(addToCartAsync(product))
+      if (addToCartAsync.fulfilled.match(resultAction)) {
+        showToast("Added to cart successfully!", "success")
+      }
+    } catch {
+      showToast("Failed to add to cart", "error")
+    }
+  }
+
+  const handleQuickView = (product: Product, e: React.MouseEvent) => {
+    e.stopPropagation()
+    setQuickViewProduct(product)
   }
 
   const handleProductClick = (productId: string) => {
@@ -61,24 +100,27 @@ export default function ProductPage() {
 
   const handlePageChange = (page: number) => {
     dispatch(setCurrentPage(page))
+    window.scrollTo({ top: 0, behavior: 'smooth' })
   }
 
   const handleSortChange = (value: string) => {
     dispatch(setSortBy(value))
   }
 
-
   const toggleWishlist = (productId: string, e: React.MouseEvent) => {
     e.stopPropagation()
-    setWishlist(prev => {
-      const newWishlist = new Set(prev)
-      if (newWishlist.has(productId)) {
-        newWishlist.delete(productId)
-      } else {
-        newWishlist.add(productId)
-      }
-      return newWishlist
-    })
+    
+    const isProductInWishlist: boolean = wishlists.some((item) => item._id === productId)
+  
+    if (isProductInWishlist) {
+      dispatch(removeFromWishlist(productId))
+        .then(() => showToast("Removed from wishlist", "success"))
+        .catch((error) => showToast(error.message, "error"))
+    } else {
+      dispatch(addToWishlist(productId))
+        .then(() => showToast("Added to wishlist", "success"))
+        .catch((error) => showToast(error.message, "error"))
+    }
   }
 
   const handleShare = async (product: Product, e: React.MouseEvent) => {
@@ -87,64 +129,171 @@ export default function ProductPage() {
       await navigator.share({
         title: product.name,
         text: `Check out ${product.name}`,
-        url: window.location.href,
+        url: window.location.href + `/${product._id}`,
       })
-    } catch (err) {
-      showToast(`Error sharing:${err}`, 'error')
+    } catch {
+      showToast("Failed to share product", "error")
     }
   }
 
   const categories = [...new Set(products.map((p) => p.category).filter((category): category is string => !!category))]
+
+  const cardVariants = {
+    hidden: { opacity: 0, y: 20 },
+    visible: { 
+      opacity: 1, 
+      y: 0,
+      transition: { duration: 0.4, ease: "easeOut" }
+    },
+    hover: {
+      y: -5,
+      transition: { duration: 0.2 }
+    }
+  }
+
+  const ProductFeatures = () => (
+    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 p-4 bg-muted/30 rounded-lg mb-8">
+      <div className="flex items-center gap-2 text-sm">
+        <div className="p-2 bg-primary/10 rounded-full shrink-0">
+          <Truck className="w-4 h-4 text-primary" />
+        </div>
+        <div>
+          <p className="font-medium">Free Delivery</p>
+          <p className="text-muted-foreground text-xs">Orders over ₹999</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 text-sm">
+        <div className="p-2 bg-primary/10 rounded-full shrink-0">
+          <Shield className="w-4 h-4 text-primary" />
+        </div>
+        <div>
+          <p className="font-medium">Secure Payment</p>
+          <p className="text-muted-foreground text-xs">100% Protected</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 text-sm">
+        <div className="p-2 bg-primary/10 rounded-full shrink-0">
+          <RefreshCcw className="w-4 h-4 text-primary" />
+        </div>
+        <div>
+          <p className="font-medium">Easy Returns</p>
+          <p className="text-muted-foreground text-xs">30 Day Policy</p>
+        </div>
+      </div>
+      <div className="flex items-center gap-2 text-sm">
+        <div className="p-2 bg-primary/10 rounded-full shrink-0">
+          <Clock className="w-4 h-4 text-primary" />
+        </div>
+        <div>
+          <p className="font-medium">24/7 Support</p>
+          <p className="text-muted-foreground text-xs">Always Available</p>
+        </div>
+      </div>
+    </div>
+  )
 
   const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
     const [isHovered, setIsHovered] = useState(false)
     const isWishlisted = wishlist.has(product._id)
     const isSpecialOffer = product.isSpecialOffer && (product.discountPercentage ?? 0) > 0
 
-    const cardVariants = {
-      hidden: { opacity: 0, y: 20 },
-      visible: { 
-        opacity: 1, 
-        y: 0,
-        transition: { duration: 0.4, ease: "easeOut" }
-      },
-      hover: {
-        y: -5,
-        transition: { duration: 0.2 }
-      }
-    }
-
     return (
       <motion.div
         variants={cardVariants}
         initial="hidden"
         animate="visible"
-        whileHover="hover"
+        whileHover={!isMobile ? "hover" : undefined}
         onClick={() => handleProductClick(product._id)}
         className="cursor-pointer"
       >
         <Card 
           className={`${
-            filters.view === 'grid' ? 'flex flex-col' : 'flex flex-row'
+            filters.view === 'grid' ? 'flex flex-col' : 'flex flex-col md:flex-row'
           } overflow-hidden transition-all duration-300 hover:shadow-xl relative group ${
             isSpecialOffer ? 'ring-2 ring-red-500 ring-offset-2' : ''
           }`}
-          onMouseEnter={() => setIsHovered(true)}
-          onMouseLeave={() => setIsHovered(false)}
         >
-          <CardHeader className={`${filters.view === 'grid' ? 'p-0' : 'p-4'} relative`}>
-            <div className="relative w-full h-48 md:h-64 overflow-hidden">
+          <CardHeader className={`${filters.view === 'grid' ? 'p-0' : 'p-4 md:w-1/3'} relative`}>
+            <div className="relative w-full aspect-square md:aspect-[4/3] overflow-hidden">
               <img
-                src={product?.images[0] || '/placeholder.svg'}
+                src={product?.images[0].secure_url || '/placeholder.svg'}
                 alt={product.name}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                loading="lazy"
               />
-              <div className={`absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 transition-opacity duration-300 ${isHovered ? 'opacity-100' : ''}`}>
-                <div className="flex items-center gap-2">
-                  <Eye className="text-white w-6 h-6" />
-                  <span className="text-white font-medium">Quick View</span>
+
+              {!isMobile && (
+                <div 
+                  className={`absolute inset-0 bg-black/40 flex items-center justify-center opacity-0 transition-opacity duration-300 ${
+                    isHovered ? 'opacity-100' : ''
+                  }`}
+                  onClick={(e) => handleQuickView(product, e)}
+                >
+                  <Button variant="secondary" className="gap-2">
+                    <Eye className="w-4 h-4" />
+                    Quick View
+                  </Button>
                 </div>
-              </div>
+              )}
+              {isMobile && (
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button
+                      variant="secondary"
+                      className="absolute bottom-4 right-4 gap-2"
+                      onClick={(e) => e.stopPropagation()}
+                    >
+                      <Eye className="w-4 h-4" />
+                      Quick View
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="bottom" className="h-[90vh]">
+                    <SheetHeader>
+                      <SheetTitle>{product.name}</SheetTitle>
+                    </SheetHeader>
+                    <div className="space-y-4 mt-4">
+                      <img
+                        src={product.images[0].secure_url}
+                        alt={product.name}
+                        className="w-full h-auto rounded-lg"
+                      />
+                      <div className="space-y-4">
+                        <div className="flex items-center gap-2">
+                          {isSpecialOffer ? (
+                            <>
+                              <span className="text-2xl font-bold text-red-500">
+                                ₹{product.discountedPrice?.toFixed(2)}
+                              </span>
+                              <span className="text-lg text-muted-foreground line-through">
+                                ₹{product.price.toFixed(2)}
+                              </span>
+                            </>
+                          ) : (
+                            <span className="text-2xl font-bold">
+                              ₹{product.price.toFixed(2)}
+                            </span>
+                          )}
+                        </div>
+                        <p className="text-muted-foreground">
+                          {product.description}
+                        </p>
+                        <Button
+                          className="w-full"
+                          size="lg"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleAddToCart(product, e);
+                          }}
+                          disabled={product.stock === 0}
+                        >
+                          <ShoppingCart className="mr-2 h-5 w-5" />
+                          Add to Cart
+                        </Button>
+                      </div>
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              )}
             </div>
             <div className="absolute top-2 right-2 flex flex-col gap-2">
               <TooltipProvider>
@@ -156,7 +305,9 @@ export default function ProductPage() {
                       className="rounded-full bg-white/80 backdrop-blur-sm hover:bg-white"
                       onClick={(e) => toggleWishlist(product._id, e)}
                     >
-                      <Heart className={`h-4 w-4 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`} />
+                      <Heart className={`h-4 w-4 transition-colors duration-300 ${
+                        isWishlisted ? 'fill-red-500 text-red-500' : ''
+                      }`} />
                     </Button>
                   </TooltipTrigger>
                   <TooltipContent>
@@ -199,7 +350,7 @@ export default function ProductPage() {
               </Badge>
             )}
           </CardHeader>
-          <CardContent className={`flex-grow p-4 ${filters.view === 'list' ? 'flex-1' : ''}`}>
+          <CardContent className={`flex-grow p-4 ${filters.view === 'list' ? 'md:flex-1' : ''}`}>
             <div className="space-y-2">
               <Badge variant="outline" className="mb-2">
                 {product.category}
@@ -238,7 +389,7 @@ export default function ProductPage() {
               </div>
             </div>
           </CardContent>
-          <CardFooter className={`p-4 ${filters.view === 'list' ? 'self-end' : ''}`}>
+          <CardFooter className={`p-4 ${filters.view === 'list' ? 'md:self-end' : ''}`}>
             {isAuthenticated ? (
               <Button
                 className={`w-full group relative overflow-hidden ${
@@ -272,9 +423,10 @@ export default function ProductPage() {
   return (
     <div className="container mx-auto px-4 py-8">
       <div className="flex flex-col gap-6">
-        <div className="flex flex-col lg:flex-row justify-between items-start gap-4">
+        {/* Header Section */}
+        <div className="flex flex-col gap-4">
           <div>
-            <h1 className="text-4xl font-bold">
+            <h1 className="text-2xl md:text-4xl font-bold">
               {filters.category 
                 ? `${filters.category?.toUpperCase()} - ${filters.subcategory || 'All'}`
                 : 'All Products'
@@ -284,61 +436,83 @@ export default function ProductPage() {
               Discover our curated collection of premium products
             </p>
           </div>
-          <div className="flex items-center gap-4 self-stretch lg:self-center">
-            <Button
-              variant="outline"
-              className="lg:hidden"
-              onClick={() => setIsFilterOpen(!isFilterOpen)}
-            >
-              <Filter className="mr-2 h-4 w-4" />
-              Filters
-            </Button>
-            <ToggleGroup
-              type="single"
-              value={filters.view}
-              onValueChange={(value: string) => value && dispatch(setView(value as 'grid' | 'list'))}
-              className="border rounded-md"
-            >
-              <ToggleGroupItem value="grid" aria-label="Grid view" className="px-3 py-2">
-                <Grid className="h-4 w-4" />
-              </ToggleGroupItem>
-              <ToggleGroupItem value="list" aria-label="List view" className="px-3 py-2">
-                <List className="h-4 w-4" />
-              </ToggleGroupItem>
-            </ToggleGroup>
-            <Select onValueChange={handleSortChange} defaultValue={filters.sortBy}>
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Sort by" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="price_asc">Price: Low to High</SelectItem>
-                <SelectItem value="price_desc">Price: High to Low</SelectItem>
-                <SelectItem value="rating_desc">Highest Rated</SelectItem>
-                <SelectItem value="newest">Newest Arrivals</SelectItem>
-              </SelectContent>
-            </Select>
+          <div className="flex flex-col sm:flex-row items-stretch sm:items-center gap-4 self-stretch">
+            <div className="flex items-center gap-2 w-full sm:w-auto">
+              {isTablet && (
+                <Sheet>
+                  <SheetTrigger asChild>
+                    <Button variant="outline" className="flex-1 sm:flex-none">
+                      <SlidersHorizontal className="mr-2 h-4 w-4" />
+                      Filters
+                      {selectedFilters.length > 0 && (
+                        <Badge className="ml-2" variant="secondary">
+                          {selectedFilters.length}
+                        </Badge>
+                      )}
+                    </Button>
+                  </SheetTrigger>
+                  <SheetContent side="left">
+                    <SheetHeader>
+                      <SheetTitle>Filters</SheetTitle>
+                    </SheetHeader>
+                    <div className="mt-4">
+                      <ProductFilter 
+                        categories={categories} 
+                        brands={[]} 
+                        selectedFilters={selectedFilters}
+                        onFilterChange={setSelectedFilters}
+                      />
+                    </div>
+                  </SheetContent>
+                </Sheet>
+              )}
+              <div className="flex items-center gap-2 flex-1 sm:flex-none">
+                <ToggleGroup
+                  type="single"
+                  value={filters.view}
+                  onValueChange={(value: string) => value && dispatch(setView(value as 'grid' | 'list'))}
+                  className="border rounded-md"
+                >
+                  <ToggleGroupItem value="grid" aria-label="Grid view" className="px-3 py-2">
+                    <Grid className="h-4 w-4" />
+                  </ToggleGroupItem>
+                  <ToggleGroupItem value="list" aria-label="List view" className="px-3 py-2">
+                    <List className="h-4 w-4" />
+                  </ToggleGroupItem>
+                </ToggleGroup>
+                <Select onValueChange={handleSortChange} defaultValue={filters.sortBy}>
+                  <SelectTrigger className="w-full sm:w-[180px]">
+                    <SelectValue placeholder="Sort by" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    <SelectItem value="price_asc">Price: Low to High</SelectItem>
+                    <SelectItem value="price_desc">Price: High to Low</SelectItem>
+                    <SelectItem value="rating_desc">Highest Rated</SelectItem>
+                    <SelectItem value="newest">Newest Arrivals</SelectItem>
+                  </SelectContent>
+                </Select>
+              </div>
+            </div>
           </div>
         </div>
 
+        {/* Features Section */}
+        <ProductFeatures />
+
         <div className="flex flex-col lg:flex-row gap-8">
-          {/* Filter Section */}
-          <div className="lg:w-1/4">
-            <AnimatePresence>
-              {(isFilterOpen || window.innerWidth >= 1024) && (
-                <motion.div
-                  initial={{ height: 0, opacity: 0 }}
-                  animate={{ height: 'auto', opacity: 1 }}
-                  exit={{ height: 0, opacity: 0 }}
-                  transition={{ duration: 0.3 }}
-                  className="overflow-hidden"
-                >
-                  <div className="sticky top-20">
-                    <ProductFilter categories={categories} brands={[]} />
-                  </div>
-                </motion.div>
-              )}
-            </AnimatePresence>
-          </div>
+          {/* Filter Section - Only visible on desktop */}
+          {!isTablet && (
+            <div className="lg:w-1/4">
+              <div className="sticky top-20">
+                <ProductFilter 
+                  categories={categories} 
+                  brands={[]} 
+                  selectedFilters={selectedFilters}
+                  onFilterChange={setSelectedFilters}
+                />
+              </div>
+            </div>
+          )}
 
           {/* Products Section */}
           <div className="lg:w-3/4">
@@ -349,7 +523,7 @@ export default function ProductPage() {
             </div>
 
             {status === 'loading' ? (
-              <div className={filters.view === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
+              <div className={filters.view === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6' : 'space-y-4'}>
                 {[...Array(6)].map((_, index) => (
                   <Card key={index} className="overflow-hidden">
                     <Skeleton className="h-48 md:h-64 w-full" />
@@ -368,14 +542,23 @@ export default function ProductPage() {
                   Try Again
                 </Button>
               </div>
+            ) : products.length === 0 ? (
+              <div className="text-center py-12">
+                <Package className="h-12 w-12 text-muted-foreground mx-auto mb-4" />
+                <h3 className="text-lg font-semibold mb-2">No Products Found</h3>
+                <p className="text-muted-foreground">
+                  Try adjusting your search or filter criteria
+                </p>
+              </div>
             ) : (
-              <div className={filters.view === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6' : 'space-y-4'}>
+              <div className={filters.view === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6' : 'space-y-4'}>
                 {products.map((product) => (
                   <ProductCard key={product._id || product.name} product={product} />
                 ))}
               </div>
             )}
 
+            {/* Pagination */}
             <div className="mt-8">
               <Paginator
                 currentPage={pagination.currentPage}
@@ -388,6 +571,108 @@ export default function ProductPage() {
           </div>
         </div>
       </div>
+
+      {/* Quick View Dialog - Only for desktop */}
+      {!isMobile && (
+        <Dialog open={!!quickViewProduct} onOpenChange={() => setQuickViewProduct(null)}>
+          <DialogContent className="max-w-3xl">
+            {quickViewProduct && (
+              <>
+                <DialogHeader>
+                  <DialogTitle>{quickViewProduct.name}</DialogTitle>
+                </DialogHeader>
+                <div className="grid md:grid-cols-2 gap-6 p-6">
+                  <div className="relative">
+                    <img
+                      src={quickViewProduct.images[0].secure_url}
+                      alt={quickViewProduct.name}
+                      className="w-full h-auto rounded-lg"
+                    />
+                    {quickViewProduct.isSpecialOffer && (
+                      <Badge className="absolute top-2 left-2 bg-red-500">
+                        {quickViewProduct.discountPercentage}% OFF
+                      </Badge>
+                    )}
+                  </div>
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <div className="space-y-1">
+                        <Badge variant="outline">{quickViewProduct.category}</Badge>
+                        <h2 className="text-2xl font-bold">{quickViewProduct.name}</h2>
+                      </div>
+                      <Button
+                        size="icon"
+                        variant="ghost"
+                        onClick={(e) => toggleWishlist(quickViewProduct._id, e)}
+                      >
+                        <Heart className={`h-5 w-5 ${
+                          wishlist.has(quickViewProduct._id) ? 'fill-red-500 text-red-500' : ''
+                        }`} />
+                      </Button>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      {quickViewProduct.isSpecialOffer ? (
+                        <>
+                          <span className="text-2xl font-bold text-red-500">
+                            ₹{quickViewProduct.discountedPrice?.toFixed(2)}
+                          </span>
+                          <span className="text-lg text-muted-foreground line-through">
+                            ₹{quickViewProduct.price.toFixed(2)}
+                          </span>
+                        </>
+                      ) : (
+                        <span className="text-2xl font-bold">
+                          ₹{quickViewProduct.price.toFixed(2)}
+                        </span>
+                      )}
+                    </div>
+                    <p className="text-muted-foreground">
+                      {quickViewProduct.description}
+                    </p>
+                    <div className="flex items-center gap-2">
+                      {[...Array(5)].map((_, i) => (
+                        <Star
+                          key={i}
+                          className={`h-5 w-5 ${
+                            i < Math.round(quickViewProduct.rating || 0)
+                              ? 'text-yellow-400 fill-yellow-400'
+                              : 'text-gray-300'
+                          }`}
+                        />
+                      ))}
+                      <span className="text-sm text-muted-foreground">
+                        ({quickViewProduct.rating?.toFixed(1)})
+                      </span>
+                    </div>
+                    <div className="space-y-2">
+                      <Button
+                        className="w-full"
+                        size="lg"
+                        onClick={(e) => handleAddToCart(quickViewProduct, e)}
+                        disabled={quickViewProduct.stock === 0}
+                      >
+                        <ShoppingCart className="mr-2 h-5 w-5" />
+                        Add to Cart
+                      </Button>
+                      <Button
+                        variant="outline"
+                        className="w-full"
+                        size="lg"
+                        onClick={() => {
+                          setQuickViewProduct(null)
+                          handleProductClick(quickViewProduct._id)
+                        }}
+                      >
+                        View Full Details
+                      </Button>
+                    </div>
+                  </div>
+                </div>
+              </>
+            )}
+          </DialogContent>
+        </Dialog>
+      )}
     </div>
   )
 }

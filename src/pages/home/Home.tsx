@@ -16,6 +16,7 @@ import AdminDashboard from '../admin/AdminDashboard';
 import { ReactNode } from 'react';
 
 
+
 // Lazy-loaded components
 const Banner = lazy(() => import('../banner/Banner'));
 const FeaturedProducts = lazy(() => import('../featuredProducts/FeaturedProducts'));
@@ -35,7 +36,7 @@ const NotFound = lazy(() => import('../pageNotfound/pageNotFound'));
 const Profile = lazy(() => import('../user-profile/Profile'));
 const ResetPassword = lazy(() => import('../auth/resetPassword'));
 const AllSpecialOffers  = lazy(() => import('../special-offer/all-special-offers'));
-
+const VerifyEmail = lazy(() => import('../auth/verifyEmail'));
 
 function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
@@ -78,6 +79,7 @@ export default function Home() {
                 <Route element={<NonAuthRoute />}>
                   <Route path="/signin" element={<SignIn />} />
                   <Route path="/register" element={<Register />} />
+                  <Route path="/verify-email" element={<VerifyEmail />} />
                   <Route path="/reset-password/:token" element={<ResetPassword />} />
                 </Route>
 
@@ -89,7 +91,7 @@ export default function Home() {
                 {/* Protected Routes (only accessible by logged-in users) */}
                 <Route element={<ProtectedRoute />}>
                   <Route path="/checkout" element={<CheckoutPage />} />
-                  <Route path="/place-order" element={<PaymentPage />} />
+                  <Route path="/checkout/place-order" element={<PaymentPage />} />
                   <Route path="/order-confirmation" element={<OrderConfirmationPage />} />
                   <Route path="/thank-you" element={<ThankYouPage />} />
                   <Route path="/my-order" element={<OrderPage />} />

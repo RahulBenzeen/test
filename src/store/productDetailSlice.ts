@@ -8,6 +8,7 @@ interface ProductDetailState {
   recentlyViewed: Product[];
   searchResults: Product[];
   status: 'idle' | 'loading' | 'succeeded' | 'failed';
+  searchStatus: 'idle' | 'loading' | 'succeeded' | 'failed';
   error: string | null;
 }
 
@@ -16,6 +17,7 @@ const initialState: ProductDetailState = {
   recentlyViewed: [],
   searchResults: [],
   status: 'idle',
+  searchStatus: 'idle',
   error: null,
 };
 
@@ -44,6 +46,7 @@ export const fetchProductDetails = createAsyncThunk(
     }
   }
 );
+
 export const fetchRecentlyViewedProducts = createAsyncThunk(
   'productDetail/fetchRecentlyViewedProducts',
   async (_, { rejectWithValue }) => {
@@ -78,26 +81,26 @@ const productDetailSlice = createSlice({
         state.status = 'loading';
       })
       .addCase(fetchRecentlyViewedProducts.fulfilled, (state, action) => {
+        state.status = 'succeeded';
         state.recentlyViewed = action.payload;
         state.error = null;
       })
       .addCase(fetchRecentlyViewedProducts.rejected, (state, action) => {
-        state.error = action.payload as string;
-      })
-      builder
-      .addCase(searchProducts.pending, (state) => {
-        state.status = 'loading';
-      })
-      .addCase(searchProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
-        state.status = 'succeeded';
-        state.searchResults = action.payload;
-      })
-      .addCase(searchProducts.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload as string;
       })
+      .addCase(searchProducts.pending, (state) => {
+        state.searchStatus = 'loading';
+      })
+      .addCase(searchProducts.fulfilled, (state, action: PayloadAction<Product[]>) => {
+        state.searchStatus = 'succeeded';
+        state.searchResults = action.payload;
+      })
+      .addCase(searchProducts.rejected, (state, action) => {
+        state.searchStatus = 'failed';
+        state.error = action.payload as string;
+      });
   },
 });
 
 export default productDetailSlice.reducer;
-

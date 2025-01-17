@@ -15,6 +15,8 @@ import { ProductFormValues, productSchema } from '../../utils/schemas/productSch
 import { addProductThunk, Product } from '../../store/productSlice'
 import { useAppDispatch } from '../../store/hooks'
 import showToast from '../../utils/toast/toastUtils'
+import { uploadToCloudinary } from '../../utils/ProductImageUpload/cloudanary'
+
 
 interface AddProductPageProps {
   onAddProduct: (newProduct: Omit<Product, "_id">) => void;
@@ -32,7 +34,7 @@ export default function AddProductPage({ onAddProduct, onCancel }: AddProductPag
   const [previewImages, setPreviewImages] = useState<string[]>([])
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [selectedCategory, setSelectedCategory] = useState('')
- 
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([])
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -54,12 +56,18 @@ export default function AddProductPage({ onAddProduct, onCancel }: AddProductPag
 
   async function onSubmit(values: ProductFormValues) {
     setIsSubmitting(true)
+
+    const imageData  = await Promise.all(
+      uploadedFiles.map(file => uploadToCloudinary(file))
+    );
+
+
     const product = {
       ...values,
       price: parseFloat(values.price),
       stock: parseInt(values.stock), 
       weight: parseFloat(values.weight), 
-      images: previewImages,
+      images: imageData ,
       discountPercentage: values.isSpecialOffer && values.discountPercentage ? parseFloat(values.discountPercentage) : undefined,
     };
     try {
@@ -78,12 +86,16 @@ export default function AddProductPage({ onAddProduct, onCancel }: AddProductPag
   const handleImageUpload = (files: FileList | null) => {
     if (files) {
       const newPreviewImages: string[] = []
+      const newUploadedFiles: File[] = []
+      
       Array.from(files).forEach((file) => {
         const reader = new FileReader()
         reader.onloadend = () => {
           newPreviewImages.push(reader.result as string)
+          newUploadedFiles.push(file)
           if (newPreviewImages.length === files.length) {
             setPreviewImages((prev) => [...prev, ...newPreviewImages].slice(0, 5))
+            setUploadedFiles((prev) => [...prev, ...newUploadedFiles].slice(0, 5))
           }
         }
         reader.readAsDataURL(file)
@@ -93,6 +105,7 @@ export default function AddProductPage({ onAddProduct, onCancel }: AddProductPag
 
   const removeImage = (index: number) => {
     setPreviewImages((prev) => prev.filter((_, i) => i !== index))
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index))
     const currentImages = form.getValues('images')
     if (currentImages instanceof FileList) {
       const dataTransfer = new DataTransfer()

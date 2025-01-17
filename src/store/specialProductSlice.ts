@@ -2,14 +2,14 @@ import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { getSpecialOfferProducts } from '../api/product';
 import { handleApiError } from '../api/apiErrorHandler';
 
- interface Product {
+interface Product {
   _id: string;
   name: string;
   description: string;
   price: number;
   category: string;
   subcategory: string;
-  images: string[];
+  images: { secure_url: string; public_id: string }[];
   stock: number;
   isSpecialOffer?: boolean;
   brand?: string;
@@ -18,8 +18,8 @@ import { handleApiError } from '../api/apiErrorHandler';
   weight?: number;
   dimensions?: string;
   createdAt?: Date;
-  discountPercentage:number
-  discountedPrice:number
+  discountPercentage: number;
+  discountedPrice: number;
 }
 
 interface SpecialOfferState {
@@ -31,6 +31,7 @@ interface SpecialOfferState {
     totalPages: number;
     totalItems: number;
   };
+  lastFetched: number | null;
 }
 
 const initialState: SpecialOfferState = {
@@ -42,19 +43,30 @@ const initialState: SpecialOfferState = {
     totalPages: 1,
     totalItems: 0,
   },
+  lastFetched: null,
 };
 
-export  interface FetchSpecialOffersParams {
+export interface FetchSpecialOffersParams {
   page: number;
   limit: number;
   minPrice?: number;
   maxPrice?: number;
   sortBy?: string;
+  forceRefresh?: boolean;
 }
 
 export const fetchSpecialOffers = createAsyncThunk(
   'specialOffers/fetchSpecialOffers',
-  async (params: FetchSpecialOffersParams, { rejectWithValue }) => {
+  async (params: FetchSpecialOffersParams, { getState, rejectWithValue }) => {
+    const state = getState() as { specialOffers: SpecialOfferState };
+    const lastFetched = state.specialOffers.lastFetched;
+    const currentTime = Date.now();
+    const cacheTime = 5 * 60 * 1000; // 5 minutes
+
+    if (!params.forceRefresh && lastFetched && currentTime - lastFetched < cacheTime) {
+      return { data: state.specialOffers.items, count: state.specialOffers.pagination.totalItems, pagination: state.specialOffers.pagination };
+    }
+
     try {
       const response = await getSpecialOfferProducts(params);
       return response.data;
@@ -65,14 +77,12 @@ export const fetchSpecialOffers = createAsyncThunk(
   }
 );
 
-
 const specialOfferSlice = createSlice({
   name: 'specialOffers',
   initialState,
   reducers: {},
   extraReducers: (builder) => {
     builder
-      // Fetch Special Offers
       .addCase(fetchSpecialOffers.pending, (state) => {
         state.status = 'loading';
       })
@@ -84,12 +94,12 @@ const specialOfferSlice = createSlice({
         state.status = 'succeeded';
         state.items = action.payload.data;
         state.pagination = action.payload.pagination;
+        state.lastFetched = Date.now();
       })
       .addCase(fetchSpecialOffers.rejected, (state, action) => {
         state.status = 'failed';
         state.error = action.payload as string;
-      })
-
+      });
   },
 });
 

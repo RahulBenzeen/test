@@ -84,7 +84,7 @@ export default function SimilarProducts({ currentProductId }: SimilarProductsPro
         className="overflow-hidden transition-shadow duration-300 hover:shadow-xl flex flex-col"
         onMouseEnter={() => {
           setHoveredProductId(product._id)
-          intervalRef = startImageCycle(product.images)
+          intervalRef = startImageCycle(product.images.map((image) => image.secure_url))
         }}
         onMouseLeave={() => {
           setHoveredProductId(null)
@@ -94,7 +94,7 @@ export default function SimilarProducts({ currentProductId }: SimilarProductsPro
       >
         <CardHeader className="p-0 relative">
           <img
-            src={product.images[hoveredProductId === product._id ? hoveredImageIndex : 0]}
+            src={product.images[hoveredProductId === product._id ? hoveredImageIndex : 0].secure_url}
             alt={product.name}
             className="w-full h-48 object-cover rounded-lg transition-transform duration-300 hover:scale-105 cursor-pointer"
             onClick={() => navigate(`/product/${product._id}`)}

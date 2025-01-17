@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
-import { registerUserThunk, setUser,loginUserThunk  } from '../../store/authSlice';
+import { registerUserThunk, loginUserThunk } from '../../store/authSlice';
 import { Button } from "../../components/ui/button";
 import { Input } from "../../components/ui/input";
 import { Label } from "../../components/ui/label";
@@ -10,6 +10,7 @@ import axios from 'axios';
 import { FcGoogle } from 'react-icons/fc';
 import { useAppDispatch } from '../../store/hooks';
 import showToast from '../../utils/toast/toastUtils';
+
 export default function Register() {
   const [name, setUsername] = useState('');
   const [email, setEmail] = useState('');
@@ -22,24 +23,26 @@ export default function Register() {
   const handleRegister = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
-  
+    setError(null); // Clear previous errors
+
     try {
+      // Step 1: Register the user
       const registerResult = await dispatch(
         registerUserThunk({ name, email, password })
       );
-  
+
       if (registerUserThunk.fulfilled.match(registerResult)) {
-        const loginResult = await dispatch(loginUserThunk({ email, password }));
-        if (loginUserThunk.fulfilled.match(loginResult)) {
-          navigate('/');
-          showToast('Registration successful', 'success');
-        } else {
-          throw new Error('Login after registration failed');
-        }
+
+        // Step 3: Show success message to check email
+        showToast('Registration successful! Please check your email to verify your account.', 'success');
+
+        // No need to redirect to '/verify-email' page
+        // The user will follow the verification process in their email
       } else {
         throw new Error('Registration failed');
       }
-    } catch (err) {
+    } catch  {
+      setError("Registration failed. Please try again"); // Set error state to show message
       showToast('Registration failed. Please try again.', 'error');
     } finally {
       setIsLoading(false);
@@ -53,9 +56,10 @@ export default function Register() {
           headers: { Authorization: `Bearer ${tokenResponse.access_token}` },
         });
 
-        const { sub: id, email, name } = userInfo.data;
+        const { sub: googleId, email } = userInfo.data;
 
-        const loginResult = await dispatch(loginUserThunk({ email, password: id }));
+        // Dispatch Google login action with googleId
+        const loginResult = await dispatch(loginUserThunk({ email, password: googleId }));
         if (loginUserThunk.fulfilled.match(loginResult)) {
           navigate('/');
           showToast('Google Sign-In successful', 'success');
@@ -85,8 +89,8 @@ export default function Register() {
             <div className="grid w-full items-center gap-4">
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="username">Username</Label>
-                <Input 
-                  id="username" 
+                <Input
+                  id="username"
                   placeholder="Enter your username"
                   value={name}
                   onChange={(e) => setUsername(e.target.value)}
@@ -95,9 +99,9 @@ export default function Register() {
               </div>
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="email">Email</Label>
-                <Input 
-                  id="email" 
-                  type="email" 
+                <Input
+                  id="email"
+                  type="email"
                   placeholder="Enter your email"
                   value={email}
                   onChange={(e) => setEmail(e.target.value)}
@@ -106,9 +110,9 @@ export default function Register() {
               </div>
               <div className="flex flex-col space-y-1.5">
                 <Label htmlFor="password">Password</Label>
-                <Input 
-                  id="password" 
-                  type="password" 
+                <Input
+                  id="password"
+                  type="password"
                   placeholder="Create a password"
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
@@ -131,8 +135,8 @@ export default function Register() {
               </span>
             </div>
           </div>
-          <Button 
-            variant="outline" 
+          <Button
+            variant="outline"
             className="w-full"
             onClick={() => googleLogin()}
           >

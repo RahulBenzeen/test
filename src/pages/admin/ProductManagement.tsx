@@ -151,7 +151,7 @@ export default function ProductManagement() {
                       {product.images.length > 0 ? (
                         <div className="relative w-16 h-16 group">
                           <img
-                            src={product.images[0]}
+                            src={product.images[0].secure_url}
                             alt={`${product.name} - 1`}
                             className="w-full h-full object-cover cursor-pointer"
                             onClick={() => openImagePreview(product._id)}
@@ -230,7 +230,7 @@ export default function ProductManagement() {
               <>
                 <div className="flex justify-center mb-4 relative">
                   <img
-                    src={products.find(p => p._id === imagePreview.productId)?.images[imagePreview.index!]}
+                    src={products.find(p => p._id === imagePreview.productId)?.images[imagePreview.index!].secure_url}
                     alt="Product"
                     className="max-w-full max-h-96 object-contain"
                   />

@@ -11,6 +11,8 @@ import reviewReducer from './reviewSlice'
 import userReducer from './adminSlice'
 import allOrderReducer from './allOrdersSlice'
 import specialOfferProduct from './specialProductSlice'
+import subscriptionReducer from './subscriptionSlice'
+import whislistReducer from './whislistSlice'
 export const store = configureStore({
     reducer:{
         cart:cartReducer,
@@ -24,7 +26,9 @@ export const store = configureStore({
         reviews: reviewReducer,
         users:userReducer,
         allOrders:allOrderReducer,
-        specialOffers: specialOfferProduct
+        specialOffers: specialOfferProduct,
+        subscription : subscriptionReducer,
+        whishlist: whislistReducer
     }
 })
 
