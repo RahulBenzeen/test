@@ -8,5 +8,8 @@ export const getOrderByUserId = () =>
   api.get('api/order/myorder');  // Replace with your actual login API endpoint
 
 export const deleteOrder = (orderId:string) => 
-  api.delete(`api/order/orders/${orderId}`);  // Replace with your actual login API endpoint
+  api.delete(`api/order/orders/${orderId}`); 
+ // Replace with your actual login API endpoint
+export const cancelProductOrder = (orderId:string) => 
+  api.put(`api/order/orders/cancel/${orderId}`);  // Replace with your actual login API endpoint
 

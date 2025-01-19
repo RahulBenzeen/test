@@ -15,9 +15,9 @@ const OrderFilters: React.FC<OrderFiltersProps> = ({
   onDateChange
 }) => {
   return (
-    <div className="flex flex-col sm:flex-row gap-4 mb-6">
-      <Select value={statusFilter?.toLowerCase()} onValueChange={onStatusChange}>
-        <SelectTrigger className="w-full sm:w-[200px]">
+    <div className="flex flex-col sm:flex-row gap-2 sm:gap-4 mb-4 sm:mb-6">
+      <Select value={statusFilter} onValueChange={onStatusChange}>
+        <SelectTrigger className="w-full sm:w-[200px] h-9 sm:h-10 text-xs sm:text-sm">
           <SelectValue placeholder="Filter by status" />
         </SelectTrigger>
         <SelectContent>
@@ -30,7 +30,7 @@ const OrderFilters: React.FC<OrderFiltersProps> = ({
       </Select>
 
       <Select value={dateFilter} onValueChange={onDateChange}>
-        <SelectTrigger className="w-full sm:w-[200px]">
+        <SelectTrigger className="w-full sm:w-[200px] h-9 sm:h-10 text-xs sm:text-sm">
           <SelectValue placeholder="Filter by date" />
         </SelectTrigger>
         <SelectContent>

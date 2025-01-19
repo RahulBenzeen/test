@@ -27,7 +27,7 @@ export default function CustomerOrderHistory() {
     const matchesSearch = order._id?.toLowerCase().includes(searchTerm.toLowerCase()) ||
       order.products.some(product => product.name.toLowerCase().includes(searchTerm.toLowerCase()))
     
-    const matchesStatus = statusFilter === "all" || order.orderStatus === statusFilter
+    const matchesStatus = statusFilter === "all" || order.orderStatus.toLocaleLowerCase() === statusFilter
     
     const matchesDate = dateFilter === "all" || (() => {
       const orderDate = new Date(order.createdAt)
@@ -51,12 +51,12 @@ export default function CustomerOrderHistory() {
   if (status === "failed") return <ErrorState onRetry={() => dispatch(fetchOrdersByUser())} />
 
   return (
-    <div className="min-h-screen bg-gray-50 py-8">
-      <div className="container mx-auto px-4 max-w-6xl">
+    <div className="min-h-screen bg-gray-50 py-4 sm:py-8">
+      <div className="container mx-auto px-3 sm:px-4 max-w-6xl">
         <Card className="w-full shadow-xl border-0">
-          <CardHeader className="border-b bg-white rounded-t-xl">
-            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-              <CardTitle className="text-2xl font-bold text-gray-800">
+          <CardHeader className="border-b bg-white rounded-t-xl p-4 sm:p-6">
+            <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-3 sm:gap-4">
+              <CardTitle className="text-xl sm:text-2xl font-bold text-gray-800">
                 Order History
               </CardTitle>
               <div className="relative w-full md:w-96">
@@ -66,14 +66,14 @@ export default function CustomerOrderHistory() {
                   placeholder="Search orders by ID or product..."
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
-                  className="pl-9 border-gray-200"
+                  className="pl-9 border-gray-200 h-9 sm:h-10 text-xs sm:text-sm"
                 />
               </div>
             </div>
           </CardHeader>
-          <CardContent className="p-6">
+          <CardContent className="p-3 sm:p-6">
             <OrderFilter
-              statusFilter={statusFilter.toLocaleLowerCase()}
+              statusFilter={statusFilter}
               dateFilter={dateFilter}
               onStatusChange={setStatusFilter}
               onDateChange={setDateFilter}

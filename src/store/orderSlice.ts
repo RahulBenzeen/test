@@ -1,6 +1,6 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import axios from 'axios';
-import { deleteOrder, getOrderByUserId, placeOrder } from '../api/order';
+import { cancelProductOrder, deleteOrder, getOrderByUserId, placeOrder } from '../api/order';
 import { Product } from './productSlice';
 
 
@@ -21,21 +21,6 @@ interface ShippingInfo {
   courierService?: string;
   shippingDate?: string;
 }
-
-// // Define the structure of an order
-// export interface Order {
-//   _id?: string;
-//   user?: string; // MongoDB ObjectId as string
-//   products:Product;
-//   totalPrice: number;
-//   shippingAddress: ShippingAddress;
-//   paymentStatus: 'pending' | 'completed' | 'failed';
-//   orderStatus: 'pending' | 'shipped' | 'delivered' | 'cancelled';
-//   paymentMethod?: 'razorpay' | 'creditCard' | 'paypal';
-//   shippingInfo?: ShippingInfo;
-//   createdAt?: string;
-//   updatedAt?: string;
-// }
 
 
 export interface Order {
@@ -115,6 +100,20 @@ export const deleteOrders = createAsyncThunk(
   }
 );
 
+// Async thunk for canceling an order
+export const cancelOrder = createAsyncThunk(
+  'orders/cancelOrder',
+  async (orderId: string, { rejectWithValue }) => {
+    try {
+      const response = await cancelProductOrder(orderId);
+      return response.data; // Assuming the API returns the updated order
+    } catch (error: any) {
+      return rejectWithValue(error.response?.data?.message || error.message);
+    }
+  }
+);
+
+
 const orderSlice = createSlice({
   name: 'orders',
   initialState,
@@ -191,6 +190,20 @@ const orderSlice = createSlice({
         state.status = 'failed';
         state.error = action.error.message || null;
       })
+      .addCase(cancelOrder.pending, (state) => {
+        state.status = 'loading';
+      })
+      .addCase(cancelOrder.fulfilled, (state, action) => {
+        state.status = 'succeeded';
+        const index = state.orders.findIndex(order => order._id === action.payload._id);
+        if (index !== -1) {
+          state.orders[index] = action.payload; // Update the canceled order in the state
+        }
+      })
+      .addCase(cancelOrder.rejected, (state, action) => {
+        state.status = 'failed';
+        state.error = action.payload as string;
+      });
   },
 });
 
