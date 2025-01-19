@@ -121,7 +121,7 @@ export default function CheckoutPage() {
                     <li key={item._id} className="flex flex-col sm:flex-row sm:items-center justify-between gap-4 pb-4 border-b">
                       <div className="flex items-start space-x-4">
                         <img 
-                          src={item?.product?.images[0]} 
+                          src={item?.product?.images[0].secure_url} 
                           alt={item?.product?.name} 
                           className="w-20 h-20 object-cover rounded-lg"
                         />

@@ -106,7 +106,7 @@ export default function Cart() {
                   <li key={item._id} className="flex space-x-4">
                     <div className="relative h-24 w-24 rounded-md overflow-hidden">
                       <img
-                        src={item.product?.images?.[0] || '/path/to/placeholder.png'}
+                        src={item.product?.images?.[0].secure_url || '/path/to/placeholder.png'}
                         alt={item.product?.name || 'Product'}
                         className="h-full w-full object-cover"
                       />

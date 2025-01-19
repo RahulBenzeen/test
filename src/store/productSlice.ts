@@ -11,7 +11,7 @@ export interface Product {
   subcategory: string;
   images: { secure_url: string; public_id: string }[]; // Updated type
   stock: number;
-  brand?: string;
+  brand: string;
   rating?: number;
   sku?: string;
   weight?: number;

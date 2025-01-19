@@ -13,7 +13,8 @@ interface PaginatorProps {
   totalPages: number
   onPageChange: (page: number) => void
   itemsPerPage: number
-  onItemsPerPageChange: (items: number) => void
+  onItemsPerPageChange: (items: number) => void,
+  itemsPerPageOptions:number[]
 }
 
 const Paginator: React.FC<PaginatorProps> = ({
@@ -21,7 +22,9 @@ const Paginator: React.FC<PaginatorProps> = ({
   totalPages,
   onPageChange,
   itemsPerPage,
-  onItemsPerPageChange
+  onItemsPerPageChange,
+  itemsPerPageOptions
+ 
 }) => {
   return (
     <div className="flex flex-col sm:flex-row items-center justify-between space-y-2 sm:space-y-0 sm:space-x-4">
@@ -51,7 +54,7 @@ const Paginator: React.FC<PaginatorProps> = ({
             <SelectValue>{itemsPerPage.toString()}</SelectValue>
           </SelectTrigger>
           <SelectContent>
-            {[3, 5, 8, 10].map((number) => (
+            {itemsPerPageOptions.map((number) => (
               <SelectItem key={number} value={number.toString()}>
                 {number}
               </SelectItem>

@@ -56,7 +56,7 @@ export default function RecentlyViewed() {
             <Card key={item._id} className="min-w-[250px]">
               <CardContent className="p-4">
                 <img
-                  src={item.images[0] || "/placeholder.svg?height=200&width=200"}
+                  src={item.images[0].secure_url || "/placeholder.svg?height=200&width=200"}
                   alt={item.name}
                   className="w-full aspect-square object-cover rounded-lg mb-4"
                 />
