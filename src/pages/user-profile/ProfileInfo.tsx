@@ -1,45 +1,37 @@
-'use client'
+"use client"
 
-import { useState, useEffect, useRef } from "react";
-import { useForm } from "react-hook-form";
-import { zodResolver } from "@hookform/resolvers/zod";
-import * as z from "zod";
-import {
-  Card,
-  CardHeader,
-  CardTitle,
-  CardDescription,
-  CardContent,
-  CardFooter,
-} from "../../components/ui/card";
-import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../../components/ui/form";
-import { Input } from "../../components/ui/input";
-import { Button } from "../../components/ui/button";
-import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar";
-import { useAppDispatch, useAppSelector } from "../../store/hooks";
+import { useState, useEffect } from "react"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import * as z from "zod"
+import { Card, CardHeader, CardTitle, CardDescription, CardContent, CardFooter } from "../../components/ui/card"
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "../../components/ui/form"
+import { Input } from "../../components/ui/input"
+import { Button } from "../../components/ui/button"
+import { Avatar, AvatarFallback, AvatarImage } from "../../components/ui/avatar"
+import { useAppDispatch, useAppSelector } from "../../store/hooks"
+import { Loader2, UserCircle, Mail, Check, Camera, LogOut } from "lucide-react"
 
-import { Loader2, UserCircle, Mail, Check, Camera, LogOut } from 'lucide-react';
-import showToast from "../../utils/toast/toastUtils";
-import { fetchUserData, updateUserProfile, updateUserProfilePicture, logoutUserThunk } from "../../store/authSlice";
+import { fetchUserData, updateUserProfile, updateUserProfilePicture, logoutUserThunk } from "../../store/authSlice"
+import showToast from "../../utils/toast/toastUtils"
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+const MAX_FILE_SIZE = 5 * 1024 * 1024 // 5MB
+const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"]
 
 const profileSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
   email: z.string().email("Invalid email address"),
-});
+})
 
-type ProfileFormValues = z.infer<typeof profileSchema>;
+type ProfileFormValues = z.infer<typeof profileSchema>
 
 export default function UserProfile() {
-  const [isEditing, setIsEditing] = useState(false);
-  const [previewImage, setPreviewImage] = useState<string | null>(null);
-  const [newProfilePicture, setNewProfilePicture] = useState<File | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const dispatch = useAppDispatch();
-  const user = useAppSelector((state) => state.auth.user);
-  const { status } = useAppSelector((state) => state.auth);
+  const [isEditing, setIsEditing] = useState(false)
+  const [previewImage, setPreviewImage] = useState<string | null>(null)
+  const [newProfilePicture, setNewProfilePicture] = useState<File | null>(null)
+  const dispatch = useAppDispatch()
+  const user = useAppSelector((state) => state.auth.user)
+  const { status } = useAppSelector((state) => state.auth)
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileSchema),
@@ -47,106 +39,112 @@ export default function UserProfile() {
       name: user?.name || "",
       email: user?.email || "",
     },
-  });
+  })
 
   useEffect(() => {
     if (user) {
       form.reset({
         name: user.name,
         email: user.email,
-      });
+      })
     }
-  }, [user, form]);
+  }, [user, form])
 
   useEffect(() => {
-    if (status === 'idle' && user?.id) {
-      dispatch(fetchUserData(user.id));
+    if (status === "idle" && user?.id) {
+      dispatch(fetchUserData(user.id))
     }
-  }, [status, dispatch, user]);
+  }, [status, dispatch, user])
 
   const onSubmit = async (data: ProfileFormValues) => {
     try {
-      const updatedUser = await dispatch(updateUserProfile(data)).unwrap();
-      setIsEditing(false);
+      const updatedUser = await dispatch(updateUserProfile(data)).unwrap()
+      setIsEditing(false)
       form.reset({
         name: updatedUser.name,
         email: updatedUser.email,
-      });
-      showToast("Your profile has been successfully updated.", 'success');
+      })
+      showToast(
+        "Your profile has been successfully updated.", "success")
     } catch {
-      showToast("Failed to update profile. Please try again.", 'error');
+      showToast("Failed to update profile. Please try again.", "error")
     }
-  };
-
-  const handleAvatarClick = () => {
-    fileInputRef.current?.click();
-  };
-
-  const handleLogout = () => {
-    dispatch(logoutUserThunk());
-  };
+  }
 
   const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const file = e.target.files?.[0];
+    const file = e.target.files?.[0]
     if (file) {
       if (file.size > MAX_FILE_SIZE) {
-        showToast("File size exceeds 5MB limit.", 'error');
-        return;
+ 
+
+      showToast("File size exceeds 5MB limit.", "info")
+
+        return
       }
       if (!ACCEPTED_IMAGE_TYPES.includes(file.type)) {
-        showToast("Only .jpg, .jpeg, .png and .webp formats are supported.", 'error');
-        return;
+   
+
+        showToast("Only .jpg, .jpeg, .png and .webp formats are supported.", "info")
+
+        return
       }
-      const reader = new FileReader();
+      const reader = new FileReader()
       reader.onloadend = () => {
-        setPreviewImage(reader.result as string);
-      };
-      reader.readAsDataURL(file);
-      setNewProfilePicture(file);
+        setPreviewImage(reader.result as string)
+      }
+      reader.readAsDataURL(file)
+      setNewProfilePicture(file)
     }
-  };
+  }
 
   const updateProfilePicture = async () => {
     if (!newProfilePicture) {
-      showToast("No new profile picture selected.", "error");
-      return;
+ 
+      showToast("No new profile picture selected.", "warning")
+
+      return
     }
 
     try {
-      const reader = new FileReader();
+      const reader = new FileReader()
       reader.onloadend = async () => {
-        const base64String = reader.result as string;
-        const profilePictureData = { profilePicture: base64String };
+        const base64String = reader.result as string
+        const profilePictureData = { profilePicture: base64String }
 
-        await dispatch(updateUserProfilePicture(profilePictureData)).unwrap();
+        await dispatch(updateUserProfilePicture(profilePictureData)).unwrap()
 
-        setNewProfilePicture(null);
-        setPreviewImage(null);
-        showToast("Your profile picture has been successfully updated.", "success");
-      };
+        setNewProfilePicture(null)
+        setPreviewImage(null)
+
+      showToast("Your profile picture has been successfully updated.", "success")
+
+      }
       reader.onerror = () => {
-        showToast("Failed to process the image. Please try again.", "error");
-      };
 
-      reader.readAsDataURL(newProfilePicture);
+      showToast("Failed to process the image. Please try again.", "error")
+
+      }
+
+      reader.readAsDataURL(newProfilePicture)
     } catch {
-      showToast("Failed to update profile picture. Please try again.", "error");
+      showToast("Failed to update profile picture. Please try again.", "error")
+
     }
-  };
+  }
 
   if (!user) {
     return (
       <div className="flex items-center justify-center h-[400px]">
         <Loader2 className="w-8 h-8 animate-spin text-primary" />
       </div>
-    );
+    )
   }
 
   return (
     <Card className="w-full max-w-2xl mx-auto">
       <CardHeader className="relative">
         <Button
-          onClick={handleLogout}
+          onClick={() => dispatch(logoutUserThunk())}
           variant="outline"
           className="absolute top-2 right-2 flex items-center gap-2"
         >
@@ -154,11 +152,8 @@ export default function UserProfile() {
           Logout
         </Button>
         <div className="flex flex-col md:flex-row items-center gap-6">
-          <div className="relative">
-            <Avatar
-              className="w-24 h-24 border-4 border-primary/10 cursor-pointer"
-              onClick={handleAvatarClick}
-            >
+          <div className="relative group">
+            <Avatar className="w-24 h-24 border-4 border-primary/10 cursor-pointer transition-transform group-hover:scale-105">
               <AvatarImage src={previewImage || user.profilePicture} />
               <AvatarFallback className="text-2xl bg-primary/5">
                 {user.name
@@ -170,17 +165,14 @@ export default function UserProfile() {
                   : "U"}
               </AvatarFallback>
             </Avatar>
-            <div className="absolute bottom-0 right-0 bg-primary rounded-full p-1">
+            <label
+              htmlFor="avatar-upload"
+              className="absolute bottom-0 right-0 bg-primary rounded-full p-1 cursor-pointer transition-opacity opacity-0 group-hover:opacity-100"
+            >
               <Camera className="w-4 h-4 text-white" />
-            </div>
+            </label>
+            <input id="avatar-upload" type="file" onChange={handleFileChange} accept="image/*" className="hidden" />
           </div>
-          <input
-            type="file"
-            ref={fileInputRef}
-            onChange={handleFileChange}
-            accept="image/*"
-            className="hidden"
-          />
           <div className="space-y-1 text-center md:text-left">
             <CardTitle className="text-3xl">{user.name || "User"}</CardTitle>
             <CardDescription className="text-lg flex items-center justify-center md:justify-start gap-2">
@@ -257,8 +249,8 @@ export default function UserProfile() {
                   type="button"
                   variant="outline"
                   onClick={() => {
-                    setIsEditing(false);
-                    form.reset();
+                    setIsEditing(false)
+                    form.reset()
                   }}
                   className="flex-1"
                 >
@@ -272,15 +264,12 @@ export default function UserProfile() {
 
       <CardFooter className="flex justify-between border-t pt-6">
         {!isEditing && (
-          <Button
-            onClick={() => setIsEditing(true)}
-            variant="outline"
-            className="w-full"
-          >
+          <Button onClick={() => setIsEditing(true)} variant="outline" className="w-full">
             Edit Profile
           </Button>
         )}
       </CardFooter>
     </Card>
-  );
+  )
 }
+
