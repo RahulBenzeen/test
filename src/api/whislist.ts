@@ -9,5 +9,8 @@ export const addWishlist= (productId:string) =>
 
 // API call for getting reviews for a specific product
 export const removeWhislist = (productId: string) => 
-  api.post(`/api/wishlist/remove`, {productId});
+  api.delete(`/api/wishlist/remove/${productId}`);
+
+export const getUserWishList = (userId: string) => 
+  api.get(`/api/wishlist/${userId}`);
 

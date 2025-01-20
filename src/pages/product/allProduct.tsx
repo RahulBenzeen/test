@@ -36,8 +36,10 @@ import { addToCartAsync } from '../../store/cartSlice'
 import { Product } from '../../store/productSlice'
 import { Skeleton } from "../../components/ui/skeleton"
 import showToast from '../../utils/toast/toastUtils'
-import { addToWishlist, removeFromWishlist } from '../../store/whislistSlice'
+import { addToWishlist, fetchWishlist, removeFromWishlist } from '../../store/whislistSlice'
 import { useMediaQuery } from '../../hooks/useMediaQuery'
+import WishlistButton from '../wishlistButton/wishlistButton'
+import fallbackImage from '../../assets/images/fallbackimage.webp'
 
 export default function ProductPage() {
   const dispatch = useAppDispatch()
@@ -45,16 +47,14 @@ export default function ProductPage() {
   const location = useLocation()
   const filters = useAppSelector((state) => state.filters)
   const { items: products, status, error, pagination } = useAppSelector((state) => state.products)
-  const { wishlists }: { wishlists: { _id: string }[] } = useAppSelector((state) => state.whishlist)
-  const { isAuthenticated } = useAppSelector((state) => state.auth)
-  // const [isFilterOpen, setIsFilterOpen] = useState(false)
+  const wishlists  = useAppSelector((state) => state.whishlist.wishlists)
+  const { isAuthenticated,user } = useAppSelector((state) => state.auth)
   const [wishlist, setWishlist] = useState<Set<string>>(new Set())
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null)
   const [selectedFilters, setSelectedFilters] = useState<string[]>([])
 
   const isMobile = useMediaQuery('(max-width: 768px)')
   const isTablet = useMediaQuery('(max-width: 1024px)')
-
   useEffect(() => {
     const searchParams = new URLSearchParams(location.search)
     const category = searchParams.get('category') || ''
@@ -71,6 +71,13 @@ export default function ProductPage() {
       sortBy: filters.sortBy,
     }))
   }, [dispatch, filters.currentPage, filters.itemsPerPage, filters.sortBy, location.search])
+
+  useEffect(() => {
+    if (isAuthenticated) {
+      dispatch(fetchWishlist(user?.id || ''));
+    }
+  }, [isAuthenticated, user?.id, dispatch]);  // Dependency array: runs when `isAuthenticated` or `user?.id` changes
+  
 
   const handleAddToCart = async (product: Product, e: React.MouseEvent) => {
     e.stopPropagation()
@@ -107,22 +114,31 @@ export default function ProductPage() {
     dispatch(setSortBy(value))
   }
 
-  const toggleWishlist = (productId: string, e: React.MouseEvent) => {
-    e.stopPropagation()
-    
-    const isProductInWishlist: boolean = wishlists.some((item) => item._id === productId)
+  const toggleWishlist = async (productId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
   
-    if (isProductInWishlist) {
-      dispatch(removeFromWishlist(productId))
-        .then(() => showToast("Removed from wishlist", "success"))
-        .catch((error) => showToast(error.message, "error"))
-    } else {
-      dispatch(addToWishlist(productId))
-        .then(() => showToast("Added to wishlist", "success"))
-        .catch((error) => showToast(error.message, "error"))
+    if (!productId) {
+      showToast("Invalid product", "error");
+      return;
     }
-  }
-
+  
+    const isProductInWishlist = wishlists?.some((item) => item?.product?._id === productId);
+  
+    try {
+      if (isProductInWishlist) {
+        await dispatch(removeFromWishlist(productId)).unwrap();
+        showToast("Removed from wishlist", "success");
+      } else {
+        await dispatch(addToWishlist(productId)).unwrap();
+        showToast("Added to wishlist", "success");
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      showToast(errorMessage, "error");
+    }
+  };
+  
+  
   const handleShare = async (product: Product, e: React.MouseEvent) => {
     e.stopPropagation()
     try {
@@ -194,9 +210,11 @@ export default function ProductPage() {
 
   const ProductCard: React.FC<{ product: Product }> = ({ product }) => {
     const [isHovered, setIsHovered] = useState(false)
-    const isWishlisted = wishlist.has(product._id)
+    const isWishlisted = Array.isArray(wishlists) && wishlists.some((item) => item?.product?._id === product?._id);
     const isSpecialOffer = product.isSpecialOffer && (product.discountPercentage ?? 0) > 0
 
+
+    
     return (
       <motion.div
         variants={cardVariants}
@@ -216,10 +234,11 @@ export default function ProductPage() {
           <CardHeader className={`${filters.view === 'grid' ? 'p-0' : 'p-4 md:w-1/3'} relative`}>
             <div className="relative w-full aspect-square md:aspect-[4/3] overflow-hidden">
               <img
-                src={product?.images[0].secure_url || '/placeholder.svg'}
+                src={product?.images?.[0]?.secure_url || fallbackImage}
                 alt={product.name}
                 className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                 loading="lazy"
+                onError={(e) => (e.target as HTMLImageElement).src = fallbackImage}
               />
 
               {!isMobile && (
@@ -253,9 +272,11 @@ export default function ProductPage() {
                     </SheetHeader>
                     <div className="space-y-4 mt-4">
                       <img
-                        src={product.images[0].secure_url}
-                        alt={product.name}
+                        src={product?.images?.[0]?.secure_url}
+                        alt={fallbackImage}
                         className="w-full h-auto rounded-lg"
+                        onError={(e) => (e.target as HTMLImageElement).src = fallbackImage}
+
                       />
                       <div className="space-y-4">
                         <div className="flex items-center gap-2">
@@ -296,25 +317,11 @@ export default function ProductPage() {
               )}
             </div>
             <div className="absolute top-2 right-2 flex flex-col gap-2">
-              <TooltipProvider>
-                <Tooltip>
-                  <TooltipTrigger asChild>
-                    <Button
-                      size="icon"
-                      variant="secondary"
-                      className="rounded-full bg-white/80 backdrop-blur-sm hover:bg-white"
-                      onClick={(e) => toggleWishlist(product._id, e)}
-                    >
-                      <Heart className={`h-4 w-4 transition-colors duration-300 ${
-                        isWishlisted ? 'fill-red-500 text-red-500' : ''
-                      }`} />
-                    </Button>
-                  </TooltipTrigger>
-                  <TooltipContent>
-                    <p>{isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}</p>
-                  </TooltipContent>
-                </Tooltip>
-              </TooltipProvider>
+            <WishlistButton
+              productId={product._id}
+              isWishlisted={isWishlisted}
+              toggleWishlist={toggleWishlist}
+            />
               <TooltipProvider>
                 <Tooltip>
                   <TooltipTrigger asChild>
@@ -333,12 +340,12 @@ export default function ProductPage() {
                 </Tooltip>
               </TooltipProvider>
             </div>
-            {product.stock === 0 && (
+            {product?.stock === 0 && (
               <Badge variant="destructive" className="absolute top-2 left-2">
                 Out of Stock
               </Badge>
             )}
-            {product.stock > 0 && product.stock <= 5 && (
+            {product?.stock > 0 && product?.stock <= 5 && (
               <Badge variant="secondary" className="absolute top-2 left-2">
                 Only {product.stock} left
               </Badge>
@@ -346,30 +353,35 @@ export default function ProductPage() {
             {isSpecialOffer && (
               <Badge variant="secondary" className="absolute bottom-2 left-2 bg-red-500 text-white">
                 <Percent className="w-4 h-4 mr-1" />
-                {product.discountPercentage}% OFF
+                {product?.discountPercentage}% OFF
               </Badge>
             )}
           </CardHeader>
           <CardContent className={`flex-grow p-4 ${filters.view === 'list' ? 'md:flex-1' : ''}`}>
             <div className="space-y-2">
-              <Badge variant="outline" className="mb-2">
-                {product.category}
-              </Badge>
+              {
+                product?.category && (
+                  <Badge variant="outline" className="mb-2">
+                  {product.category}
+                  </Badge>
+                )
+              }
+  
               <h3 className="text-lg font-semibold line-clamp-2 group-hover:text-primary transition-colors duration-300">
-                {product.name}
+                {product?.name}
                 <ArrowUpRight className="inline-block w-4 h-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
               </h3>
-              {product.brand && (
+              {product?.brand && (
                 <p className="text-sm text-muted-foreground">{product.brand}</p>
               )}
               <div className="flex items-center gap-2">
                 {isSpecialOffer ? (
                   <>
-                    <p className="text-xl font-bold text-red-500">₹{product.discountedPrice?.toFixed(2)}</p>
-                    <p className="text-sm text-muted-foreground line-through">₹{product.price.toFixed(2)}</p>
+                    <p className="text-xl font-bold text-red-500">₹{product?.discountedPrice?.toFixed(2)}</p>
+                    <p className="text-sm text-muted-foreground line-through">₹{product?.price?.toFixed(2)}</p>
                   </>
                 ) : (
-                  <p className="text-xl font-bold text-primary">₹{product.price.toFixed(2)}</p>
+                  <p className="text-xl font-bold text-primary">₹{product?.price?.toFixed(2)}</p>
                 )}
               </div>
               <div className="flex items-center">
@@ -396,11 +408,11 @@ export default function ProductPage() {
                   isSpecialOffer ? 'bg-red-500 hover:bg-red-600' : ''
                 }`}
                 onClick={(e) => handleAddToCart(product, e)}
-                disabled={product.stock === 0}
+                disabled={product?.stock === 0}
               >
                 <span className="absolute inset-0 bg-white/20 group-hover:translate-y-0 translate-y-full transition-transform duration-300" />
                 <ShoppingCart className="mr-2 h-4 w-4" />
-                {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+                {product?.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
               </Button>
             ) : (
               <Button
@@ -408,10 +420,10 @@ export default function ProductPage() {
                   isSpecialOffer ? 'bg-red-500 hover:bg-red-600' : ''
                 }`}
                 onClick={() => navigate('/signin')}
-                disabled={product.stock === 0}
+                disabled={product?.stock === 0}
               >
                 <span className="absolute inset-0 bg-white/20 group-hover:translate-y-0 translate-y-full transition-transform duration-300" />
-                {product.stock > 0 ? 'Sign in to Buy' : 'Out of Stock'}
+                {product?.stock > 0 ? 'Sign in to Buy' : 'Out of Stock'}
               </Button>
             )}
           </CardFooter>
@@ -584,9 +596,10 @@ export default function ProductPage() {
                 <div className="grid md:grid-cols-2 gap-6 p-6">
                   <div className="relative">
                     <img
-                      src={quickViewProduct.images[0].secure_url}
-                      alt={quickViewProduct.name}
+                      src={quickViewProduct?.images?.[0]?.secure_url}
+                      alt={fallbackImage}
                       className="w-full h-auto rounded-lg"
+                      onError={(e) => (e.target as HTMLImageElement).src = fallbackImage}
                     />
                     {quickViewProduct.isSpecialOffer && (
                       <Badge className="absolute top-2 left-2 bg-red-500">

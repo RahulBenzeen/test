@@ -334,33 +334,43 @@ useEffect(() => {
             </AccordionTrigger>
             <AccordionContent>
               <div className="space-y-2">
-                {[0, ...Array(5).keys()].map((rating) => (
-                  <div
-                    key={rating}
-                    className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-colors ${
-                      localFilters.rating === rating
-                        ? 'bg-primary/10 text-primary'
-                        : 'hover:bg-muted'
-                    }`}
-                    onClick={() => handleFilterChange('rating', rating)}
-                  >
-                    <div className="flex items-center gap-1">
-                      {rating === 0 ? (
-                        <span>Any Rating</span>
-                      ) : (
-                        <>
-                          <span>{rating}+</span>
-                          {Array(rating).fill(0).map((_, i) => (
-                            <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                          ))}
-                        </>
-                      )}
-                    </div>
-                    {localFilters.rating === rating && (
-                      <Check className="w-4 h-4" />
-                    )}
-                  </div>
-                ))}
+                {[
+              { value: 0, label: 'Any Rating' },
+              { value: 1, label: '1+ Star' },
+              { value: 2, label: '2+ Stars' },
+              { value: 3, label: '3+ Stars' },
+              { value: 4, label: '4+ Stars' },
+              { value: 5, label: '5 Stars' }
+            ].map((rating) => (
+              <div
+              key={`rating-${rating.value}`}
+              className={`flex items-center justify-between p-2 rounded-md cursor-pointer transition-colors ${
+                localFilters.rating === rating.value
+                  ? 'bg-primary/10 text-primary'
+                  : 'hover:bg-muted'
+              }`}
+              onClick={() => handleFilterChange('rating', rating.value)}
+            >
+                <div className="flex items-center gap-1">
+                  {rating.value === 0 ? (
+                    <span>{rating.label}</span>
+                  ) : (
+                    <>
+                      <span>{rating.label}</span>
+                      {Array.from({ length: rating.value }).map((_, i) => (
+                        <Star 
+                          key={`star-${rating.value}-${i}`} 
+                          className="w-4 h-4 fill-yellow-400 text-yellow-400" 
+                        />
+                      ))}
+                    </>
+                  )}
+                </div>
+                {localFilters.rating === rating.value && (
+                  <Check className="w-4 h-4" />
+                )}
+              </div>
+            ))}
               </div>
             </AccordionContent>
           </AccordionItem>

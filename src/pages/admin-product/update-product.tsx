@@ -95,7 +95,7 @@ export default function UpdateProductPage({ productId, onUpdateProduct}: UpdateP
       };
       
       form.reset(formValues);
-      setPreviewImages(product.images || []);
+      setPreviewImages(product.images.map(images => images.secure_url) || []);
       setSelectedCategory(product.category || '');
     }
   }, [product, form]);
@@ -128,6 +128,10 @@ export default function UpdateProductPage({ productId, onUpdateProduct}: UpdateP
   const removeImage = (index: number) => {
     setPreviewImages((prev) => prev.filter((_, i) => i !== index));
   };
+
+  const deleteCloodinaryImage = async (publicId: string) => {
+    
+  }
 
   const onSubmit = async (values: ProductFormValues) => {
     try {
