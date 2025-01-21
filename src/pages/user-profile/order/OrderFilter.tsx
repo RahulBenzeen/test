@@ -16,7 +16,7 @@ const OrderFilters: React.FC<OrderFiltersProps> = ({
 }) => {
   return (
     <div className="flex flex-col sm:flex-row gap-4 mb-6">
-      <Select value={statusFilter} onValueChange={onStatusChange}>
+      <Select value={statusFilter?.toLowerCase()} onValueChange={onStatusChange}>
         <SelectTrigger className="w-full sm:w-[200px]">
           <SelectValue placeholder="Filter by status" />
         </SelectTrigger>

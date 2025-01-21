@@ -73,7 +73,7 @@ export default function CustomerOrderHistory() {
           </CardHeader>
           <CardContent className="p-6">
             <OrderFilter
-              statusFilter={statusFilter}
+              statusFilter={statusFilter.toLocaleLowerCase()}
               dateFilter={dateFilter}
               onStatusChange={setStatusFilter}
               onDateChange={setDateFilter}

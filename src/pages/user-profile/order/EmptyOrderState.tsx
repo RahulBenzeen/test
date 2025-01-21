@@ -1,12 +1,13 @@
 import React from 'react'
 import { ShoppingCart } from 'lucide-react'
 import { Button } from "../../../components/ui/button"
-
+import { useNavigate } from 'react-router-dom'
 interface EmptyOrderStateProps {
   hasSearch: boolean
 }
 
 const EmptyOrderState: React.FC<EmptyOrderStateProps> = ({ hasSearch }) => {
+  const router = useNavigate()
   return (
     <div className="text-center py-12">
       <ShoppingCart className="w-16 h-16 text-gray-300 mx-auto mb-4" />
@@ -21,7 +22,7 @@ const EmptyOrderState: React.FC<EmptyOrderStateProps> = ({ hasSearch }) => {
       </p>
       <Button 
         variant="outline"
-        onClick={() => window.location.href = "/shop"}
+        onClick={() => router("/product")}
         className="hover:bg-primary hover:text-white transition-colors"
       >
         Browse Products

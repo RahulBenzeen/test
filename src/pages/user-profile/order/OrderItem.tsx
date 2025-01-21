@@ -43,8 +43,8 @@ const OrderItem = ({ order}) => {
             <span className="hidden md:block font-medium text-gray-700">
               ${order.totalPrice.toFixed(2)}
             </span>
-            <Badge className={`${getStatusColor(order.orderStatus)} border`}>
-              {order.orderStatus}
+            <Badge className={`${getStatusColor(order.orderStatus.toLowerCase())} border`}>
+              {order.orderStatus.toLowerCase()}
             </Badge>
           </div>
         </div>
@@ -60,7 +60,7 @@ const OrderItem = ({ order}) => {
                 <div className="space-y-2">
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Payment Status</span>
-                    <span className="font-medium">{order.paymentStatus}</span>
+                    <span className="font-medium">{order.paymentStatus.toLowerCase()}</span>
                   </div>
                   <div className="flex justify-between text-sm">
                     <span className="text-gray-600">Payment Method</span>
