@@ -19,6 +19,7 @@ import { useDispatch, useSelector } from 'react-redux'
 import { fetchProducts, deleteProductThunk } from '../../store/productSlice'
 import { RootState, AppDispatch } from '../../store/store'
 import { Product } from '../../store/productSlice'
+import showToast from '../../utils/toast/toastUtils'
 
 
 export default function ProductManagement() {
@@ -55,8 +56,8 @@ export default function ProductManagement() {
 
   const handleDeleteProduct = () => {
     if (deleteConfirmation.productId) {
-      console.log('Deleting product with id:', deleteConfirmation.productId)
       dispatch(deleteProductThunk(deleteConfirmation.productId))
+      showToast(`Deleted product with id: ${deleteConfirmation.productId}`, 'success')
       closeDeleteConfirmation()
     }
   }

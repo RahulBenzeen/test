@@ -14,7 +14,7 @@ import NonAuthRoute from '../../utils/ProtectedRoute/NonAuthRoute';
 import 'react-toastify/dist/ReactToastify.css';
 import AdminDashboard from '../admin/AdminDashboard';
 import { ReactNode } from 'react';
-
+import ScrollToTop from '../scroll-top/ScrollToTop';
 
 
 // Lazy-loaded components
@@ -57,8 +57,9 @@ function Layout({ children }: { children: ReactNode }) {
 export default function Home() {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <Router>
+      <Router future={{v7_startTransition:true}}>
         <AuthCheck>
+        <ScrollToTop /> {/* Add this component */}
           <Layout>
             <Suspense fallback={<LoadingSpinner />}>
               <Routes>

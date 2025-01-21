@@ -10,6 +10,7 @@ interface QuickViewDialogProps {
   isOpen: boolean;
   onClose: () => void;
   onAddToCart: (product: Product, e: React.MouseEvent) => void;
+  isAuthenticated:boolean
   onViewDetails: () => void;
   isWishlisted: boolean;
   onWishlistToggle: (productId: string, e: React.MouseEvent) => void;
@@ -20,6 +21,7 @@ const QuickViewDialog: React.FC<QuickViewDialogProps> = ({
   isOpen,
   onClose,
   onAddToCart,
+  isAuthenticated,
   onViewDetails,
   isWishlisted,
   onWishlistToggle,
@@ -49,13 +51,17 @@ const QuickViewDialog: React.FC<QuickViewDialogProps> = ({
                 <Badge variant="outline">{product.category}</Badge>
                 <h2 className="text-2xl font-bold">{product.name}</h2>
               </div>
-              <Button
+              {
+                isAuthenticated && 
+                <Button
                 size="icon"
                 variant="ghost"
                 onClick={(e) => onWishlistToggle(product._id, e)}
               >
                 <Heart className={`h-5 w-5 ${isWishlisted ? 'fill-red-500 text-red-500' : ''}`} />
               </Button>
+              }
+              
             </div>
             <div className="flex items-center gap-2">
               {product.isSpecialOffer ? (

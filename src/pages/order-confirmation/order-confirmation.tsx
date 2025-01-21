@@ -19,10 +19,6 @@ const orderData = {
 export default function OrderConfirmationPage() {
 
  const createdOrderData = useLocation();
- console.log(createdOrderData.state);
-
-
-
 
   const redirect = useNavigate()
 

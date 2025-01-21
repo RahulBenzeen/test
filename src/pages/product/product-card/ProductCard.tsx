@@ -8,6 +8,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../.
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../../components/ui/tooltip';
 import WishlistButton from '../../wishlistButton/wishlistButton';
 import { Product } from '../../../store/productSlice';
+import { useNavigate } from 'react-router-dom';
 
 interface ProductCardProps {
   product: Product;
@@ -46,14 +47,15 @@ const ProductCard: React.FC<ProductCardProps> = ({
   const [isHovered, setIsHovered] = useState(false);
   const isMobile = window.innerWidth <= 768;
   const isSpecialOffer = product.isSpecialOffer && (product.discountPercentage ?? 0) > 0;
+  const router = useNavigate()
 
-  const handleShare = async (e: React.MouseEvent) => {
+  const handleShare = async (product:Product, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
       await navigator.share({
         title: product.name,
         text: `Check out ${product.name}`,
-        url: window.location.href + `/${product._id}`,
+        url: `/product/${product._id}`,
       });
     } catch {
       // Ignore share errors
@@ -154,11 +156,14 @@ const ProductCard: React.FC<ProductCardProps> = ({
           </div>
 
           <div className="absolute top-2 right-2 flex flex-col gap-2">
-            <WishlistButton
+            {isAuthenticated && 
+              <WishlistButton
               productId={product._id}
               isWishlisted={isWishlisted}
               toggleWishlist={onWishlistToggle}
             />
+            }
+
             <TooltipProvider>
               <Tooltip>
                 <TooltipTrigger asChild>
@@ -166,7 +171,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     size="icon"
                     variant="secondary"
                     className="rounded-full bg-white/80 backdrop-blur-sm hover:bg-white"
-                    onClick={handleShare}
+                    onClick={(e) => {handleShare(product,e)}}
                   >
                     <Share2 className="h-4 w-4" />
                   </Button>
@@ -260,7 +265,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
               className={`w-full group relative overflow-hidden ${
                 isSpecialOffer ? 'bg-red-500 hover:bg-red-600' : ''
               }`}
-              onClick={() => window.location.href = '/signin'}
+              onClick={() => router('/signin')}
               disabled={product.stock === 0}
             >
               <span className="absolute inset-0 bg-white/20 group-hover:translate-y-0 translate-y-full transition-transform duration-300" />

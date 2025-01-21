@@ -88,7 +88,6 @@ const addressSlice = createSlice({
         state.status = "loading";
       })
       .addCase(saveNewAddress.fulfilled, (state, action) => {
-        console.log(action.payload)
         state.status = "succeeded";
         state.addresses.push(action.payload); // Add new address to the state
       })

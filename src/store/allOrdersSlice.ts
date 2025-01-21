@@ -65,7 +65,6 @@ export const fetchAllOrders = createAsyncThunk(
 export const updateOrderStatus = createAsyncThunk(
   'orders/updateOrderStatus',
   async ({ id, orderStatus }: { id: string, orderStatus: string }, { rejectWithValue }) => {
-    console.log({ id, orderStatus })
     try {
       await updateOrderStatusAPI(id, orderStatus) // API call to update the order status
       return { id, orderStatus }  // Return the updated status and order id

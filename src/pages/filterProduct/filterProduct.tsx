@@ -3,7 +3,6 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { setCategory, setBrand, setPriceRange, setRating, clearFilters } from '../../store/filterSlice'
 import { fetchProducts } from '../../store/productSlice'
 import { useLocation, useNavigate } from 'react-router-dom'
-
 import { Slider } from "../../components/ui/slider"
 import { Button } from "../../components/ui/button"
 import { Badge } from "../../components/ui/badge"

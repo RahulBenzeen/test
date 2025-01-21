@@ -22,12 +22,6 @@ import ProductErrorState from './error-state/ProductErrorState';
 
 // Constants
 const ITEMS_PER_PAGE_OPTIONS = [12, 24, 48];
-// const SORT_OPTIONS = [
-//   { value: 'price_asc', label: 'Price: Low to High' },
-//   { value: 'price_desc', label: 'Price: High to Low' },
-//   { value: 'rating_desc', label: 'Highest Rated' },
-//   { value: 'newest', label: 'Newest Arrivals' }
-// ];
 
 const ProductPage = () => {
   const dispatch = useAppDispatch();
@@ -225,6 +219,7 @@ const ProductPage = () => {
           isOpen={!!quickViewProduct}
           onClose={() => setQuickViewProduct(null)}
           onAddToCart={handleAddToCart}
+          isAuthenticated ={isAuthenticated}
           onViewDetails={() => {
             setQuickViewProduct(null);
             handleProductClick(quickViewProduct._id);

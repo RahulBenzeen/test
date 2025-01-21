@@ -1,26 +1,7 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { getSpecialOfferProducts } from '../api/product';
 import { handleApiError } from '../api/apiErrorHandler';
-
-interface Product {
-  _id: string;
-  name: string;
-  description: string;
-  price: number;
-  category: string;
-  subcategory: string;
-  images: { secure_url: string; public_id: string }[];
-  stock: number;
-  isSpecialOffer?: boolean;
-  brand?: string;
-  rating?: number;
-  sku?: string;
-  weight?: number;
-  dimensions?: string;
-  createdAt?: Date;
-  discountPercentage: number;
-  discountedPrice: number;
-}
+import { Product } from './productSlice';
 
 interface SpecialOfferState {
   items: Product[];

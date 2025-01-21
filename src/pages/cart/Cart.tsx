@@ -104,13 +104,15 @@ export default function Cart() {
               <ul className="space-y-6">
                 {cartItems.map((item: CartItem) => (
                   <li key={item._id} className="flex space-x-4">
-                    <div className="relative h-24 w-24 rounded-md overflow-hidden">
+                   <div className="relative h-24 w-24 rounded-md overflow-hidden">
+                    <Link to={`/product/${item.product?._id}`}>
                       <img
                         src={item.product?.images?.[0].secure_url || '/path/to/placeholder.png'}
                         alt={item.product?.name || 'Product'}
                         className="h-full w-full object-cover"
                       />
-                    </div>
+                    </Link>
+                  </div>
                     <div className="flex-1">
                       <div className="flex justify-between">
                         <h3 className="font-medium">{item.product.name}</h3>

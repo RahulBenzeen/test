@@ -152,12 +152,9 @@ export const updateUserProfilePicture = createAsyncThunk<
       const state = getState();
       const userId = (state as { auth: AuthState }).auth.user?.id;
       const token = (state as { auth: AuthState }).auth.token;
-      console.log('state', state)
 
       // If userId or token is not available, throw an error
       if (!userId || !token) {
-        console.log('userId', userId)
-        console.log('token', token)
         throw new Error('User not authenticated');
       }
 

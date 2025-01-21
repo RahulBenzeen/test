@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useEffect } from 'react'
+import { useState, useEffect, useCallback } from 'react'
 import { useParams, useNavigate } from 'react-router-dom'
 import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { Button } from "../../components/ui/button"
@@ -16,7 +16,6 @@ import {
   Loader2, 
   Share2, 
   Shield,
-  Heart,
   ArrowLeft,
   Package,
   ShoppingCart
@@ -30,6 +29,8 @@ import { fetchProductDetails } from '../../store/productDetailSlice'
 import { addToCartAsync } from '../../store/cartSlice'
 import SimilarProducts from '../similarProduct/similarProduct'
 import ReviewPage from '../ReviewPage/ReviewPage'
+import { addToWishlist, removeFromWishlist } from '../../store/whislistSlice'
+import WishlistButton from '../wishlistButton/wishlistButton'
 
 export default function ProductDetailPage() {
   const { id } = useParams<{ id: string }>()
@@ -38,9 +39,8 @@ export default function ProductDetailPage() {
   const { isAuthenticated } = useAppSelector((state) => state.auth)
   const [quantity, setQuantity] = useState(1)
   const [selectedImageIndex, setSelectedImageIndex] = useState(0)
-  const [isWishlisted, setIsWishlisted] = useState(false)
   const navigate = useNavigate()
-
+   const wishlists= useAppSelector((state) => state.whishlist.wishlists)
   useEffect(() => {
     if (id) {
       dispatch(fetchProductDetails(id))
@@ -63,54 +63,42 @@ export default function ProductDetailPage() {
     }
   }
 
-  const handleShare = async (platform: string, product: Product, e: React.MouseEvent) => {
-    e.stopPropagation();
-    
-    const productUrl = window.location.href;
-    const shareText = `Check out ${product.name}`;
-  
-    if (navigator.share) {
+    const handleShare = async (product: Product, e: React.MouseEvent) => {
+      e.stopPropagation();
       try {
         await navigator.share({
           title: product.name,
-          text: shareText,
-          url: productUrl,
+          text: `Check out ${product.name}`,
+          url:`/product/${product._id}`,
         });
-        showToast('Product shared successfully!', 'success');
-      } catch (err) {
-        showToast(`Error sharing: ${err}`, 'error');
+      } catch {
+        // Ignore share errors
       }
-    } else {
-      // Fallback for unsupported browsers
-      switch (platform) {
-        case 'whatsapp':
-          window.open(`https://wa.me/?text=${encodeURIComponent(shareText + ' ' + productUrl)}`, '_blank');
-          break;
-        case 'facebook':
-          window.open(`https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(productUrl)}`, '_blank');
-          break;
-        case 'twitter':
-          window.open(`https://twitter.com/intent/tweet?url=${encodeURIComponent(productUrl)}&text=${encodeURIComponent(shareText)}`, '_blank');
-          break;
-        case 'copy':
-          navigator.clipboard.writeText(productUrl)
-            .then(() => showToast('Product link copied to clipboard!', 'success'))
-            .catch(() => showToast('Failed to copy link. Please try again.', 'error'));
-          break;
-        default:
-          showToast('Unsupported sharing platform', 'error');
-      }
-    }
-  };
+    };
   
-  const toggleWishlist = () => {
-    setIsWishlisted(!isWishlisted)
-    showToast(
-      isWishlisted ? "Removed from wishlist" : "Added to wishlist",
-      "success"
-    )
-  }
-
+  const toggleWishlist = useCallback(async (productId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    
+    if (!productId) {
+      showToast("Invalid product", "error");
+      return;
+    }
+    
+    const isProductInWishlist = wishlists?.some((item) => item?.product?._id === productId);
+    
+    try {
+      if (isProductInWishlist) {
+        await dispatch(removeFromWishlist(productId)).unwrap();
+        showToast("Removed from wishlist", "success");
+      } else {
+        await dispatch(addToWishlist(productId)).unwrap();
+        showToast("Added to wishlist", "success");
+      }
+    } catch (error) {
+      const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
+      showToast(errorMessage, "error");
+    }
+  }, [dispatch, wishlists]);
   if (status === 'loading') {
     return (
       <div className="flex flex-col items-center justify-center min-h-screen gap-4">
@@ -196,7 +184,7 @@ export default function ProductDetailPage() {
                 <div className="flex justify-between items-start mb-4">
                 <h1 className="text-3xl font-bold">{product.name}</h1>
                 <div className="flex items-center gap-2 ml-auto"> {/* Align items to the right */}
-                  <TooltipProvider>
+                  {/* <TooltipProvider>
                     <Tooltip>
                       <TooltipTrigger asChild>
                         <Button
@@ -216,15 +204,21 @@ export default function ProductDetailPage() {
                         <p>{isWishlisted ? 'Remove from Wishlist' : 'Add to Wishlist'}</p>
                       </TooltipContent>
                     </Tooltip>
-                  </TooltipProvider>
-
+                  </TooltipProvider> */}
+                            {isAuthenticated && 
+              <WishlistButton
+              productId={product._id}
+              isWishlisted={wishlists?.some((item) => item?.product?._id === product._id)}
+              toggleWishlist={toggleWishlist}
+            />
+                            }
                     <TooltipProvider>
                       <Tooltip>
                         <TooltipTrigger asChild>
                           <Button
                             size="icon"
                             variant="ghost"
-                            onClick={(e) => handleShare('copy', product, e)}
+                            onClick={(e) => handleShare( product, e)}
                             className="hover:bg-transparent"
                           >
                             <Share2 className="w-5 h-5 text-primary" />

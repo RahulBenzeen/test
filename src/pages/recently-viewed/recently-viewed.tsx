@@ -14,8 +14,7 @@ export default function RecentlyViewed() {
       dispatch(fetchRecentlyViewedProducts());
     }
   }, [dispatch, isAuthenticated]);
-
-  console.log('isAuthenticated: ',isAuthenticated)
+  
   // Don't render anything if user is not authenticated
   if (!isAuthenticated) {
     return null;

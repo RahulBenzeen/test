@@ -75,7 +75,6 @@ const initialState: OrderState = {
 export const createOrder = createAsyncThunk(
   'orders/createOrder',
   async (orderData: { products: Product, shippingAddress: ShippingAddress, paymentMethod: Order['paymentMethod'] }) => {
-    console.log({ orderData });
     const response = await placeOrder(orderData);
     return response.data;
   }
