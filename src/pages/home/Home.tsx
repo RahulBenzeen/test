@@ -16,7 +16,6 @@ import AdminDashboard from '../admin/AdminDashboard';
 import { ReactNode } from 'react';
 import ScrollToTop from '../scroll-top/ScrollToTop';
 
-
 // Lazy-loaded components
 const Banner = lazy(() => import('../banner/Banner'));
 const FeaturedProducts = lazy(() => import('../featuredProducts/FeaturedProducts'));
@@ -35,8 +34,17 @@ const OrderPage = lazy(() => import('../my-orders/my-order'));
 const NotFound = lazy(() => import('../pageNotfound/pageNotFound'));
 const Profile = lazy(() => import('../user-profile/Profile'));
 const ResetPassword = lazy(() => import('../auth/resetPassword'));
-const AllSpecialOffers  = lazy(() => import('../special-offer/all-special-offers'));
+const AllSpecialOffers = lazy(() => import('../special-offer/all-special-offers'));
 const VerifyEmail = lazy(() => import('../auth/verifyEmail'));
+
+// New Information Pages
+const ContactUs = lazy(() => import('../../pages/policy/ContactUs'));
+const ShippingInfo = lazy(() => import('../../pages/policy/ShippingInfo'));
+const ReturnsExchanges = lazy(() => import('../../pages/policy/ReturnsExchanges'));
+const FAQ = lazy(() => import('../../pages/policy/FAQ'));
+const Blog = lazy(() => import('../../pages/policy/Blog'));
+const AboutUs = lazy(() => import('../../pages/policy/AboutUs'));
+
 
 function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
@@ -45,7 +53,6 @@ function Layout({ children }: { children: ReactNode }) {
   return (
     <div className="flex flex-col min-h-screen bg-background">
       <Header />
-
       {!isAdminRoute && <Breadcrumbs />}
       <main className="flex-grow">{children}</main>
       {!isAdminRoute && <Newsletter />}
@@ -57,24 +64,35 @@ function Layout({ children }: { children: ReactNode }) {
 export default function Home() {
   return (
     <ErrorBoundary FallbackComponent={ErrorFallback}>
-      <Router future={{v7_startTransition:true}}>
+      <Router future={{ v7_startTransition: true }}>
         <AuthCheck>
-        <ScrollToTop /> {/* Add this component */}
+          <ScrollToTop />
           <Layout>
             <Suspense fallback={<LoadingSpinner />}>
               <Routes>
-                <Route path="/" element={
-                  <>
-                    <Banner />
-                    <FeaturedProducts />
-                    <ShopByCategory />
-                    <RecentlyViewed />
-                    <SpecialOffers />
-                  </>
-                } />
+                <Route
+                  path="/"
+                  element={
+                    <>
+                      <Banner />
+                      <FeaturedProducts />
+                      <ShopByCategory />
+                      <RecentlyViewed />
+                      <SpecialOffers />
+                    </>
+                  }
+                />
                 <Route path="/special-offers" element={<AllSpecialOffers />} />
                 <Route path="/product/:id" element={<ProductDetailPage />} />
                 <Route path="/product" element={<ProductPage />} />
+
+                {/* Information Pages */}
+                <Route path="/contact" element={<ContactUs />} />
+                <Route path="/shipping" element={<ShippingInfo />} />
+                <Route path="/returns" element={<ReturnsExchanges />} />
+                <Route path="/faq" element={<FAQ />} />
+                <Route path="/blog" element={<Blog />} />
+                <Route path="/about" element={<AboutUs />} />
 
                 {/* Non-authenticated routes */}
                 <Route element={<NonAuthRoute />}>

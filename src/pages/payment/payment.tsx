@@ -42,19 +42,22 @@ export default function PaymentPage() {
   })
 
   async function onSubmit(values: z.infer<typeof formSchema>) {
+    console.log(orderData.order.order.paymentMethod,orderData.order.order.totalPrice )
     setIsProcessing(true)
     try {
       const response = await api.post('/api/payment/create', {
         orderId: orderData.order.orderId,
-        paymentMethod: orderData.order.paymentMethod,
+        paymentMethod: orderData.order.order.paymentMethod,
       })
+
+      console.log('===>' ,response )
 
       if (response.data && response.data.orderId && response.data.paymentId) {
         const { orderId, paymentId } = response.data
-
+         
         const options: RazorpayOrderOptions = {
           key: 'rzp_test_Bs8cNGqoVFMPB6',
-          amount: orderData.amount * 100,
+          amount: orderData.order.order.totalPrice * 100,
           currency: 'INR',
           order_id: orderId,
           name: "Nothing",
@@ -98,6 +101,7 @@ export default function PaymentPage() {
         throw new Error('Missing orderId or paymentId in response.')
       }
     } catch (error) {
+      console.log(error)
       showToast('Error creating payment order:', 'error')
       if (error.response) {
         showToast('Error response data:', 'error')
@@ -125,7 +129,7 @@ export default function PaymentPage() {
             <CardContent>
               <ScrollArea className="h-[200px] rounded-md border p-4">
                 <div className="space-y-4">
-                  {orderData.order?.order.products?.map((product: any, index: number) => (
+                  {orderData.order?.order.products?.map((product: { name: string; quantity: number; price: number }, index: number) => (
                     <div key={index} className="flex justify-between items-center pb-2 border-b">
                       <div>
                         <p className="font-medium">{product.name}</p>
@@ -139,7 +143,7 @@ export default function PaymentPage() {
               <div className="mt-4 pt-4 border-t">
                 <div className="flex justify-between items-center font-medium">
                   <span>Total Amount</span>
-                  <span>₹{orderData.order?.order.products?.reduce((total: number, product: any) => {
+                  <span>₹{orderData.order?.order.products?.reduce((total: number, product: { name: string; quantity: number; price: number }) => {
       return total + product.price * product.quantity;
     }, 0)}</span>
                 </div>
@@ -253,7 +257,7 @@ export default function PaymentPage() {
                     Processing...
                   </>
                 ) : (
-                  `Pay ₹${orderData.order?.order.products?.reduce((total: number, product: any) => {
+                  `Pay ₹${orderData.order?.order.products?.reduce((total: number, product: { name: string; quantity: number; price: number }) => {
                     return total + product.price * product.quantity;
                   }, 0)}`
                 )}

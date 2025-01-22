@@ -31,6 +31,7 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { ProductFormValues, productSchema } from '../../utils/schemas/productSchema';
 import { fetchProductDetails } from '../../store/productDetailSlice';
 import { useNavigate } from 'react-router-dom';
+import { uploadToCloudinary } from '../../utils/ProductImageUpload/cloudanary';
 
 const categories = [
   { value: 'electronics', label: 'Electronics', subcategories: ['Smartphones', 'Laptops', 'Accessories'] },
@@ -39,16 +40,16 @@ const categories = [
   { value: 'books', label: 'Books', subcategories: ['Fiction', 'Non-fiction', 'Educational'] },
 ];
 
-
 interface UpdateProductPageProps {
   productId: string;
   onUpdateProduct: (updatedProduct: Product) => void;
   onCancel: () => void;
-
 }
 
 export default function UpdateProductPage({ productId, onUpdateProduct}: UpdateProductPageProps) {
   const [previewImages, setPreviewImages] = useState<string[]>([]);
+  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+  const [existingImages, setExistingImages] = useState<Array<{ secure_url: string; public_id: string }>>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
   const dispatch = useAppDispatch();
@@ -95,7 +96,8 @@ export default function UpdateProductPage({ productId, onUpdateProduct}: UpdateP
       };
       
       form.reset(formValues);
-      setPreviewImages(product.images.map(images => images.secure_url) || []);
+      setExistingImages(product.images || []);
+      setPreviewImages(product.images.map(img => img.secure_url) || []);
       setSelectedCategory(product.category || '');
     }
   }, [product, form]);
@@ -112,12 +114,16 @@ export default function UpdateProductPage({ productId, onUpdateProduct}: UpdateP
   const handleImageUpload = (files: FileList | null) => {
     if (files) {
       const newPreviewImages: string[] = [];
+      const newUploadedFiles: File[] = [];
+      
       Array.from(files).forEach((file) => {
         const reader = new FileReader();
         reader.onloadend = () => {
           newPreviewImages.push(reader.result as string);
+          newUploadedFiles.push(file);
           if (newPreviewImages.length === files.length) {
             setPreviewImages((prev) => [...prev, ...newPreviewImages].slice(0, 5));
+            setUploadedFiles((prev) => [...prev, ...newUploadedFiles].slice(0, 5));
           }
         };
         reader.readAsDataURL(file);
@@ -127,15 +133,30 @@ export default function UpdateProductPage({ productId, onUpdateProduct}: UpdateP
 
   const removeImage = (index: number) => {
     setPreviewImages((prev) => prev.filter((_, i) => i !== index));
-  };
-
-  const deleteCloodinaryImage = async (publicId: string) => {
+    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
+    setExistingImages((prev) => prev.filter((_, i) => i !== index));
     
-  }
+    const currentImages = form.getValues('images');
+    if (currentImages instanceof FileList) {
+      const dataTransfer = new DataTransfer();
+      Array.from(currentImages).forEach((file, i) => {
+        if (i !== index) dataTransfer.items.add(file);
+      });
+      form.setValue('images', dataTransfer.files);
+    }
+  };
 
   const onSubmit = async (values: ProductFormValues) => {
     try {
       setIsSubmitting(true);
+
+      // Upload new images to Cloudinary
+      const newImageData = await Promise.all(
+        uploadedFiles.map(file => uploadToCloudinary(file))
+      );
+
+      // Combine existing and new images
+      const allImages = [...existingImages, ...newImageData];
 
       const updatedProduct = {
         _id: productId,
@@ -144,7 +165,7 @@ export default function UpdateProductPage({ productId, onUpdateProduct}: UpdateP
         price: parseFloat(values.price),
         stock: parseInt(values.stock),
         weight: values.weight ? parseFloat(values.weight) : undefined,
-        images: previewImages,
+        images: allImages,
         discountPercentage: values.isSpecialOffer && values.discountPercentage ? parseFloat(values.discountPercentage) : undefined,
       };
 
@@ -152,7 +173,6 @@ export default function UpdateProductPage({ productId, onUpdateProduct}: UpdateP
       showToast('Product updated successfully!', 'success');
       onUpdateProduct(updatedProduct);
     } catch (err) {
-
       showToast(`Failed to update product: ${err}`, 'error');
     } finally {
       setIsSubmitting(false);

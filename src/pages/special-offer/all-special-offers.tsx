@@ -13,7 +13,7 @@ export default function AllSpecialOffers() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    dispatch(fetchSpecialOffers({ page: 1, limit: 100 })); // Fetch all special offers
+    dispatch(fetchSpecialOffers({ page: 1, limit: 10})); // Fetch all special offers
   }, [dispatch]);
 
   // Handle loading state
@@ -55,23 +55,23 @@ export default function AllSpecialOffers() {
           {items?.map((product) => (
             <Card key={product._id}>
               <CardContent className="p-4">
-                {product.discountPercentage > 0 && (
+                {(product.discountPercentage ?? 0) > 0 && (
                   <Badge className="mb-2" variant="destructive">
                     Save {product.discountPercentage}%
                   </Badge>
                 )}
                 <img
-                  src={product?.images[0] || "/placeholder.svg?height=300&width=400"}
+                  src={product?.images?.[0]?.secure_url || "/placeholder.svg?height=300&width=400"}
                   alt={product.name}
                   className="w-full h-48 object-cover rounded-lg mb-4"
                 />
                 <h3 className="font-semibold text-lg">{product.name}</h3>
                 <p className="text-muted-foreground">Ends in 24 hours</p>
                 <div className="mt-2">
-                  {product.discountPercentage > 0 ? (
+                  {(product.discountPercentage ?? 0) > 0 ? (
                     <div className="flex items-center space-x-2">
                       <span className="text-lg font-semibold text-red-500">
-                        ₹{product.discountedPrice.toFixed(2)}
+                        ₹{(product.discountedPrice ?? 0).toFixed(2)}
                       </span>
                       <span className="text-sm text-gray-500 line-through">
                         ₹{product.price.toFixed(2)}

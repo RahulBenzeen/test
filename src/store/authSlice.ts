@@ -1,5 +1,8 @@
 import { createSlice, createAsyncThunk, PayloadAction } from '@reduxjs/toolkit';
 import { loginUser, getUserData, registerUser, updateUserProfileAPI, initiatePasswordResetAPI, confirmPasswordResetAPI } from '../api/auth';
+import { fetchCart } from './cartSlice';
+
+
 
 export interface User {
   id: string;
@@ -75,12 +78,13 @@ export const loginUserThunk = createAsyncThunk<
   AuthResponse,
   { email: string; password: string; googleId?: string; tokens?:string },  // Add googleId as optional
   { rejectValue: string }
->('auth/loginUser', async (credentials, { rejectWithValue }) => {
+>('auth/loginUser', async (credentials, { rejectWithValue, dispatch }) => {
   try {
     const response = await loginUser(credentials);
     const data = response.data.data;
     localStorage.setItem('authToken', data.token);
     localStorage.setItem('id', data.id);
+    await dispatch(fetchCart())
     return data;
   } catch (error) {
     return rejectWithValue((error as Error).message);
@@ -89,10 +93,12 @@ export const loginUserThunk = createAsyncThunk<
 
 export const logoutUserThunk = createAsyncThunk<void, void, { rejectValue: string }>(
   'auth/logoutUser',
-  async (_, { rejectWithValue }) => {
+  async (_, { rejectWithValue  }) => {
     try {
       localStorage.removeItem('authToken');
       localStorage.removeItem('id');
+      localStorage.removeItem('user');
+
     } catch (error) {
       return rejectWithValue((error as Error).message);
     }
@@ -136,8 +142,6 @@ export const updateUserProfile = createAsyncThunk<User, { name: string; email: s
     }
   }
 );
-
-
 
 export const updateUserProfilePicture = createAsyncThunk<
   User,
@@ -195,8 +199,6 @@ export const confirmPasswordReset = createAsyncThunk<
     return rejectWithValue((error as Error).message);
   }
 });
-
-
 
 const authSlice = createSlice({
   name: 'auth',
