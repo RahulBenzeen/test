@@ -31,7 +31,7 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { ProductFormValues, productSchema } from '../../utils/schemas/productSchema';
 import { fetchProductDetails } from '../../store/productDetailSlice';
 import { useNavigate } from 'react-router-dom';
-import { uploadToCloudinary } from '../../utils/ProductImageUpload/cloudanary';
+import { uploadAndUpdateImage } from '../../utils/ProductImageUpload/cloudnaryUtils';
 
 const categories = [
   { value: 'electronics', label: 'Electronics', subcategories: ['Smartphones', 'Laptops', 'Accessories'] },
@@ -152,7 +152,7 @@ export default function UpdateProductPage({ productId, onUpdateProduct}: UpdateP
 
       // Upload new images to Cloudinary
       const newImageData = await Promise.all(
-        uploadedFiles.map(file => uploadToCloudinary(file))
+        uploadedFiles.map(file => uploadAndUpdateImage(file))
       );
 
       // Combine existing and new images
