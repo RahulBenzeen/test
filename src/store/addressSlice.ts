@@ -11,6 +11,8 @@ export interface ShippingAddress {
   zipCode: string;
   country: string;
   type?: string;
+  state?:string;
+  phone?:string
 }
 
 interface AddressState {

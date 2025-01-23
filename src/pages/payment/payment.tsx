@@ -23,7 +23,7 @@ export default function PaymentPage() {
     0
   );
 
-  async function handlePayment(values: any) {
+  async function handlePayment() {
     setIsProcessing(true);
     try {
       const response = await api.post("/api/payment/create", {

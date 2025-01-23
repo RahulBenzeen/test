@@ -1,7 +1,7 @@
 import { Link, useLocation } from 'react-router-dom';
 import { ChevronRight, Home } from 'lucide-react';
+import { useAppSelector } from '../../store/hooks';
 
-// Define the structure of a breadcrumb item
 interface BreadcrumbItem {
   label: string;
   to: string;
@@ -9,10 +9,12 @@ interface BreadcrumbItem {
 
 interface BreadcrumbsProps {
   items?: BreadcrumbItem[];
+  productName?: string;
 }
 
-export function Breadcrumbs({ items = [] }: BreadcrumbsProps) {
+export function Breadcrumbs({ items = [], productName }: BreadcrumbsProps) {
   const location = useLocation();
+  const { item} = useAppSelector((state) => state.productDetails);
 
   // Paths where breadcrumbs should not be displayed
   const excludedPaths = ['/', '/signin', '/register', '/reset-password'];
@@ -23,7 +25,21 @@ export function Breadcrumbs({ items = [] }: BreadcrumbsProps) {
   }
 
   // Generate breadcrumbs based on the current path if no items are provided
-  const breadcrumbs = items.length > 0 ? items : generateBreadcrumbs(location.pathname);
+  let breadcrumbs = items.length > 0 ? items : generateBreadcrumbs(location.pathname);
+
+  // Handle product detail pages
+  if (location.pathname.startsWith('/product/') && (item?.name || productName)) {
+    breadcrumbs = [
+      {
+        label: 'Product',
+        to: '/product'
+      },
+      {
+        label: item?.name || productName || 'Product Details',
+        to: location.pathname
+      }
+    ];
+  }
 
   return (
     <nav aria-label="Breadcrumb" className="py-4 px-4 md:px-8 bg-white shadow-sm sticky top-16 z-10">
@@ -45,7 +61,7 @@ export function Breadcrumbs({ items = [] }: BreadcrumbsProps) {
             <ChevronRight className="h-4 w-4 text-muted-foreground" />
             {index === breadcrumbs.length - 1 ? (
               <span
-                className="ml-2 font-medium text-foreground"
+                className="ml-2 font-medium text-foreground line-clamp-1"
                 aria-current="page"
               >
                 {item.label}
@@ -71,14 +87,24 @@ function generateBreadcrumbs(path: string): BreadcrumbItem[] {
   const parts = path.split('/').filter(Boolean);
 
   // Map each part to a breadcrumb item
-  return parts.map((part, index) => ({
-    // Capitalize each word in the label
-    label: part
-      .replace(/[-_]/g, ' ') // Replace dashes and underscores with spaces
-      .replace(/(^\w|\s\w)/g, (m) => m.toUpperCase()), // Capitalize each word
-    // Construct the path up to the current part
-    to: '/' + parts.slice(0, index + 1).join('/'),
-  }));
+  return parts.map((part, index) => {
+    // Skip product IDs in the path
+    if (parts[index - 1] === 'product') {
+      return {
+        label: 'Product Details',
+        to: '/' + parts.slice(0, index + 1).join('/')
+      };
+    }
+
+    return {
+      // Capitalize each word in the label
+      label: part
+        .replace(/[-_]/g, ' ') // Replace dashes and underscores with spaces
+        .replace(/(^\w|\s\w)/g, (m) => m.toUpperCase()), // Capitalize each word
+      // Construct the path up to the current part
+      to: '/' + parts.slice(0, index + 1).join('/'),
+    };
+  });
 }
 
 export default Breadcrumbs;

@@ -1,14 +1,24 @@
-'use client'
+'use client';
 
-import { useState, useEffect } from 'react'
-import { LayoutDashboard, Package, ShoppingCart, Users, ChevronLeft, ChevronRight, Image, Menu } from 'lucide-react'
-import { Button } from '../../components/ui/button'
-import { Separator } from '../../components/ui/separator'
-import ProductManagement from './ProductManagement'
-import OrderManagement from './OrderManagement'
-import CustomerManagement from './CustomerManagement'
-import Analytics from './Analytics'
-import ImageUpload from './uploadBannerImage'
+import { useEffect, useState } from 'react';
+import {
+  LayoutDashboard,
+  Package,
+  ShoppingCart,
+  Users,
+  ChevronLeft,
+  ChevronRight,
+  Image,
+  Menu,
+} from 'lucide-react';
+import { Button } from '../../components/ui/button';
+import { Separator } from '../../components/ui/separator';
+import ProductManagement from './ProductManagement';
+import OrderManagement from './OrderManagement';
+import CustomerManagement from './CustomerManagement';
+import Analytics from './Analytics';
+import ImageUpload from './uploadBannerImage';
+import { useMediaQuery } from '../../hooks/useMediaQuery';
 
 const sidebarItems = [
   { name: 'Dashboard', icon: LayoutDashboard },
@@ -16,57 +26,45 @@ const sidebarItems = [
   { name: 'Orders', icon: ShoppingCart },
   { name: 'Customers', icon: Users },
   { name: 'Image', icon: Image },
-]
+];
 
 export default function AdminDashboard() {
-  const [activeItem, setActiveItem] = useState('Dashboard')
-  const [isSidebarOpen, setIsSidebarOpen] = useState(true)
-  const [isMobile, setIsMobile] = useState(false)
+  const [activeItem, setActiveItem] = useState('Dashboard');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(true);
+  const isMobile = useMediaQuery('(max-width: 768px)'); // Use the hook here
 
+  // Automatically handle sidebar state based on `isMobile`
   useEffect(() => {
-    const checkScreenSize = () => {
-      setIsMobile(window.innerWidth < 768)
-      if (window.innerWidth < 768) {
-        setIsSidebarOpen(false)
-      } else {
-        setIsSidebarOpen(true)
-      }
-    }
-
-    checkScreenSize()
-    window.addEventListener('resize', checkScreenSize)
-    return () => window.removeEventListener('resize', checkScreenSize)
-  }, [])
-
+    setIsSidebarOpen(!isMobile);
+  }, [isMobile]);
+  
   const renderContent = () => {
     switch (activeItem) {
       case 'Dashboard':
-        return <Analytics />
+        return <Analytics />;
       case 'Products':
-        return <ProductManagement />
+        return <ProductManagement />;
       case 'Orders':
-        return <OrderManagement />
+        return <OrderManagement />;
       case 'Customers':
-        return <CustomerManagement />
+        return <CustomerManagement />;
       case 'Image':
-        return <ImageUpload />
+        return <ImageUpload />;
       default:
-        return <Analytics />
+        return <Analytics />;
     }
-  }
+  };
 
   const handleItemClick = (itemName: string) => {
-    setActiveItem(itemName)
-    if (isMobile) {
-      setIsSidebarOpen(false)
-    }
-  }
+    setActiveItem(itemName);
+    if (isMobile) setIsSidebarOpen(false);
+  };
 
   return (
-    <div className="relative flex min-h-[92vh] bg-gray-100">
+    <div className="relative flex h-[91vh] bg-gray-100">
       {/* Mobile Overlay */}
       {isMobile && isSidebarOpen && (
-        <div 
+        <div
           className="fixed inset-0 bg-black bg-opacity-50 z-20"
           onClick={() => setIsSidebarOpen(false)}
         />
@@ -139,17 +137,15 @@ export default function AdminDashboard() {
             <Menu className="h-6 w-6" />
           </Button>
           <h2 className="text-lg font-semibold">{activeItem}</h2>
-          <div className="w-8" /> {/* Spacer for alignment */}
+          <div className="w-8" />
         </div>
 
         {/* Content Area */}
         <div className="p-4 md:p-8">
           <h2 className="hidden md:block text-2xl md:text-3xl font-bold mb-6">{activeItem}</h2>
-          <div className="space-y-6">
-            {renderContent()}
-          </div>
+          <div className="space-y-6">{renderContent()}</div>
         </div>
       </main>
     </div>
-  )
+  );
 }

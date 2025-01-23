@@ -4,13 +4,12 @@ import { Button } from "../../components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "../../components/ui/sheet";
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCart, removeFromCartAsync, updateQuantityAsync, clearCartAsync, CartItem } from '../../store/cartSlice';
-import { Link } from 'react-router-dom';
-
-// Assuming showToast is imported from your utils or a toast component
+import { Link, useNavigate } from 'react-router-dom';
 import showToast from '../../utils/toast/toastUtils';
 
 export default function Cart() {
   const dispatch = useAppDispatch();
+  const navigate = useNavigate();
   const { items: cartItems, status, error } = useAppSelector((state) => state.cart);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
@@ -23,7 +22,6 @@ export default function Cart() {
 
   useEffect(() => {
     if (error) {
-      // Show the error message as a toast notification
       showToast(error, 'error');
     }
   }, [error]);
@@ -48,6 +46,11 @@ export default function Cart() {
     setIsLoading(true);
     await dispatch(clearCartAsync());
     setIsLoading(false);
+  };
+
+  const handleCheckout = () => {
+    setIsOpen(false); // Close the cart dialog
+    navigate('/checkout'); // Navigate to checkout
   };
 
   const getTotalPrice = () => {
@@ -87,7 +90,6 @@ export default function Cart() {
         <div className="flex flex-col h-full">
           <div className="flex items-center justify-between pb-4 border-b">
             <h2 className="text-lg font-semibold">Your Cart</h2>
-
           </div>
 
           <div className="flex-grow py-6 overflow-auto relative">
@@ -104,15 +106,15 @@ export default function Cart() {
               <ul className="space-y-6">
                 {cartItems.map((item: CartItem) => (
                   <li key={item._id} className="flex space-x-4">
-                   <div className="relative h-24 w-24 rounded-md overflow-hidden">
-                    <Link to={`/product/${item.product?._id}`}>
-                      <img
-                        src={item.product?.images?.[0].secure_url || '/path/to/placeholder.png'}
-                        alt={item.product?.name || 'Product'}
-                        className="h-full w-full object-cover"
-                      />
-                    </Link>
-                  </div>
+                    <div className="relative h-24 w-24 rounded-md overflow-hidden">
+                      <Link to={`/product/${item.product?._id}`}>
+                        <img
+                          src={item.product?.images?.[0].secure_url || '/path/to/placeholder.png'}
+                          alt={item.product?.name || 'Product'}
+                          className="h-full w-full object-cover"
+                        />
+                      </Link>
+                    </div>
                     <div className="flex-1">
                       <div className="flex justify-between">
                         <h3 className="font-medium">{item.product.name}</h3>
@@ -128,17 +130,17 @@ export default function Cart() {
                       </div>
                       <div className="flex items-center justify-between">
                         <p className="text-sm text-muted-foreground mt-1">
-                          ${item.discountedPrice ? item.discountedPrice.toFixed(2) : item.price.toFixed(2)}
+                          ₹{item.discountedPrice ? item.discountedPrice.toFixed(2) : item.price.toFixed(2)}
                         </p>
                         {item.discountedPrice && (
                           <span className="text-xs text-red-500 line-through">
-                            ${item.price.toFixed(2)}
+                            ₹{item.price.toFixed(2)}
                           </span>
                         )}
                       </div>
                       {item.discountedPrice && (
                         <p className="text-xs text-green-500 mt-1">
-                          Save ${(item.price - item.discountedPrice).toFixed(2)}!
+                          Save ₹{(item.price - item.discountedPrice).toFixed(2)}!
                         </p>
                       )}
                       <div className="flex items-center mt-2">
@@ -163,7 +165,7 @@ export default function Cart() {
                         </Button>
                       </div>
                       <p className="text-sm font-medium mt-2">
-                        Subtotal: ${(item.discountedPrice ? item.discountedPrice : item.price) * (item.quantity ?? 0)}
+                        Subtotal: ₹{(item.discountedPrice ? item.discountedPrice : item.price) * (item.quantity ?? 0)}
                       </p>
                     </div>
                   </li>
@@ -175,13 +177,15 @@ export default function Cart() {
           <div className="border-t pt-6">
             <div className="flex justify-between mb-4">
               <span className="text-base font-medium">Total:</span>
-              <span className="text-lg font-bold">${getTotalPrice()}</span>
+              <span className="text-lg font-bold">₹{getTotalPrice()}</span>
             </div>
-            <Link to={'/checkout'}>
-              <Button className="w-full mb-2" disabled={cartItems.length === 0 || isLoading}>
-                Proceed to Checkout
-              </Button>
-            </Link>
+            <Button 
+              className="w-full mb-2" 
+              disabled={cartItems.length === 0 || isLoading}
+              onClick={handleCheckout}
+            >
+              Proceed to Checkout
+            </Button>
             <Button
               variant="outline"
               className="w-full"

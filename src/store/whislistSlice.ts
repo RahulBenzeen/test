@@ -19,7 +19,6 @@ export const fetchWishlist = createAsyncThunk(
   }
 );
 
-
 // Async Thunk to add a product to the wishlist
 export const addToWishlist = createAsyncThunk(
   'wishlist/addToWishlist',
@@ -52,20 +51,37 @@ export const removeFromWishlist = createAsyncThunk(
   }
 );
 
+type WishlistStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
+
+interface WishlistState {
+  wishlists: { _id: string; product: Product }[];
+  status: WishlistStatus;
+  loading: {
+    fetch: boolean;
+    add: boolean;
+    remove: boolean;
+  };
+  error: string | null;
+}
+
+const initialState: WishlistState = {
+  wishlists: [],
+  status: 'idle',
+  loading: {
+    fetch: false,
+    add: false,
+    remove: false,
+  },
+  error: null,
+};
+
 const wishlistSlice = createSlice({
   name: 'wishlist',
-  initialState: {
-    wishlists: [] as { _id: string; product: Product }[],
-    loading: {
-      fetch: false,
-      add: false,
-      remove: false,
-    },
-    error: null as string | null,
-  },
+  initialState,
   reducers: {
     resetWishlistState: (state) => {
       state.wishlists = [];
+      state.status = 'idle';
       state.loading = { fetch: false, add: false, remove: false };
       state.error = null;
     },
@@ -74,14 +90,17 @@ const wishlistSlice = createSlice({
     builder
       // Fetch wishlist
       .addCase(fetchWishlist.pending, (state) => {
+        state.status = 'loading';
         state.loading.fetch = true;
         state.error = null;
       })
       .addCase(fetchWishlist.fulfilled, (state, action) => {
+        state.status = 'succeeded';
         state.loading.fetch = false;
         state.wishlists = action.payload;
       })
       .addCase(fetchWishlist.rejected, (state, action) => {
+        state.status = 'failed';
         state.loading.fetch = false;
         state.error = action.payload as string;
       })
@@ -115,7 +134,6 @@ const wishlistSlice = createSlice({
       });
   },
 });
-
 
 export const { resetWishlistState } = wishlistSlice.actions;
 export default wishlistSlice.reducer;

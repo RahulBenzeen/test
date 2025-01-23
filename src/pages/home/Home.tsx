@@ -44,7 +44,7 @@ const ReturnsExchanges = lazy(() => import('../../pages/policy/ReturnsExchanges'
 const FAQ = lazy(() => import('../../pages/policy/FAQ'));
 const Blog = lazy(() => import('../../pages/policy/Blog'));
 const AboutUs = lazy(() => import('../../pages/policy/AboutUs'));
-
+const Wishlist = lazy(()=>import('../../pages/wishlist/WishlistPage'))
 
 function Layout({ children }: { children: ReactNode }) {
   const location = useLocation();
@@ -115,6 +115,7 @@ export default function Home() {
                   <Route path="/thank-you" element={<ThankYouPage />} />
                   <Route path="/my-order" element={<OrderPage />} />
                   <Route path="/profile" element={<Profile />} />
+                  <Route path="/profile/wishlist" element={<Wishlist />} />
                 </Route>
 
                 <Route path="*" element={<NotFound />} />
