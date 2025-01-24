@@ -1,10 +1,8 @@
-'use client'
-
 import { useEffect, useState } from 'react'
 import { Button } from '../../components/ui/button'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table'
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
-import { Edit, Trash2, Plus,  ChevronLeft, ChevronRight, ImageIcon, ArrowLeft, Loader2 } from 'lucide-react'
+import { Edit, Trash2, Plus, ChevronLeft, ChevronRight, ImageIcon, ArrowLeft, Loader2 } from 'lucide-react'
 import AddProduct from '../admin-product/add-product'
 import UpdateProductPage from '../admin-product/update-product'
 import {
@@ -21,10 +19,9 @@ import { RootState, AppDispatch } from '../../store/store'
 import { Product } from '../../store/productSlice'
 import showToast from '../../utils/toast/toastUtils'
 
-
 export default function ProductManagement() {
   const dispatch = useDispatch<AppDispatch>()
-  const { items: products, status } = useSelector((state: RootState) => state.products)
+  const { items: products = [], status } = useSelector((state: RootState) => state.products)
   const [view, setView] = useState<'list' | 'add' | 'edit'>('list')
   const [editingProduct, setEditingProduct] = useState<Product | null>(null)
   const [deleteConfirmation, setDeleteConfirmation] = useState<{ isOpen: boolean; productId: string | null }>({
@@ -36,14 +33,13 @@ export default function ProductManagement() {
     index: null,
   })
 
-
   useEffect(() => {
     dispatch(fetchProducts({ page: 1, limit: 12 }))
   }, [dispatch])
 
-  const handleAddProduct = (newProduct: Omit<Product, '_id'>) => {
-    // handle adding product logic here
-    console.log('Adding product:', newProduct)
+  const handleAddProduct = () => {
+    dispatch(fetchProducts({ page: 1, limit: 12 }))
+    setView('list')
   }
 
   const openDeleteConfirmation = (id: string) => {
@@ -68,9 +64,9 @@ export default function ProductManagement() {
   }
 
   const handleUpdateProduct = () => {
-    setView('list');
+    setView('list')
     dispatch(fetchProducts({ page: 1, limit: 12 }))
-    setEditingProduct(null);
+    setEditingProduct(null)
   }
 
   const openImagePreview = (productId: string, index: number = 0) => {
@@ -84,7 +80,7 @@ export default function ProductManagement() {
   const showNextImage = () => {
     if (imagePreview.productId && imagePreview.index !== null) {
       const product = products.find(p => p._id === imagePreview.productId)
-      if (product) {
+      if (product?.images?.length) {
         setImagePreview(prev => ({
           ...prev,
           index: (prev.index! + 1) % product.images.length
@@ -96,7 +92,7 @@ export default function ProductManagement() {
   const showPrevImage = () => {
     if (imagePreview.productId && imagePreview.index !== null) {
       const product = products.find(p => p._id === imagePreview.productId)
-      if (product) {
+      if (product?.images?.length) {
         setImagePreview(prev => ({
           ...prev,
           index: (prev.index! - 1 + product.images.length) % product.images.length
@@ -105,6 +101,11 @@ export default function ProductManagement() {
     }
   }
 
+  const currentProduct = imagePreview.productId 
+    ? products.find(p => p._id === imagePreview.productId)
+    : null
+
+  const currentImage = currentProduct?.images?.[imagePreview.index ?? 0]
 
   return (
     <Card>
@@ -125,11 +126,9 @@ export default function ProductManagement() {
       </CardHeader>
       <CardContent>
         {status === 'loading' ? (
-    
-              <div className="flex justify-center items-center h-screen">
-                <Loader2 className="h-8 w-8 animate-spin" />
-              </div>
-        
+          <div className="flex justify-center items-center h-screen">
+            <Loader2 className="h-8 w-8 animate-spin" />
+          </div>
         ) : (
           view === 'list' && (
             <Table>
@@ -149,7 +148,7 @@ export default function ProductManagement() {
                     <TableCell>₹{product.price?.toFixed(2) || 0}</TableCell>
                     <TableCell>{product.stock}</TableCell>
                     <TableCell>
-                      {product.images.length > 0 ? (
+                      {product?.images?.length > 0 ? (
                         <div className="relative w-16 h-16 group">
                           <img
                             src={product.images[0].secure_url}
@@ -224,47 +223,52 @@ export default function ProductManagement() {
         <DialogContent className="max-w-screen-lg max-h-screen flex flex-col items-center justify-center">
           <DialogHeader className="w-full flex justify-between items-center">
             <DialogTitle>Product Images</DialogTitle>
-           
           </DialogHeader>
           <DialogDescription className="w-full">
-            {imagePreview.productId !== null && imagePreview.index !== null && (
+            {currentImage && (
               <>
                 <div className="flex justify-center mb-4 relative">
                   <img
-                    src={products.find(p => p._id === imagePreview.productId)?.images[imagePreview.index!].secure_url}
+                    src={currentImage.secure_url}
                     alt="Product"
                     className="max-w-full max-h-96 object-contain"
                   />
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={showPrevImage}
-                    className="absolute left-0 top-1/2 transform -translate-y-1/2"
-                  >
-                    <ChevronLeft className="h-6 w-6" />
-                  </Button>
-                  <Button
-                    variant="ghost"
-                    size="icon"
-                    onClick={showNextImage}
-                    className="absolute right-0 top-1/2 transform -translate-y-1/2"
-                  >
-                    <ChevronRight className="h-6 w-6" />
-                  </Button>
+                  {currentProduct?.images?.length > 1 && (
+                    <>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={showPrevImage}
+                        className="absolute left-0 top-1/2 transform -translate-y-1/2"
+                      >
+                        <ChevronLeft className="h-6 w-6" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        onClick={showNextImage}
+                        className="absolute right-0 top-1/2 transform -translate-y-1/2"
+                      >
+                        <ChevronRight className="h-6 w-6" />
+                      </Button>
+                    </>
+                  )}
                 </div>
-                <div className="flex justify-center space-x-2 mt-4">
-                  {products.find(p => p._id === imagePreview.productId)?.images.map((_, index) => (
-                    <Button
-                      key={index}
-                      variant="ghost"
-                      size="sm"
-                      className={`w-8 h-8 p-0 ${index === imagePreview.index ? 'bg-primary text-primary-foreground' : ''}`}
-                      onClick={() => setImagePreview(prev => ({ ...prev, index }))}
-                    >
-                      {index + 1}
-                    </Button>
-                  ))}
-                </div>
+                {currentProduct?.images?.length > 1 && (
+                  <div className="flex justify-center space-x-2 mt-4">
+                    {currentProduct.images.map((_, index) => (
+                      <Button
+                        key={index}
+                        variant="ghost"
+                        size="sm"
+                        className={`w-8 h-8 p-0 ${index === imagePreview.index ? 'bg-primary text-primary-foreground' : ''}`}
+                        onClick={() => setImagePreview(prev => ({ ...prev, index }))}
+                      >
+                        {index + 1}
+                      </Button>
+                    ))}
+                  </div>
+                )}
               </>
             )}
           </DialogDescription>

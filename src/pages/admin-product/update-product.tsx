@@ -1,36 +1,20 @@
-'use client';
-
-import { useState, useEffect } from 'react';
+import  { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '../../components/ui/button';
-import { Input } from '../../components/ui/input';
-import { Textarea } from '../../components/ui/textarea';
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from '../../components/ui/select';
-import {
-  FormControl,
-  FormField,
-  FormItem,
-  FormLabel,
-  FormMessage,
-  Form,
-  FormDescription,
-} from '../../components/ui/form';
 import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
-import { Switch } from '../../components/ui/switch';
-import { X, Loader2 } from 'lucide-react';
+import { Loader2 } from 'lucide-react';
+import { Form } from '../../components/ui/form';
+import { ProductBasicInfo } from './update-product/ProductBasicInfo';
+import { ProductCategories } from './update-product/ProductCategories';
+import { ProductSpecifications } from './update-product/ProductSpecifications';
+import { ProductSpecialOffer } from './update-product/ProductSpecialOffer';
+import { ProductImageUpload } from './update-product/ProductImageUpload';
 import showToast from '../../utils/toast/toastUtils';
 import { Product, updateProductThunk } from '../../store/productSlice';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { ProductFormValues, productSchema } from '../../utils/schemas/productSchema';
 import { fetchProductDetails } from '../../store/productDetailSlice';
-import { useNavigate } from 'react-router-dom';
 import { uploadAndUpdateImage } from '../../utils/ProductImageUpload/cloudnaryUtils';
 
 const categories = [
@@ -46,14 +30,18 @@ interface UpdateProductPageProps {
   onCancel: () => void;
 }
 
-export default function UpdateProductPage({ productId, onUpdateProduct}: UpdateProductPageProps) {
+export default function UpdateProductPage({
+  productId,
+  onUpdateProduct,
+  onCancel,
+}: UpdateProductPageProps) {
   const [previewImages, setPreviewImages] = useState<string[]>([]);
   const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
   const [existingImages, setExistingImages] = useState<Array<{ secure_url: string; public_id: string }>>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
   const dispatch = useAppDispatch();
-  const router = useNavigate();
+
   const { item: product, status, error } = useAppSelector((state) => state.productDetails);
 
   const form = useForm<ProductFormValues>({
@@ -135,27 +123,16 @@ export default function UpdateProductPage({ productId, onUpdateProduct}: UpdateP
     setPreviewImages((prev) => prev.filter((_, i) => i !== index));
     setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
     setExistingImages((prev) => prev.filter((_, i) => i !== index));
-    
-    const currentImages = form.getValues('images');
-    if (currentImages instanceof FileList) {
-      const dataTransfer = new DataTransfer();
-      Array.from(currentImages).forEach((file, i) => {
-        if (i !== index) dataTransfer.items.add(file);
-      });
-      form.setValue('images', dataTransfer.files);
-    }
   };
 
   const onSubmit = async (values: ProductFormValues) => {
     try {
       setIsSubmitting(true);
 
-      // Upload new images to Cloudinary
       const newImageData = await Promise.all(
         uploadedFiles.map(file => uploadAndUpdateImage(file))
       );
 
-      // Combine existing and new images
       const allImages = [...existingImages, ...newImageData];
 
       const updatedProduct = {
@@ -203,264 +180,24 @@ export default function UpdateProductPage({ productId, onUpdateProduct}: UpdateP
       <CardContent>
         <Form {...form}>
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <FormField
-              control={form.control}
-              name="name"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Product Name</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter product name" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+            <ProductBasicInfo form={form} />
+            <ProductCategories
+              form={form}
+              categories={categories}
+              selectedCategory={selectedCategory}
+              setSelectedCategory={setSelectedCategory}
             />
-
-            <FormField
-              control={form.control}
-              name="brand"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Brand</FormLabel>
-                  <FormControl>
-                    <Input placeholder="Enter product brand" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
+            <ProductSpecifications form={form} />
+            <ProductSpecialOffer form={form} />
+            <ProductImageUpload
+              form={form}
+              previewImages={previewImages}
+              handleImageUpload={handleImageUpload}
+              removeImage={removeImage}
             />
-
-            <FormField
-              control={form.control}
-              name="description"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Description</FormLabel>
-                  <FormControl>
-                    <Textarea placeholder="Enter product description" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Price</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" placeholder="Enter price" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="category"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Category</FormLabel>
-                  <Select 
-                    onValueChange={(value) => {
-                      field.onChange(value);
-                      setSelectedCategory(value);
-                      form.setValue('subcategory', '');
-                    }}
-                    value={field.value}
-                  >
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categories.map((category) => (
-                        <SelectItem key={category.value} value={category.value}>
-                          {category.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="subcategory"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Subcategory</FormLabel>
-                  <Select onValueChange={field.onChange} value={field.value}>
-                    <FormControl>
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a subcategory" />
-                      </SelectTrigger>
-                    </FormControl>
-                    <SelectContent>
-                      {categories
-                        .find((cat) => cat.value === selectedCategory)
-                        ?.subcategories.map((sub) => (
-                          <SelectItem key={sub} value={sub}>
-                            {sub}
-                          </SelectItem>
-                        ))}
-                    </SelectContent>
-                  </Select>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="stock"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Stock</FormLabel>
-                  <FormControl>
-                    <Input type="number" placeholder="Enter available stock" min="0" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="weight"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Weight (in kg)</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" placeholder="Enter weight" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="dimensions"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Dimensions (L x W x H in cm)</FormLabel>
-                  <FormControl>
-                    <Input placeholder="e.g., 10 x 5 x 2" {...field} />
-                  </FormControl>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            <FormField
-              control={form.control}
-              name="isSpecialOffer"
-              render={({ field }) => (
-                <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
-                  <div className="space-y-0.5">
-                    <FormLabel className="text-base">Special Product</FormLabel>
-                    <FormDescription>
-                      Toggle if this product is on special offer.
-                    </FormDescription>
-                  </div>
-                  <FormControl>
-                    <Switch
-                      checked={field.value}
-                      onCheckedChange={field.onChange}
-                    />
-                  </FormControl>
-                </FormItem>
-              )}
-            />
-
-            {form.watch("isSpecialOffer") && (
-              <FormField
-                control={form.control}
-                name="discountPercentage"
-                render={({ field }) => (
-                  <FormItem>
-                    <FormLabel>Discount Percentage</FormLabel>
-                    <FormControl>
-                      <Input
-                        type="number"
-                        step="0.01"
-                        placeholder="Enter discount percentage"
-                        {...field}
-                      />
-                    </FormControl>
-                    <FormDescription>
-                      Enter a discount percentage (e.g., 10 for 10%).
-                    </FormDescription>
-                    <FormMessage />
-                  </FormItem>
-                )}
-              />
-            )}
-
-            <FormField
-              control={form.control}
-              name="images"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Product Images</FormLabel>
-                  <FormControl>
-                    <Input
-                      type="file"
-                      accept="image/*"
-                      multiple
-                      onChange={(e) => {
-                        const files = e.target.files;
-                        if (files) {
-                          field.onChange(files);
-                          handleImageUpload(files);
-                        }
-                      }}
-                      name={field.name}
-                      onBlur={field.onBlur}
-                      ref={field.ref}
-                    />
-                  </FormControl>
-                  <FormDescription>
-                    Upload up to 5 product images (max 5MB each, .jpg, .jpeg, .png, or .webp)
-                  </FormDescription>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-
-            {previewImages.length > 0 && (
-              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-4">
-                {previewImages.map((image, index) => (
-                  <div key={index} className="relative">
-                    <img
-                      src={image}
-                      alt={`Product ${index + 1}`}
-                      className="w-full h-32 object-cover rounded-lg"
-                    />
-                    <Button
-                      type="button"
-                      variant="destructive"
-                      size="icon"
-                      className="absolute top-2 right-2"
-                      onClick={() => removeImage(index)}
-                    >
-                      <X className="h-4 w-4" />
-                    </Button>
-                  </div>
-                ))}
-              </div>
-            )}
 
             <div className="flex justify-between">
-              <Button type="button" variant="outline" onClick={() => router('/products')}>
+              <Button type="button" variant="outline" onClick={onCancel}>
                 Cancel
               </Button>
               <Button type="submit" disabled={isSubmitting}>

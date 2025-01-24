@@ -2,9 +2,13 @@ import { useNavigate } from 'react-router-dom'
 import { Button } from "../../components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../../components/ui/card"
 import { CheckCircle } from 'lucide-react'
+// import { useLocation } from 'react-router-dom'
 
 export default function ThankYouPage() {
   const redirect = useNavigate();
+  // const location = useLocation();
+  // const { order } = location.state;
+  // console.log(order)
 
   return (
     <div className="container mx-auto px-4 py-8">
@@ -25,7 +29,7 @@ export default function ThankYouPage() {
           </p>
         </CardContent>
         <CardFooter className="flex flex-col space-y-2">
-          <Button className="w-full" onClick={() => redirect('/order-tracking')}>
+          <Button className="w-full" onClick={() =>redirect("/profile?tab=orders")}>
             Track Your Order
           </Button>
           <Button variant="outline" className="w-full" onClick={() => redirect('/')}>
