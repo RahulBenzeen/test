@@ -1,14 +1,15 @@
-import React, { useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useState, useCallback, useMemo } from 'react';
+import { motion, AnimatePresence } from 'framer-motion';
 import { Eye, ShoppingCart, Share2, Percent, ArrowUpRight, Star } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../../../components/ui/sheet';
+// import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../../../components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../../components/ui/tooltip';
 import WishlistButton from '../../wishlistButton/wishlistButton';
 import { Product } from '../../../store/productSlice';
 import { useNavigate } from 'react-router-dom';
+import { useInView } from 'react-intersection-observer';
 
 interface ProductCardProps {
   product: Product;
@@ -26,7 +27,7 @@ const cardVariants = {
   visible: { 
     opacity: 1, 
     y: 0,
-    transition: { duration: 0.4, ease: "easeOut" }
+    transition: { duration: 0.3, ease: "easeOut" }
   },
   hover: {
     y: -5,
@@ -34,7 +35,7 @@ const cardVariants = {
   }
 };
 
-const ProductCard: React.FC<ProductCardProps> = ({
+const ProductCard: React.FC<ProductCardProps> = React.memo(({
   product,
   isWishlisted,
   onAddToCart,
@@ -45,11 +46,28 @@ const ProductCard: React.FC<ProductCardProps> = ({
   isAuthenticated
 }) => {
   const [isHovered, setIsHovered] = useState(false);
-  const isMobile = window.innerWidth <= 768;
-  const isSpecialOffer = product.isSpecialOffer && (product.discountPercentage ?? 0) > 0;
-  const router = useNavigate()
+  const [ref, inView] = useInView({
+    triggerOnce: true,
+    threshold: 0.1,
+  });
+  
+  const router = useNavigate();
+  
+  // Memoize computed values
+  const {
+    isSpecialOffer,
+    formattedPrice,
+    formattedDiscountedPrice,
+    stockStatus
+  } = useMemo(() => ({
+    isSpecialOffer: product.isSpecialOffer && (product.discountPercentage ?? 0) > 0,
+    formattedPrice: product.price?.toFixed(2),
+    formattedDiscountedPrice: product.discountedPrice?.toFixed(2),
+    stockStatus: product.stock === 0 ? 'out-of-stock' : product.stock <= 5 ? 'low-stock' : 'in-stock'
+  }), [product]);
 
-  const handleShare = async (product:Product, e: React.MouseEvent) => {
+  // Memoize event handlers
+  const handleShare = useCallback(async (e: React.MouseEvent) => {
     e.stopPropagation();
     try {
       await navigator.share({
@@ -60,16 +78,39 @@ const ProductCard: React.FC<ProductCardProps> = ({
     } catch {
       // Ignore share errors
     }
-  };
+  }, [product]);
+
+  const handleAddToCart = useCallback((e: React.MouseEvent) => {
+    onAddToCart(product, e);
+  }, [product, onAddToCart]);
+
+  const handleQuickView = useCallback((e: React.MouseEvent) => {
+    onQuickView(product, e);
+  }, [product, onQuickView]);
+
+  // Render rating stars
+  const renderRatingStars = useMemo(() => (
+    [...Array(5)].map((_, i) => (
+      <Star
+        key={i}
+        className={`h-4 w-4 ${
+          i < Math.round(product.rating || 0)
+            ? 'text-yellow-400 fill-yellow-400'
+            : 'text-gray-300'
+        }`}
+      />
+    ))
+  ), [product.rating]);
 
   return (
     <motion.div
+      ref={ref}
       variants={cardVariants}
       initial="hidden"
-      animate="visible"
-      whileHover={!isMobile ? "hover" : undefined}
+      animate={inView ? "visible" : "hidden"}
+      whileHover="hover"
       onClick={onClick}
-      className="cursor-pointer"
+      className="cursor-pointer transform-gpu"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
@@ -77,92 +118,63 @@ const ProductCard: React.FC<ProductCardProps> = ({
         ${view === 'grid' ? 'flex flex-col' : 'flex flex-col md:flex-row'}
         overflow-hidden transition-all duration-300 hover:shadow-xl relative group
         ${isSpecialOffer ? 'ring-2 ring-red-500 ring-offset-2' : ''}
+        will-change-transform
       `}>
         <CardHeader className={`${view === 'grid' ? 'p-0' : 'p-4 md:w-1/3'} relative`}>
           <div className="relative w-full aspect-square md:aspect-[4/3] overflow-hidden">
             <img
               src={product?.images?.[0]?.secure_url}
               alt={product.name}
-              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+              className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110 will-change-transform"
               loading="lazy"
+              decoding="async"
             />
 
-            {!isMobile && (
-              <div className={`
-                absolute inset-0 bg-black/40 flex items-center justify-center
-                opacity-0 transition-opacity duration-300 ${isHovered ? 'opacity-100' : ''}
-              `}>
-                <Button variant="secondary" className="gap-2" onClick={(e) => onQuickView(product, e)}>
-                  <Eye className="w-4 h-4" />
-                  Quick View
-                </Button>
-              </div>
-            )}
-
-            {isMobile && (
-              <Sheet>
-                <SheetTrigger asChild>
+            <AnimatePresence>
+              {isHovered && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  className="absolute inset-0 bg-black/40 flex items-center justify-center"
+                >
                   <Button
                     variant="secondary"
-                    className="absolute bottom-4 right-4 gap-2"
-                    onClick={(e) => e.stopPropagation()}
+                    className="gap-2"
+                    onClick={handleQuickView}
                   >
                     <Eye className="w-4 h-4" />
                     Quick View
                   </Button>
-                </SheetTrigger>
-                <SheetContent side="bottom" className="h-[90vh]">
-                  <SheetHeader>
-                    <SheetTitle>{product.name}</SheetTitle>
-                  </SheetHeader>
-                  <div className="space-y-4 mt-4">
-                    <img
-                      src={product?.images?.[0]?.secure_url}
-                      alt={product.name}
-                      className="w-full h-auto rounded-lg"
-                    />
-                    <div className="space-y-4">
-                      <div className="flex items-center gap-2">
-                        {isSpecialOffer ? (
-                          <>
-                            <span className="text-2xl font-bold text-red-500">
-                              ₹{product.discountedPrice?.toFixed(2)}
-                            </span>
-                            <span className="text-lg text-muted-foreground line-through">
-                              ₹{product.price.toFixed(2)}
-                            </span>
-                          </>
-                        ) : (
-                          <span className="text-2xl font-bold">
-                            ₹{product.price.toFixed(2)}
-                          </span>
-                        )}
-                      </div>
-                      <p className="text-muted-foreground">{product.description}</p>
-                      <Button
-                        className="w-full"
-                        size="lg"
-                        onClick={(e) => onAddToCart(product, e)}
-                        disabled={product.stock === 0}
-                      >
-                        <ShoppingCart className="mr-2 h-5 w-5" />
-                        Add to Cart
-                      </Button>
-                    </div>
-                  </div>
-                </SheetContent>
-              </Sheet>
+                </motion.div>
+              )}
+            </AnimatePresence>
+
+            {stockStatus !== 'in-stock' && (
+              <Badge
+                variant={stockStatus === 'out-of-stock' ? 'destructive' : 'secondary'}
+                className="absolute top-2 left-2"
+              >
+                {stockStatus === 'out-of-stock' ? 'Out of Stock' : `Only ${product.stock} left`}
+              </Badge>
+            )}
+
+            {isSpecialOffer && (
+              <Badge variant="secondary" className="absolute bottom-2 left-2 bg-red-500 text-white">
+                <Percent className="w-4 h-4 mr-1" />
+                {product.discountPercentage}% OFF
+              </Badge>
             )}
           </div>
 
           <div className="absolute top-2 right-2 flex flex-col gap-2">
-            {isAuthenticated && 
+            {isAuthenticated && (
               <WishlistButton
-              productId={product._id}
-              isWishlisted={isWishlisted}
-              toggleWishlist={onWishlistToggle}
-            />
-            }
+                productId={product._id}
+                isWishlisted={isWishlisted}
+                toggleWishlist={onWishlistToggle}
+              />
+            )}
 
             <TooltipProvider>
               <Tooltip>
@@ -171,7 +183,7 @@ const ProductCard: React.FC<ProductCardProps> = ({
                     size="icon"
                     variant="secondary"
                     className="rounded-full bg-white/80 backdrop-blur-sm hover:bg-white"
-                    onClick={(e) => {handleShare(product,e)}}
+                    onClick={handleShare}
                   >
                     <Share2 className="h-4 w-4" />
                   </Button>
@@ -182,23 +194,6 @@ const ProductCard: React.FC<ProductCardProps> = ({
               </Tooltip>
             </TooltipProvider>
           </div>
-
-          {product.stock === 0 && (
-            <Badge variant="destructive" className="absolute top-2 left-2">
-              Out of Stock
-            </Badge>
-          )}
-          {product.stock > 0 && product.stock <= 5 && (
-            <Badge variant="secondary" className="absolute top-2 left-2">
-              Only {product.stock} left
-            </Badge>
-          )}
-          {isSpecialOffer && (
-            <Badge variant="secondary" className="absolute bottom-2 left-2 bg-red-500 text-white">
-              <Percent className="w-4 h-4 mr-1" />
-              {product.discountPercentage}% OFF
-            </Badge>
-          )}
         </CardHeader>
 
         <CardContent className={`flex-grow p-4 ${view === 'list' ? 'md:flex-1' : ''}`}>
@@ -221,25 +216,16 @@ const ProductCard: React.FC<ProductCardProps> = ({
             <div className="flex items-center gap-2">
               {isSpecialOffer ? (
                 <>
-                  <p className="text-xl font-bold text-red-500">₹{product.discountedPrice?.toFixed(2)}</p>
-                  <p className="text-sm text-muted-foreground line-through">₹{product.price?.toFixed(2)}</p>
+                  <p className="text-xl font-bold text-red-500">₹{formattedDiscountedPrice}</p>
+                  <p className="text-sm text-muted-foreground line-through">₹{formattedPrice}</p>
                 </>
               ) : (
-                <p className="text-xl font-bold text-primary">₹{product.price?.toFixed(2)}</p>
+                <p className="text-xl font-bold text-primary">₹{formattedPrice}</p>
               )}
             </div>
 
             <div className="flex items-center">
-              {[...Array(5)].map((_, i) => (
-                <Star
-                  key={i}
-                  className={`h-4 w-4 ${
-                    i < Math.round(product.rating || 0)
-                      ? 'text-yellow-400 fill-yellow-400'
-                      : 'text-gray-300'
-                  }`}
-                />
-              ))}
+              {renderRatingStars}
               <span className="ml-2 text-sm text-muted-foreground">
                 ({product.rating?.toFixed(1)})
               </span>
@@ -253,12 +239,12 @@ const ProductCard: React.FC<ProductCardProps> = ({
               className={`w-full group relative overflow-hidden ${
                 isSpecialOffer ? 'bg-red-500 hover:bg-red-600' : ''
               }`}
-              onClick={(e) => onAddToCart(product, e)}
-              disabled={product.stock === 0}
+              onClick={handleAddToCart}
+              disabled={stockStatus === 'out-of-stock'}
             >
               <span className="absolute inset-0 bg-white/20 group-hover:translate-y-0 translate-y-full transition-transform duration-300" />
               <ShoppingCart className="mr-2 h-4 w-4" />
-              {product.stock > 0 ? 'Add to Cart' : 'Out of Stock'}
+              {stockStatus === 'out-of-stock' ? 'Out of Stock' : 'Add to Cart'}
             </Button>
           ) : (
             <Button
@@ -266,16 +252,18 @@ const ProductCard: React.FC<ProductCardProps> = ({
                 isSpecialOffer ? 'bg-red-500 hover:bg-red-600' : ''
               }`}
               onClick={() => router('/signin')}
-              disabled={product.stock === 0}
+              disabled={stockStatus === 'out-of-stock'}
             >
               <span className="absolute inset-0 bg-white/20 group-hover:translate-y-0 translate-y-full transition-transform duration-300" />
-              {product.stock > 0 ? 'Sign in to Buy' : 'Out of Stock'}
+              {stockStatus === 'out-of-stock' ? 'Out of Stock' : 'Sign in to Buy'}
             </Button>
           )}
         </CardFooter>
       </Card>
     </motion.div>
   );
-};
+});
 
-export default React.memo(ProductCard);
+ProductCard.displayName = 'ProductCard';
+
+export default ProductCard;

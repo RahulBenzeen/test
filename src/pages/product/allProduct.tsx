@@ -1,4 +1,4 @@
-import React, { useEffect, useState, useCallback, memo } from 'react';
+import React, { useEffect, useState, useCallback, memo, Suspense, lazy, useMemo } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { setCurrentPage, setItemsPerPage, setView, setCategory, setSubcategory, setSortBy } from '../../store/filterSlice';
@@ -6,29 +6,77 @@ import { fetchProducts } from '../../store/productSlice';
 import { addToCartAsync } from '../../store/cartSlice';
 import { addToWishlist, fetchWishlist, removeFromWishlist } from '../../store/whislistSlice';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
+import { useInView } from 'react-intersection-observer';
 import { Product } from '../../store/productSlice';
 import showToast from '../../utils/toast/toastUtils';
+import { motion, AnimatePresence } from 'framer-motion';
+import debounce from 'lodash/debounce';
 
-// Components
-import ProductFeatures from './product-feature/ProductFeatures';
+// Lazy-loaded components
+const QuickViewDialog = lazy(() => import('./quick-view-dialog/QuickViewDialog'));
+const ProductFeatures = lazy(() => import('./product-feature/ProductFeatures'));
+
+// Eagerly loaded components for critical UI
 import ProductCard from './product-card/ProductCard';
 import ProductFilter from '../filterProduct/filterProduct';
 import Paginator from '../paginator/paginator';
-import QuickViewDialog from './quick-view-dialog/QuickViewDialog';
 import ProductHeader from './product-header/ProductHeader';
 import ProductSkeleton from './product-skeleton/ProductSkeleton';
 import ProductEmptyState from './empty-state/ProductEmptyState';
-import ProductErrorState from './error-state/ProductErrorState'; 
+import ProductErrorState from './error-state/ProductErrorState';
+import { Button } from '../../components/ui/button';
+import { Loader2, Filter, X } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../../components/ui/sheet';
 
 // Constants
 const ITEMS_PER_PAGE_OPTIONS = [12, 24, 48];
+const ANIMATION_DURATION = 0.3;
+
+// Animations
+const containerVariants = {
+  hidden: { opacity: 0 },
+  visible: {
+    opacity: 1,
+    transition: {
+      staggerChildren: 0.1
+    }
+  }
+};
+
+const itemVariants = {
+  hidden: { opacity: 0, y: 20 },
+  visible: {
+    opacity: 1,
+    y: 0,
+    transition: { duration: ANIMATION_DURATION }
+  }
+};
+
+// Memoized Components
+const MemoizedProductCard = memo(ProductCard);
+
+const FilterButton = memo(({ onClick, isActive }: { onClick: () => void; isActive: boolean }) => (
+  <Button
+    variant={isActive ? "secondary" : "outline"}
+    size="sm"
+    onClick={onClick}
+    className="flex items-center gap-2"
+  >
+    <Filter className="w-4 h-4" />
+    Filters
+  </Button>
+));
 
 const ProductPage = () => {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
   const location = useLocation();
+  const [ref, inView] = useInView({
+    threshold: 0.1,
+    triggerOnce: true
+  });
   
-  // Selectors
+  // Selectors with memoization
   const filters = useAppSelector((state) => state.filters);
   const { items: products, status, error, pagination } = useAppSelector((state) => state.products);
   const wishlists = useAppSelector((state) => state.whishlist.wishlists);
@@ -37,6 +85,8 @@ const ProductPage = () => {
   // Local state
   const [quickViewProduct, setQuickViewProduct] = useState<Product | null>(null);
   const [selectedFilters, setSelectedFilters] = useState<string[]>([]);
+  const [isFilterOpen, setIsFilterOpen] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
   
   // Media queries
   const isMobile = useMediaQuery('(max-width: 768px)');
@@ -48,9 +98,21 @@ const ProductPage = () => {
     [products]
   );
   
-  const brands = React.useMemo(() => [...new Set(products.map((p) => p.brand).filter(Boolean))], [products]) || [];
+  const brands = React.useMemo(() => 
+    [...new Set(products.map((p) => p.brand).filter(Boolean))], 
+    [products]
+  );
 
-  // Handlers
+  // Debounced handlers
+  const debouncedFetch = useMemo(() => 
+    debounce((params) => {
+      dispatch(fetchProducts(params));
+      setIsLoading(false);
+    }, 300), 
+    [dispatch]
+  );
+
+  // Event handlers
   const handleAddToCart = useCallback(async (product: Product, e: React.MouseEvent) => {
     e.stopPropagation();
     try {
@@ -105,18 +167,19 @@ const ProductPage = () => {
     if (category) dispatch(setCategory(category));
     if (subcategory) dispatch(setSubcategory(subcategory));
 
-    const controller = new AbortController();
-    
-    dispatch(fetchProducts({ 
+    setIsLoading(true);
+    debouncedFetch({ 
       page: filters.currentPage, 
       limit: filters.itemsPerPage,
       category,
       subcategory,
       sortBy: filters.sortBy,
-    }));
+    });
 
-    return () => controller.abort();
-  }, [dispatch, filters.currentPage, filters.itemsPerPage, filters.sortBy, location.search]);
+    return () => {
+      debouncedFetch.cancel();
+    };
+  }, [dispatch, filters.currentPage, filters.itemsPerPage, filters.sortBy, location.search, debouncedFetch]);
 
   useEffect(() => {
     if (isAuthenticated && user?.id) {
@@ -126,8 +189,8 @@ const ProductPage = () => {
 
   // Render helpers
   const renderProducts = () => {
-    if (status === 'loading') {
-      return <ProductSkeleton view={filters.view} count={6} />;
+    if (status === 'loading' || isLoading) {
+      return <ProductSkeleton view={filters.view} count={filters.itemsPerPage} />;
     }
 
     if (status === 'failed') {
@@ -139,21 +202,37 @@ const ProductPage = () => {
     }
 
     return (
-      <div className={filters.view === 'grid' ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6' : 'space-y-4'}>
-        {products.map((product) => (
-          <ProductCard
-            key={product._id}
-            product={product}
-            isWishlisted={wishlists?.some((item) => item?.product?._id === product._id)}
-            onAddToCart={handleAddToCart}
-            onQuickView={handleQuickView}
-            onClick={() => handleProductClick(product._id)}
-            onWishlistToggle={toggleWishlist}
-            view={filters.view}
-            isAuthenticated={isAuthenticated}
-          />
-        ))}
-      </div>
+      <motion.div
+        ref={ref}
+        variants={containerVariants}
+        initial="hidden"
+        animate={inView ? "visible" : "hidden"}
+        className={filters.view === 'grid' 
+          ? 'grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 md:gap-6' 
+          : 'space-y-4'
+        }
+      >
+        <AnimatePresence mode="wait">
+          {products.map((product) => (
+            <motion.div
+              key={product._id}
+              variants={itemVariants}
+              layout
+            >
+              <MemoizedProductCard
+                product={product}
+                isWishlisted={wishlists?.some((item) => item?.product?._id === product._id)}
+                onAddToCart={handleAddToCart}
+                onQuickView={handleQuickView}
+                onClick={() => handleProductClick(product._id)}
+                onWishlistToggle={toggleWishlist}
+                view={filters.view}
+                isAuthenticated={isAuthenticated}
+              />
+            </motion.div>
+          ))}
+        </AnimatePresence>
+      </motion.div>
     );
   };
 
@@ -167,13 +246,36 @@ const ProductPage = () => {
           selectedFilters={selectedFilters}
           isTablet={isTablet}
           categories={categories}
-          brands={brands }
+          brands={brands}
           onFilterChange={setSelectedFilters}
         />
 
-        <ProductFeatures />
+        <Suspense fallback={<div className="h-20 animate-pulse bg-gray-100 rounded-lg" />}>
+          <ProductFeatures />
+        </Suspense>
 
         <div className="flex flex-col lg:flex-row gap-8">
+          {/* Mobile Filter Sheet */}
+          {isTablet && (
+            <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
+              <SheetTrigger asChild>
+                <FilterButton onClick={() => setIsFilterOpen(true)} isActive={isFilterOpen} />
+              </SheetTrigger>
+              <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+                <SheetHeader>
+                  <SheetTitle>Filters</SheetTitle>
+                </SheetHeader>
+                <ProductFilter 
+                  categories={categories} 
+                  brands={brands} 
+                  selectedFilters={selectedFilters}
+                  onFilterChange={setSelectedFilters}
+                />
+              </SheetContent>
+            </Sheet>
+          )}
+
+          {/* Desktop Filter Sidebar */}
           {!isTablet && (
             <aside className="lg:w-1/4">
               <div className="sticky top-20">
@@ -188,15 +290,31 @@ const ProductPage = () => {
           )}
 
           <main className="lg:w-3/4">
-            <div className="mb-6">
+            <div className="flex items-center justify-between mb-6">
               <p className="text-sm text-muted-foreground">
                 Showing {products.length} of {pagination.totalItems} products
               </p>
+              {selectedFilters.length > 0 && (
+                <Button
+                  variant="ghost"
+                  size="sm"
+                  onClick={() => setSelectedFilters([])}
+                  className="text-red-500 hover:text-red-600"
+                >
+                  <X className="w-4 h-4 mr-2" />
+                  Clear Filters
+                </Button>
+              )}
             </div>
 
             {renderProducts()}
 
-            <div className="mt-8">
+            <motion.div 
+              className="mt-8"
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              transition={{ delay: 0.3 }}
+            >
               <Paginator
                 currentPage={pagination.currentPage}
                 totalPages={pagination.totalPages}
@@ -208,25 +326,32 @@ const ProductPage = () => {
                 }}
                 itemsPerPageOptions={ITEMS_PER_PAGE_OPTIONS}
               />
-            </div>
+            </motion.div>
           </main>
         </div>
       </div>
 
+      {/* Quick View Dialog */}
       {!isMobile && quickViewProduct && (
-        <QuickViewDialog
-          product={quickViewProduct}
-          isOpen={!!quickViewProduct}
-          onClose={() => setQuickViewProduct(null)}
-          onAddToCart={handleAddToCart}
-          isAuthenticated ={isAuthenticated}
-          onViewDetails={() => {
-            setQuickViewProduct(null);
-            handleProductClick(quickViewProduct._id);
-          }}
-          isWishlisted={wishlists?.some((item) => item?.product?._id === quickViewProduct._id)}
-          onWishlistToggle={toggleWishlist}
-        />
+        <Suspense fallback={
+          <div className="fixed inset-0 bg-black/50 flex items-center justify-center">
+            <Loader2 className="w-8 h-8 animate-spin text-white" />
+          </div>
+        }>
+          <QuickViewDialog
+            product={quickViewProduct}
+            isOpen={!!quickViewProduct}
+            onClose={() => setQuickViewProduct(null)}
+            onAddToCart={handleAddToCart}
+            isAuthenticated={isAuthenticated}
+            onViewDetails={() => {
+              setQuickViewProduct(null);
+              handleProductClick(quickViewProduct._id);
+            }}
+            isWishlisted={wishlists?.some((item) => item?.product?._id === quickViewProduct._id)}
+            onWishlistToggle={toggleWishlist}
+          />
+        </Suspense>
       )}
     </div>
   );
