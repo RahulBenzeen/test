@@ -37,6 +37,7 @@ const OrderItem = ({ order }) => {
   }
 
   const canCancel = ['pending', 'processing'].includes(order.orderStatus.toLowerCase())
+  const retryPayments = ['pending'].includes(order.orderStatus.toLowerCase())
 
   const handleCancelOrder = async (reason: string) => {
     setIsCancelling(true)
@@ -44,8 +45,8 @@ const OrderItem = ({ order }) => {
       await dispatch(cancelOrder(order._id)).unwrap()
       showToast('Order cancelled successfully', 'success')
       setShowCancelDialog(false)
-    } catch (error) {
-      showToast(error.message || 'Failed to cancel order', 'error')
+    } catch  {
+      showToast('Failed to cancel order', 'error')
     } finally {
       setIsCancelling(false)
     }
@@ -118,6 +119,18 @@ const OrderItem = ({ order }) => {
                       >
                         <Ban className="w-4 h-4 mr-2" />
                         Cancel Order
+                      </Button>
+                    </div>
+                  )}
+                  {retryPayments && (
+                    <div className="mt-4 pt-4 border-t">
+                      <Button 
+                        variant="default" 
+                        size="sm"
+                        className="w-full"
+                   
+                      >
+                       Retry Payment
                       </Button>
                     </div>
                   )}

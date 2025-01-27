@@ -1,11 +1,108 @@
-import { useEffect, useState } from 'react';
-import { ShoppingCart, X, Minus, Plus, Loader2 } from 'lucide-react';
+import { useEffect, useState, useCallback, memo } from 'react';
+import { ShoppingCart, X, Minus, Plus, Loader2, ShoppingBag } from 'lucide-react';
 import { Button } from "../../components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "../../components/ui/sheet";
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCart, removeFromCartAsync, updateQuantityAsync, clearCartAsync, CartItem } from '../../store/cartSlice';
 import { Link, useNavigate } from 'react-router-dom';
+import { Separator } from '../../components/ui/separator';
+import { ScrollArea } from '../../components/ui/scroll-area';
 import showToast from '../../utils/toast/toastUtils';
+
+// Memoized cart item component for better performance
+const CartItemComponent = memo(({ 
+  item, 
+  onRemove, 
+  onUpdateQuantity, 
+  isLoading 
+}: { 
+  item: CartItem; 
+  onRemove: (id: string) => void; 
+  onUpdateQuantity: (id: string, quantity: number) => void; 
+  isLoading: boolean;
+}) => (
+  <div className="flex gap-4 py-4">
+    <div className="relative aspect-square h-24 w-24 min-w-[6rem] overflow-hidden rounded-lg bg-muted">
+      <Link to={`/product/${item.product?._id}`}>
+        <img
+          src={item.product?.images?.[0].secure_url || '/placeholder.png'}
+          alt={item.product?.name}
+          className="h-full w-full object-cover transition-transform hover:scale-105"
+          loading="lazy"
+        />
+      </Link>
+    </div>
+    <div className="flex flex-1 flex-col">
+      <div className="flex justify-between">
+        <Link 
+          to={`/product/${item.product?._id}`}
+          className="font-medium line-clamp-2 hover:text-primary transition-colors"
+        >
+          {item.product.name}
+        </Link>
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => onRemove(item._id)}
+          disabled={isLoading}
+          className="h-8 w-8"
+        >
+          <X className="h-4 w-4" />
+          <span className="sr-only">Remove</span>
+        </Button>
+      </div>
+      
+      <div className="mt-2 flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <span className="font-medium">₹{item.discountedPrice?.toFixed(2) || item.price.toFixed(2)}</span>
+          {item.discountedPrice && (
+            <span className="text-sm text-muted-foreground line-through">
+              ₹{item.price.toFixed(2)}
+            </span>
+          )}
+        </div>
+        {item.discountedPrice && (
+          <span className="text-xs font-medium text-green-600">
+            Save ₹{(item.price - item.discountedPrice).toFixed(2)}
+          </span>
+        )}
+      </div>
+
+      <div className="mt-2 flex items-center justify-between">
+        <div className="flex items-center rounded-lg border">
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onUpdateQuantity(item._id, item.quantity - 1)}
+            disabled={isLoading || item.quantity <= 1}
+            className="h-8 w-8 rounded-none"
+          >
+            <Minus className="h-3 w-3" />
+            <span className="sr-only">Decrease quantity</span>
+          </Button>
+          <span className="flex h-8 w-12 items-center justify-center text-sm">
+            {item.quantity}
+          </span>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => onUpdateQuantity(item._id, item.quantity + 1)}
+            disabled={isLoading}
+            className="h-8 w-8 rounded-none"
+          >
+            <Plus className="h-3 w-3" />
+            <span className="sr-only">Increase quantity</span>
+          </Button>
+        </div>
+        <p className="text-sm font-medium">
+          ₹{((item.discountedPrice || item.price) * item.quantity).toFixed(2)}
+        </p>
+      </div>
+    </div>
+  </div>
+));
+
+CartItemComponent.displayName = 'CartItemComponent';
 
 export default function Cart() {
   const dispatch = useAppDispatch();
@@ -14,51 +111,69 @@ export default function Cart() {
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
 
+  // Memoized handlers
+  const handleRemoveFromCart = useCallback(async (productId: string) => {
+    setIsLoading(true);
+    try {
+      await dispatch(removeFromCartAsync(productId)).unwrap();
+    } catch  {
+      showToast('Failed to remove item', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [dispatch]);
+
+  const handleUpdateQuantity = useCallback(async (productId: string, newQuantity: number) => {
+    setIsLoading(true);
+    try {
+      if (newQuantity > 0) {
+        await dispatch(updateQuantityAsync({ id: productId, quantity: newQuantity })).unwrap();
+      } else {
+        await dispatch(removeFromCartAsync(productId)).unwrap();
+      }
+    } catch  {
+      showToast('Failed to update quantity', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [dispatch]);
+
+  const handleClearCart = useCallback(async () => {
+    setIsLoading(true);
+    try {
+      await dispatch(clearCartAsync()).unwrap();
+      showToast('Cart cleared successfully', 'success');
+    } catch  {
+      showToast('Failed to clear cart', 'error');
+    } finally {
+      setIsLoading(false);
+    }
+  }, [dispatch]);
+
+  const handleCheckout = useCallback(() => {
+    setIsOpen(false);
+    navigate('/checkout');
+  }, [navigate]);
+
+  // Initial cart fetch
   useEffect(() => {
     if (status === 'idle') {
       dispatch(fetchCart());
     }
   }, [status, dispatch]);
 
+  // Error handling
   useEffect(() => {
     if (error) {
       showToast(error, 'error');
     }
   }, [error]);
 
-  const handleRemoveFromCart = async (productId: string) => {
-    setIsLoading(true);
-    await dispatch(removeFromCartAsync(productId));
-    setIsLoading(false);
-  };
-
-  const handleUpdateQuantity = async (productId: string, newQuantity: number) => {
-    setIsLoading(true);
-    if (newQuantity > 0) {
-      await dispatch(updateQuantityAsync({ id: productId, quantity: newQuantity }));
-    } else {
-      await dispatch(removeFromCartAsync(productId));
-    }
-    setIsLoading(false);
-  };
-
-  const handleClearCart = async () => {
-    setIsLoading(true);
-    await dispatch(clearCartAsync());
-    setIsLoading(false);
-  };
-
-  const handleCheckout = () => {
-    setIsOpen(false); // Close the cart dialog
-    navigate('/checkout'); // Navigate to checkout
-  };
-
-  const getTotalPrice = () => {
-    return cartItems?.reduce(
-      (total, item) => total + ((item.discountedPrice || item.price) * (item.quantity || 0)),
-      0
-    )?.toFixed(2) || '0.00';
-  };
+  const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
+  const totalPrice = cartItems.reduce(
+    (total, item) => total + ((item.discountedPrice || item.price) * item.quantity),
+    0
+  ).toFixed(2);
 
   if (status === 'loading') {
     return (
@@ -78,124 +193,91 @@ export default function Cart() {
           onClick={() => setIsOpen(true)}
         >
           <ShoppingCart className="h-5 w-5" />
-          {cartItems.length > 0 && (
-            <span className="absolute -top-1 -right-1 bg-primary text-primary-foreground text-xs font-bold rounded-full h-5 w-5 flex items-center justify-center">
-              {cartItems.reduce((total, item) => total + item.quantity, 0)}
+          {totalItems > 0 && (
+            <span className="absolute -top-1 -right-1 flex h-4 w-4 items-center justify-center rounded-full bg-primary text-[10px] font-medium text-primary-foreground">
+              {totalItems}
             </span>
           )}
-          <span className="sr-only">Cart</span>
+          <span className="sr-only">Open cart</span>
         </Button>
       </SheetTrigger>
-      <SheetContent side="right" className="w-full sm:max-w-lg">
-        <div className="flex flex-col h-full">
-          <div className="flex items-center justify-between pb-4 border-b">
-            <h2 className="text-lg font-semibold">Your Cart</h2>
-          </div>
+      <SheetContent className="flex w-full flex-col pr-0 sm:max-w-lg">
+        <div className="flex items-center justify-between pr-6">
+          <h2 className="text-lg font-semibold">Shopping Cart</h2>
 
-          <div className="flex-grow py-6 overflow-auto relative">
-            {isLoading && (
-              <div className="absolute inset-0 bg-background/80 flex items-center justify-center z-50">
-                <Loader2 className="h-8 w-8 animate-spin" />
-              </div>
-            )}
-            {cartItems.length === 0 ? (
-              <p className="text-center text-muted-foreground">
-                Your cart is empty
-              </p>
-            ) : (
-              <ul className="space-y-6">
-                {cartItems.map((item: CartItem) => (
-                  <li key={item._id} className="flex space-x-4">
-                    <div className="relative h-24 w-24 rounded-md overflow-hidden">
-                      <Link to={`/product/${item.product?._id}`}>
-                        <img
-                          src={item.product?.images?.[0].secure_url || '/path/to/placeholder.png'}
-                          alt={item.product?.name || 'Product'}
-                          className="h-full w-full object-cover"
-                        />
-                      </Link>
-                    </div>
-                    <div className="flex-1">
-                      <div className="flex justify-between">
-                        <h3 className="font-medium">{item.product.name}</h3>
-                        <Button
-                          variant="ghost"
-                          size="icon"
-                          onClick={() => handleRemoveFromCart(item._id)}
-                          disabled={isLoading}
-                        >
-                          <X className="h-4 w-4" />
-                          <span className="sr-only">Remove</span>
-                        </Button>
-                      </div>
-                      <div className="flex items-center justify-between">
-                        <p className="text-sm text-muted-foreground mt-1">
-                          ₹{item.discountedPrice ? item.discountedPrice.toFixed(2) : item.price.toFixed(2)}
-                        </p>
-                        {item.discountedPrice && (
-                          <span className="text-xs text-red-500 line-through">
-                            ₹{item.price.toFixed(2)}
-                          </span>
-                        )}
-                      </div>
-                      {item.discountedPrice && (
-                        <p className="text-xs text-green-500 mt-1">
-                          Save ₹{(item.price - item.discountedPrice).toFixed(2)}!
-                        </p>
-                      )}
-                      <div className="flex items-center mt-2">
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleUpdateQuantity(item._id, item.quantity - 1)}
-                          disabled={isLoading}
-                        >
-                          <Minus className="h-4 w-4" />
-                          <span className="sr-only">Decrease quantity</span>
-                        </Button>
-                        <span className="mx-2 w-8 text-center">{item.quantity}</span>
-                        <Button
-                          variant="outline"
-                          size="icon"
-                          onClick={() => handleUpdateQuantity(item._id, item.quantity + 1)}
-                          disabled={isLoading}
-                        >
-                          <Plus className="h-4 w-4" />
-                          <span className="sr-only">Increase quantity</span>
-                        </Button>
-                      </div>
-                      <p className="text-sm font-medium mt-2">
-                        Subtotal: ₹{(item.discountedPrice ? item.discountedPrice : item.price) * (item.quantity ?? 0)}
-                      </p>
-                    </div>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </div>
-
-          <div className="border-t pt-6">
-            <div className="flex justify-between mb-4">
-              <span className="text-base font-medium">Total:</span>
-              <span className="text-lg font-bold">₹{getTotalPrice()}</span>
-            </div>
-            <Button 
-              className="w-full mb-2" 
-              disabled={cartItems.length === 0 || isLoading}
-              onClick={handleCheckout}
-            >
-              Proceed to Checkout
-            </Button>
+        </div>
+        <Separator className="my-4" />
+        {cartItems.length === 0 ? (
+          <div className="flex h-full flex-col items-center justify-center space-y-4">
+            <ShoppingBag className="h-12 w-12 text-muted-foreground" />
+            <p className="text-lg font-medium">Your cart is empty</p>
             <Button
               variant="outline"
-              className="w-full"
-              onClick={handleClearCart}
-              disabled={cartItems.length === 0 || isLoading}
+              onClick={() => {
+                setIsOpen(false);
+                navigate('/product');
+              }}
             >
-              Clear Cart
+              Continue Shopping
             </Button>
           </div>
-        </div>
+        ) : (
+          <>
+            <ScrollArea className="flex-1 pr-6">
+              {isLoading && (
+                <div className="absolute inset-0 z-50 flex items-center justify-center bg-background/80">
+                  <Loader2 className="h-8 w-8 animate-spin" />
+                </div>
+              )}
+              <div className="space-y-4">
+                {cartItems.map((item) => (
+                  <CartItemComponent
+                    key={item._id}
+                    item={item}
+                    onRemove={handleRemoveFromCart}
+                    onUpdateQuantity={handleUpdateQuantity}
+                    isLoading={isLoading}
+                  />
+                ))}
+              </div>
+            </ScrollArea>
+            <div className="space-y-4 pr-6">
+              <Separator />
+              <div className="space-y-1.5">
+                <div className="flex justify-between">
+                  <span className="text-sm">Subtotal</span>
+                  <span className="text-sm font-medium">₹{totalPrice}</span>
+                </div>
+                <div className="flex justify-between">
+                  <span className="text-sm">Shipping</span>
+                  <span className="text-sm text-muted-foreground">Calculated at checkout</span>
+                </div>
+                <Separator />
+                <div className="flex justify-between font-medium">
+                  <span>Total</span>
+                  <span>₹{totalPrice}</span>
+                </div>
+              </div>
+              <div className="space-y-2">
+                <Button
+                  className="w-full"
+                  onClick={handleCheckout}
+                  disabled={isLoading}
+                >
+                  Proceed to Checkout
+                </Button>
+                <Button
+                  variant="outline"
+                  className="w-full"
+                  onClick={handleClearCart}
+                  disabled={isLoading}
+                >
+                  Clear Cart
+                </Button>
+              </div>
+            </div>
+          </>
+        )}
       </SheetContent>
     </Sheet>
   );

@@ -1,0 +1,28 @@
+{
+    "header": {
+    "brandName": "NOTHING.",
+     "brandInitial": "N.",
+      "products": "Products",
+      "specialOffers": "Special Offers",
+      "contact": "Contact",
+      "about": "About",
+      "search": "Search",
+      "cart": "Cart",
+      "profile": "Profile",
+      "login": "Login",
+      "register": "Register"
+    },
+    "footer": {
+      "newsletter": "Newsletter",
+      "subscribe": "Subscribe",
+      "emailPlaceholder": "Enter your email",
+      "links": {
+        "about": "About Us",
+        "contact": "Contact",
+        "shipping": "Shipping Info",
+        "returns": "Returns & Exchanges",
+        "faq": "FAQ",
+        "blog": "Blog"
+      }
+    }
+  }

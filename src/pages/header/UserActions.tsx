@@ -4,8 +4,6 @@ import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel,
 import Cart from '../cart/Cart'
 import { useNavigate } from 'react-router-dom'
 import {User as Users} from '../../store/authSlice'
-
-
 interface UserActionsProps {
   isAuthenticated: boolean
   user: Users|null

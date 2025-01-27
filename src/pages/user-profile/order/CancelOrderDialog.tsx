@@ -33,7 +33,7 @@ const CancelOrderDialog: React.FC<CancelOrderDialogProps> = ({
       await onConfirm(reason)
       setReason('')
       setError('')
-    } catch (err) {
+    } catch  {
       setError('Failed to cancel order. Please try again.')
     }
   }
