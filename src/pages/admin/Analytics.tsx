@@ -4,10 +4,10 @@ import { useState } from 'react'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '../../components/ui/card'
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '../../components/ui/tabs'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../components/ui/select'
-import { ChartContainer, ChartTooltip, ChartTooltipContent } from '../../components/ui/chart'
-import { ArrowDown, ArrowUp, DollarSign,IndianRupeeIcon, ShoppingCart, Users, Activity, TrendingUp, Package, Repeat } from 'lucide-react'
+import { ChartContainer} from '../../components/ui/chart'
+import {  ArrowUp,IndianRupeeIcon, ShoppingCart, Users, Activity, } from 'lucide-react'
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table'
-import { Bar, BarChart, AreaChart } from "recharts"
+import { BarChart, AreaChart } from "recharts"
 // Mock data (replace with actual data from your backend)
 const revenueData = [
   { name: 'Jan', total: 2500 },
