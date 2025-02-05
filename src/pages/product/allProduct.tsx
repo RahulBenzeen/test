@@ -28,6 +28,7 @@ import { Button } from '../../components/ui/button';
 import { Loader2, Filter, X } from 'lucide-react';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../../components/ui/sheet';
 
+
 // Constants
 const ITEMS_PER_PAGE_OPTIONS = [12, 24, 48];
 const ANIMATION_DURATION = 0.3;
@@ -237,7 +238,8 @@ const ProductPage = () => {
   };
 
   return (
-    <div className="container mx-auto px-4 py-8">
+    <>
+    <div className="container mx-auto px-4 py-8 pb-24 md:pb-8">
       <div className="flex flex-col gap-6">
         <ProductHeader
           filters={filters}
@@ -251,17 +253,21 @@ const ProductPage = () => {
         />
 
         <Suspense fallback={<div className="h-20 animate-pulse bg-gray-100 rounded-lg" />}>
+        {
+          !isMobile && 
           <ProductFeatures />
+        }
+         
         </Suspense>
 
         <div className="flex flex-col lg:flex-row gap-8">
           {/* Mobile Filter Sheet */}
-          {isTablet && (
+          {(isTablet && !isMobile) && (
             <Sheet open={isFilterOpen} onOpenChange={setIsFilterOpen}>
               <SheetTrigger asChild>
                 <FilterButton onClick={() => setIsFilterOpen(true)} isActive={isFilterOpen} />
               </SheetTrigger>
-              <SheetContent side="left" className="w-[300px] sm:w-[400px]">
+              <SheetContent side="left" className="w-full sm:w-[400px] p-0">
                 <SheetHeader>
                   <SheetTitle>Filters</SheetTitle>
                 </SheetHeader>
@@ -354,6 +360,14 @@ const ProductPage = () => {
         </Suspense>
       )}
     </div>
+        {/* <BottomNav 
+        isAuthenticated={isAuthenticated}
+        showFilter={isTablet}
+        isFilterActive={isFilterOpen}
+        onFilterClick={() => setIsFilterOpen(true)}
+      /> */}
+      </>
+    
   );
 };
 

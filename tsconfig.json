@@ -9,9 +9,6 @@
     }
   ],
   "compilerOptions": {
-    "skipLibCheck": true,
-    "noImplicitAny": false,
-    "strict": false,
     "baseUrl": ".",
     "typeRoots": ["node_modules/@types", "src/types"],
     "paths": {

@@ -5,6 +5,7 @@ import './index.css'
 import App from './App.tsx'
 import { store } from './store/store.ts'
 import { GoogleOAuthProvider } from '@react-oauth/google';
+import './sw.ts'
 // import { I18nextProvider } from 'react-i18next'
 // import i18n from './i18n/config.ts'
 
@@ -17,3 +18,5 @@ createRoot(document.getElementById('root')!).render(
       {/* </I18nextProvider> */}
     </Provider>
 )
+
+

@@ -7,6 +7,7 @@ import Search from '../search/Search'
 import MobileMenu from './MobileMenu'
 import DesktopNav from './DesktopNav'
 import UserActions from './UserActions'
+import BottomNav from './BottomNav'
 import { CategoryType } from '../../utils/type/category'
 
 const categories: CategoryType[] = [
@@ -50,47 +51,61 @@ export default function Header() {
   }
 
   return (
-    <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
-      <div className="container flex h-16 items-center px-4 md:px-6 lg:px-8">
-        <div className="flex flex-1 items-center gap-4">
-          <MobileMenu 
-            categories={categories}
-            isAuthenticated={isAuthenticated}
-            user={user}
-            handleCategoryClick={handleCategoryClick}
-            handleLogout={handleLogout}
-            navigate={navigate}
-          />
-          
-          <Link to="/" className="flex items-center space-x-2">
-            <span className="text-xl font-bold hidden sm:inline-block">NOTHING.</span>
-            <span className="text-xl font-bold sm:hidden">N.</span>
-          </Link>
+    <>
+      <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
+        <div className="container flex h-16 items-center px-4 md:px-6 lg:px-8">
+          <div className="flex flex-1 items-center gap-4">
+            <MobileMenu 
+              categories={categories}
+              isAuthenticated={isAuthenticated}
+              user={user}
+              handleCategoryClick={handleCategoryClick}
+              handleLogout={handleLogout}
+              navigate={navigate}
+            />
+            
+            <Link to="/" className="flex items-center space-x-2">
+              <span className="text-xl font-bold hidden sm:inline-block">NOTHING.</span>
+              <span className="text-xl font-bold sm:hidden">N.</span>
+            </Link>
 
-          <DesktopNav 
-            categories={categories}
-            handleCategoryClick={handleCategoryClick}
-          />
-        </div>
+            <DesktopNav 
+              categories={categories}
+              handleCategoryClick={handleCategoryClick}
+            />
+          </div>
 
-        {/* Right Section */}
-        <div className="flex items-center gap-2 md:gap-4">
-          {isMobile ? (
-            <Search />
-          ) : (
-            <div className="hidden md:block w-[200px] lg:w-[300px]">
+          {/* Right Section */}
+          <div className="flex items-center gap-2 md:gap-4">
+            {isMobile ? (
               <Search />
-            </div>
-          )}
+            ) : (
+              <div className="hidden md:block w-[200px] lg:w-[300px]">
+                <Search />
+              </div>
+            )}
 
-          <UserActions 
-            isAuthenticated={isAuthenticated}
-            user={user}
-            isMobile={isMobile}
-            handleLogout={handleLogout}
-          />
+            <UserActions 
+              isAuthenticated={isAuthenticated}
+              user={user}
+              isMobile={isMobile}
+              handleLogout={handleLogout}
+            />
+          </div>
         </div>
-      </div>
-    </header>
+      </header>
+      
+      {/* Bottom Navigation for Mobile */}
+      <BottomNav isAuthenticated={isAuthenticated} />
+      
+      {/* Add padding to main content to prevent bottom nav overlap */}
+      <style>{`
+        @media (max-width: 768px) {
+          main {
+            padding-bottom: 4rem;
+          }
+        }
+      `}</style>
+    </>
   )
 }

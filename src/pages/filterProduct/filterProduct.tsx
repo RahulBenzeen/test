@@ -17,6 +17,8 @@ interface ProductFilterProps {
   brands: string[]
   selectedFilters: string[]
   onFilterChange: (filters: string[]) => void
+  onClose?: () => void
+  isMobileSheet?: boolean
 }
 
 const INITIAL_PRICE_RANGE: [number, number] = [0, 100000]
@@ -24,7 +26,9 @@ const INITIAL_PRICE_RANGE: [number, number] = [0, 100000]
 const ProductFilter = ({ 
   categories, 
   brands,
-  onFilterChange 
+  onFilterChange,
+  onClose,
+  isMobileSheet = false
 }: ProductFilterProps) => {
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
@@ -56,7 +60,6 @@ const ProductFilter = ({
       rating
     })
 
-    // Batch dispatch actions
     dispatch(setCategory(category !== 'all' ? category : ''))
     dispatch(setBrand(brand !== 'all' ? brand : ''))
     dispatch(setPriceRange([minPrice, maxPrice]))
@@ -124,7 +127,11 @@ const ProductFilter = ({
       page: 1, 
       limit: filters.itemsPerPage 
     }))
-  }, [localFilters, dispatch, filters.itemsPerPage])
+
+    if (isMobileSheet && onClose) {
+      onClose()
+    }
+  }, [localFilters, dispatch, filters.itemsPerPage, isMobileSheet, onClose])
 
   const handleClearFilters = useCallback(() => {
     const defaultFilters = {
@@ -140,7 +147,11 @@ const ProductFilter = ({
     setActiveFilters([])
     onFilterChange([])
     navigate(location.pathname)
-  }, [dispatch, filters.itemsPerPage, navigate, location.pathname, onFilterChange])
+
+    if (isMobileSheet && onClose) {
+      onClose()
+    }
+  }, [dispatch, filters.itemsPerPage, navigate, location.pathname, onFilterChange, isMobileSheet, onClose])
 
   const removeFilter = useCallback((filter: string) => {
     const [type] = filter.split(': ')
@@ -162,7 +173,7 @@ const ProductFilter = ({
   }, [handleFilterChange, handleApplyFilters])
 
   return (
-    <div className="bg-card rounded-lg shadow-md divide-y divide-border">
+    <div className={`bg-card rounded-lg shadow-md divide-y divide-border ${isMobileSheet ? 'h-full' : ''}`}>
       <div className="p-4">
         <FilterHeader 
           activeFiltersCount={activeFilters.length} 
@@ -174,7 +185,7 @@ const ProductFilter = ({
         />
       </div>
 
-      <div className="p-4">
+      <div className="p-4 flex-1 overflow-auto">
         <Accordion type="single" collapsible className="w-full">
           <CategoryFilter
             categories={categories}
@@ -197,15 +208,37 @@ const ProductFilter = ({
         </Accordion>
       </div>
 
-      <div className="p-4">
-        <Button
-          onClick={handleApplyFilters}
-          className="w-full"
-          size="lg"
-        >
-          Apply Filters
-        </Button>
-      </div>
+      {isMobileSheet && (
+        <div className="p-4 border-t">
+          <div className="flex gap-4">
+            <Button
+              variant="outline"
+              onClick={onClose}
+              className="flex-1"
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleApplyFilters}
+              className="flex-1"
+            >
+              Apply
+            </Button>
+          </div>
+        </div>
+      )}
+
+      {!isMobileSheet && (
+        <div className="p-4">
+          <Button
+            onClick={handleApplyFilters}
+            className="w-full"
+            size="lg"
+          >
+            Apply Filters
+          </Button>
+        </div>
+      )}
     </div>
   )
 }
