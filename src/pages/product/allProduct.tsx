@@ -4,7 +4,7 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { setCurrentPage, setItemsPerPage, setView, setCategory, setSubcategory, setSortBy } from '../../store/filterSlice';
 import { fetchProducts } from '../../store/productSlice';
 import { addToCartAsync } from '../../store/cartSlice';
-import { addToWishlist, fetchWishlist, removeFromWishlist } from '../../store/whislistSlice';
+import { addToWishlist, fetchWishlist, optimisticAddToWishlist, optimisticRemoveFromWishlist, removeFromWishlist } from '../../store/whislistSlice';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
 import { useInView } from 'react-intersection-observer';
 import { Product } from '../../store/productSlice';
@@ -146,12 +146,24 @@ const ProductPage = () => {
     const isProductInWishlist = wishlists?.some((item) => item?.product?._id === productId);
     
     try {
+      // Optimistically update the UI
       if (isProductInWishlist) {
-        await dispatch(removeFromWishlist(productId)).unwrap();
-        showToast("Removed from wishlist", "success");
+        dispatch(optimisticRemoveFromWishlist(productId));
       } else {
-        await dispatch(addToWishlist(productId)).unwrap();
-        showToast("Added to wishlist", "success");
+        dispatch(optimisticAddToWishlist(productId));
+      }
+
+      // Make the API call
+      if (isProductInWishlist) {
+        const result = await dispatch(removeFromWishlist(productId)).unwrap();
+        if (result) {
+          showToast("Removed from wishlist", "success");
+        }
+      } else {
+        const result = await dispatch(addToWishlist(productId)).unwrap();
+        if (result) {
+          showToast("Added to wishlist", "success");
+        }
       }
     } catch (error) {
       const errorMessage = error instanceof Error ? error.message : "An unknown error occurred";
@@ -360,12 +372,6 @@ const ProductPage = () => {
         </Suspense>
       )}
     </div>
-        {/* <BottomNav 
-        isAuthenticated={isAuthenticated}
-        showFilter={isTablet}
-        isFilterActive={isFilterOpen}
-        onFilterClick={() => setIsFilterOpen(true)}
-      /> */}
       </>
     
   );

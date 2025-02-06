@@ -2,7 +2,7 @@ import { useCallback, useEffect, useState, useMemo } from 'react';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchFeaturedProducts, Product } from '../../store/productSlice';
 import { addToCartAsync } from '../../store/cartSlice';
-import { addToWishlist, removeFromWishlist } from '../../store/whislistSlice';
+import { addToWishlist, fetchWishlist, removeFromWishlist } from '../../store/whislistSlice';
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
@@ -22,7 +22,7 @@ export default function FeaturedProducts() {
   const featuredProducts = useAppSelector((state) => state.products.featuredProducts);
   const status = useAppSelector((state) => state.products.status);
   const error = useAppSelector((state) => state.products.error);
-  const isAuthenticated = useAppSelector((state) => state.auth.isAuthenticated);
+  const {isAuthenticated, user} = useAppSelector((state) => state.auth);
   const view = useAppSelector((state) => state.filters.view);
   const wishlists = useAppSelector((state) => state.whishlist.wishlists);
   
@@ -37,6 +37,12 @@ export default function FeaturedProducts() {
     Array.isArray(featuredProducts) ? featuredProducts : [], 
     [featuredProducts]
   );
+
+    useEffect(() => {
+      if (isAuthenticated && user?.id) {
+        dispatch(fetchWishlist(user.id));
+      }
+    }, [isAuthenticated, user?.id, dispatch])
 
   useEffect(() => {
     if (!featuredProducts || featuredProducts.length === 0) {

@@ -41,7 +41,6 @@ export default function SignIn() {
   };
 
   const googleSignIn = useGoogleLogin({
-
     onSuccess: async (tokenResponse) => {
       try {
         const userInfo = await axios.get('https://www.googleapis.com/oauth2/v3/userinfo', {
@@ -136,10 +135,17 @@ export default function SignIn() {
                   onChange={(e) => setPassword(e.target.value)}
                   required
                   className="h-11"
+                  onKeyDown={(e) => {
+                    if (e.key === 'Enter') {
+                      e.preventDefault();
+                      handleSignIn(e);
+                    }
+                  }}
                 />
               </div>
               <div className="flex justify-end">
                 <Button
+                  type="button" // Changed to button type to prevent form submission
                   variant="link"
                   className="px-0 h-auto font-normal text-sm hover:no-underline"
                   onClick={handleForgotPassword}
@@ -170,6 +176,7 @@ export default function SignIn() {
           </div>
 
           <Button
+            type="button"
             variant="outline"
             className="w-full h-11 text-base font-medium"
             onClick={() => googleSignIn()}

@@ -66,8 +66,8 @@ export default function Header() {
             
             <Link to="/" className="flex items-center space-x-2">
               {/* <span className="text-xl font-bold hidden sm:inline-block">NOTHING.</span> */}
-              <img src={NothingLogo} alt="Nothing Logo" className="w-10 h-10 sm:w-12 sm:h-12" />
-              <span className="text-xl font-bold sm:hidden">N.</span>
+              <img src={NothingLogo} alt="Nothing Logo" title='Nothing.' className="w-10 h-10 sm:w-12 sm:h-12" />
+              {/* <span className="text-xl font-bold sm:hidden">N.</span> */}
             </Link>
 
             <DesktopNav 

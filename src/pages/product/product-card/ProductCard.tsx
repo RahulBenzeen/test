@@ -4,7 +4,6 @@ import { Eye, ShoppingCart, Share2, Percent, ArrowUpRight, Star } from 'lucide-r
 import { Button } from '../../../components/ui/button';
 import { Card, CardContent, CardFooter, CardHeader } from '../../../components/ui/card';
 import { Badge } from '../../../components/ui/badge';
-// import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../../../components/ui/sheet';
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../../components/ui/tooltip';
 import WishlistButton from '../../wishlistButton/wishlistButton';
 import { Product } from '../../../store/productSlice';

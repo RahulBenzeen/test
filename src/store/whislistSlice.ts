@@ -2,7 +2,6 @@ import { createSlice, createAsyncThunk } from '@reduxjs/toolkit';
 import { addWishlist, getUserWishList, removeWhislist } from '../api/whislist';
 import { Product } from './productSlice';
 
-// Async Thunk to fetch the wishlist for a user
 export const fetchWishlist = createAsyncThunk(
   'wishlist/fetchWishlist',
   async (userId: string, { rejectWithValue }) => {
@@ -19,7 +18,6 @@ export const fetchWishlist = createAsyncThunk(
   }
 );
 
-// Async Thunk to add a product to the wishlist
 export const addToWishlist = createAsyncThunk(
   'wishlist/addToWishlist',
   async (productId: string, { rejectWithValue }) => {
@@ -28,14 +26,13 @@ export const addToWishlist = createAsyncThunk(
       if (!response.data || !response.data.wishlist.products) {
         throw new Error('Invalid response format');
       }
-      return response.data.wishlist.products;
+      return { productId, products: response.data.wishlist.products };
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'An unknown error occurred');
     }
   }
 );
 
-// Async Thunk to remove a product from the wishlist
 export const removeFromWishlist = createAsyncThunk(
   'wishlist/removeFromWishlist',
   async (productId: string, { rejectWithValue }) => {
@@ -44,7 +41,7 @@ export const removeFromWishlist = createAsyncThunk(
       if (!response.data || !response.data.wishlist.products) {
         throw new Error('Invalid response format');
       }
-      return response.data.wishlist.products;
+      return { productId, products: response.data.wishlist.products };
     } catch (error) {
       return rejectWithValue(error instanceof Error ? error.message : 'An unknown error occurred');
     }
@@ -55,6 +52,8 @@ type WishlistStatus = 'idle' | 'loading' | 'succeeded' | 'failed';
 
 interface WishlistState {
   wishlists: { _id: string; product: Product }[];
+  pendingChanges: string[]; // Changed from Set to array
+  optimisticUpdates: string[]; // Changed from Set to array
   status: WishlistStatus;
   loading: {
     fetch: boolean;
@@ -66,6 +65,8 @@ interface WishlistState {
 
 const initialState: WishlistState = {
   wishlists: [],
+  pendingChanges: [], // Changed from Set to array
+  optimisticUpdates: [], // Changed from Set to array
   status: 'idle',
   loading: {
     fetch: false,
@@ -81,14 +82,31 @@ const wishlistSlice = createSlice({
   reducers: {
     resetWishlistState: (state) => {
       state.wishlists = [];
+      state.pendingChanges = [];
+      state.optimisticUpdates = [];
       state.status = 'idle';
       state.loading = { fetch: false, add: false, remove: false };
       state.error = null;
     },
+    optimisticAddToWishlist: (state, action) => {
+      const productId = action.payload;
+      if (!state.optimisticUpdates.includes(productId)) {
+        state.optimisticUpdates.push(productId);
+      }
+      if (!state.wishlists.some(item => item.product._id === productId)) {
+        state.wishlists.push({ _id: productId, product: { _id: productId } as Product });
+      }
+    },
+    optimisticRemoveFromWishlist: (state, action) => {
+      const productId = action.payload;
+      if (!state.optimisticUpdates.includes(productId)) {
+        state.optimisticUpdates.push(productId);
+      }
+      state.wishlists = state.wishlists.filter(item => item.product._id !== productId);
+    },
   },
   extraReducers: (builder) => {
     builder
-      // Fetch wishlist
       .addCase(fetchWishlist.pending, (state) => {
         state.status = 'loading';
         state.loading.fetch = true;
@@ -104,36 +122,58 @@ const wishlistSlice = createSlice({
         state.loading.fetch = false;
         state.error = action.payload as string;
       })
-
-      // Add to wishlist
-      .addCase(addToWishlist.pending, (state) => {
+      .addCase(addToWishlist.pending, (state, action) => {
         state.loading.add = true;
+        if (!state.pendingChanges.includes(action.meta.arg)) {
+          state.pendingChanges.push(action.meta.arg);
+        }
         state.error = null;
       })
       .addCase(addToWishlist.fulfilled, (state, action) => {
         state.loading.add = false;
-        state.wishlists = action.payload;
+        state.pendingChanges = state.pendingChanges.filter(id => id !== action.payload.productId);
+        state.optimisticUpdates = state.optimisticUpdates.filter(id => id !== action.payload.productId);
+        state.wishlists = action.payload.products;
       })
       .addCase(addToWishlist.rejected, (state, action) => {
         state.loading.add = false;
+        const productId = action.meta.arg;
+        state.pendingChanges = state.pendingChanges.filter(id => id !== productId);
+        state.optimisticUpdates = state.optimisticUpdates.filter(id => id !== productId);
         state.error = action.payload as string;
+        // Revert optimistic update
+        state.wishlists = state.wishlists.filter(item => item.product._id !== productId);
       })
-
-      // Remove from wishlist
-      .addCase(removeFromWishlist.pending, (state) => {
+      .addCase(removeFromWishlist.pending, (state, action) => {
         state.loading.remove = true;
+        if (!state.pendingChanges.includes(action.meta.arg)) {
+          state.pendingChanges.push(action.meta.arg);
+        }
         state.error = null;
       })
       .addCase(removeFromWishlist.fulfilled, (state, action) => {
         state.loading.remove = false;
-        state.wishlists = action.payload;
+        state.pendingChanges = state.pendingChanges.filter(id => id !== action.payload.productId);
+        state.optimisticUpdates = state.optimisticUpdates.filter(id => id !== action.payload.productId);
+        state.wishlists = action.payload.products;
       })
       .addCase(removeFromWishlist.rejected, (state, action) => {
         state.loading.remove = false;
+        const productId = action.meta.arg;
+        state.pendingChanges = state.pendingChanges.filter(id => id !== productId);
+        state.optimisticUpdates = state.optimisticUpdates.filter(id => id !== productId);
         state.error = action.payload as string;
+        // Revert optimistic update by re-adding the product
+        if (!state.wishlists.some(item => item.product._id === productId)) {
+          state.wishlists.push({ _id: productId, product: { _id: productId } as Product });
+        }
       });
   },
 });
 
-export const { resetWishlistState } = wishlistSlice.actions;
+export const { 
+  resetWishlistState, 
+  optimisticAddToWishlist, 
+  optimisticRemoveFromWishlist 
+} = wishlistSlice.actions;
 export default wishlistSlice.reducer;
