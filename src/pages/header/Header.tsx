@@ -9,7 +9,7 @@ import DesktopNav from './DesktopNav'
 import UserActions from './UserActions'
 import BottomNav from './BottomNav'
 import { CategoryType } from '../../utils/type/category'
-
+import NothingLogo from '../../assets/nothinglogo.svg'
 const categories: CategoryType[] = [
   { value: 'electronics', name: 'Electronics', subcategories: ['Smartphones', 'Laptops', 'Accessories'] },
   { value: 'clothing', name: 'Clothing', subcategories: ['Men', 'Women', 'Kids'] },
@@ -65,7 +65,8 @@ export default function Header() {
             />
             
             <Link to="/" className="flex items-center space-x-2">
-              <span className="text-xl font-bold hidden sm:inline-block">NOTHING.</span>
+              {/* <span className="text-xl font-bold hidden sm:inline-block">NOTHING.</span> */}
+              <img src={NothingLogo} alt="Nothing Logo" className="w-10 h-10 sm:w-12 sm:h-12" />
               <span className="text-xl font-bold sm:hidden">N.</span>
             </Link>
 
