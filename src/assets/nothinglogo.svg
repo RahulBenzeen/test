@@ -1,0 +1,23 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 300 300" aria-hidden="true" role="img">
+  <defs>
+    <linearGradient id="NothingGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#ff6f61" />
+      <stop offset="100%" stop-color="#8e44ad" />
+    </linearGradient>
+  </defs>
+
+  <!-- Main Circle Background -->
+  <circle cx="150" cy="150" r="120" fill="url(#NothingGradient)" opacity="0.9"/>
+  
+  <!-- Abstract 'N' Letter for 'Nothing' -->
+  <path fill="none" stroke="#ffffff" stroke-width="14" stroke-linecap="round" stroke-linejoin="round" 
+        d="M100 190V110l100 80V110" />
+  
+  <!-- Shopping Cart Icon -->
+  <path fill="none" stroke="#ffffff" stroke-width="10" stroke-linecap="round" stroke-linejoin="round" 
+        d="M110 210h80m-70-20h60l30-60H100l-10-20" />
+  
+  <!-- Cart Wheels -->
+  <circle cx="115" cy="220" r="8" fill="#ffffff"/>
+  <circle cx="185" cy="220" r="8" fill="#ffffff"/>
+</svg>
