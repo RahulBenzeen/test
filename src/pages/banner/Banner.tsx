@@ -90,7 +90,7 @@ export default function Banner() {
     >
       {/* Background Images */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-black/40 z-10" />
+        <div className="absolute inset-0 z-10" />
         {images.map((image, index) => (
           <img
             key={index}

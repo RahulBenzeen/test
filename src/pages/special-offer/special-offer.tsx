@@ -103,23 +103,27 @@ export default function AllSpecialOffers() {
                   alt={product.name}
                   className="w-full h-48 object-cover rounded-lg mb-4"
                 />
-                <h3 className="font-semibold text-lg">{product.name}</h3>
-                <p className="text-muted-foreground">Ends in 24 hours</p>
-                <div className="mt-2">
-                  {product.discountPercentage > 0 ? (
-                    <div className="flex items-center space-x-2">
-                      <span className="text-lg font-semibold text-red-500">
-                        ₹{product.discountedPrice.toFixed(2)}
-                      </span>
-                      <span className="text-sm text-gray-500 line-through">
+                <div className="flex flex-col justify-between">
+                  <div>
+                  <h3 className="font-semibold text-lg">{product.name}</h3>
+                  <p className="text-muted-foreground">Ends in 24 hours</p>
+                  </div>
+                  <div>
+                    {product.discountPercentage > 0 ? (
+                      <div className="flex items-center space-x-2">
+                        <span className="text-lg font-semibold text-red-500">
+                          ₹{product.discountedPrice.toFixed(2)}
+                        </span>
+                        <span className="text-sm text-gray-500 line-through">
+                          ₹{product.price.toFixed(2)}
+                        </span>
+                      </div>
+                    ) : (
+                      <span className="text-lg font-semibold">
                         ₹{product.price.toFixed(2)}
                       </span>
-                    </div>
-                  ) : (
-                    <span className="text-lg font-semibold">
-                      ₹{product.price.toFixed(2)}
-                    </span>
-                  )}
+                    )}
+                  </div>
                 </div>
               </CardContent>
               <CardFooter>
