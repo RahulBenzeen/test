@@ -17,6 +17,7 @@ interface SimilarProductsProps {
 }
 
 export default function SimilarProducts({ currentProductId }: SimilarProductsProps) {
+  console.log('rendering..')
   const containerRef = useRef<HTMLDivElement>(null)
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
@@ -105,7 +106,8 @@ export default function SimilarProducts({ currentProductId }: SimilarProductsPro
 
 
   const renderProductCard = useCallback((product: Product) => {
-    const isWishlisted = wishlists.some(item => item.product._id === product._id)
+
+    const isWishlisted = wishlists.some(item => item?.product?._id === product?._id)
 
     return (
       <ProductCard
@@ -139,6 +141,7 @@ export default function SimilarProducts({ currentProductId }: SimilarProductsPro
   }
 
   return (
+    
     <div ref={containerRef} className="mt-12">
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">{productCards}</div>
       {!isMobile && quickViewProduct && (

@@ -10,6 +10,7 @@ import {
 import { UseFormReturn } from 'react-hook-form';
 import { ProductFormValues } from '../../../utils/schemas/productSchema';
 
+
 interface ProductSpecificationsProps {
   form: UseFormReturn<ProductFormValues>;
 }

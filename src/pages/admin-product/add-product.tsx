@@ -49,6 +49,8 @@ export default function AddProductPage({ onAddProduct, onCancel }: AddProductPag
       dimensions: "",
       isSpecialOffer: false,
       discountPercentage: "",
+      bundle: false,
+      gift: false,
     },
   });
 

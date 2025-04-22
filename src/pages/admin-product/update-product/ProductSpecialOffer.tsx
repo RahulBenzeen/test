@@ -19,6 +19,47 @@ interface ProductSpecialOfferProps {
 export function ProductSpecialOffer({ form }: ProductSpecialOfferProps) {
   return (
     <>
+    <FormField
+      control={form.control}
+      name="bundle"
+      render={({ field }) => (
+    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+      <div className="space-y-0.5">
+        <FormLabel className="text-base">Bundle Product</FormLabel>
+        <FormDescription>
+          Toggle if this product is on bundle offer.
+        </FormDescription>
+      </div>
+      <FormControl>
+        <Switch
+          checked={field.value} // Ensure that field.value is a boolean (true/false)
+          onCheckedChange={(checked) => field.onChange(checked)} // onChange should handle the switch state change
+        />
+      </FormControl>
+    </FormItem>
+  )}
+/>
+    <FormField
+      control={form.control}
+      name="gift"
+      render={({ field }) => (
+    <FormItem className="flex flex-row items-center justify-between rounded-lg border p-4">
+      <div className="space-y-0.5">
+        <FormLabel className="text-base">Gift Product</FormLabel>
+        <FormDescription>
+          Toggle if this product is on gift offer.
+        </FormDescription>
+      </div>
+      <FormControl>
+        <Switch
+          checked={field.value} // Ensure that field.value is a boolean (true/false)
+          onCheckedChange={(checked) => field.onChange(checked)} // onChange should handle the switch state change
+        />
+      </FormControl>
+    </FormItem>
+  )}
+/>
+
       <FormField
         control={form.control}
         name="isSpecialOffer"
@@ -39,6 +80,7 @@ export function ProductSpecialOffer({ form }: ProductSpecialOfferProps) {
           </FormItem>
         )}
       />
+
 
       {form.watch("isSpecialOffer") && (
         <FormField

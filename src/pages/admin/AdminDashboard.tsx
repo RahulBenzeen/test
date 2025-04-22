@@ -10,6 +10,8 @@ import {
   ChevronRight,
   Image,
   Menu,
+  Ticket
+  
 } from 'lucide-react';
 import { Button } from '../../components/ui/button';
 import { Separator } from '../../components/ui/separator';
@@ -19,13 +21,14 @@ import CustomerManagement from './CustomerManagement';
 import Analytics from './Analytics';
 import ImageUpload from './uploadBannerImage';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
-
+import OfferManagement from './ManageOffers';
 const sidebarItems = [
   { name: 'Dashboard', icon: LayoutDashboard },
   { name: 'Products', icon: Package },
   { name: 'Orders', icon: ShoppingCart },
   { name: 'Customers', icon: Users },
   { name: 'Image', icon: Image },
+  { name: 'Create/manage offers', icon: Ticket },
 ];
 
 export default function AdminDashboard() {
@@ -50,6 +53,8 @@ export default function AdminDashboard() {
         return <CustomerManagement />;
       case 'Image':
         return <ImageUpload />;
+      case 'Create/manage offers':
+        return <OfferManagement />;
       default:
         return <Analytics />;
     }

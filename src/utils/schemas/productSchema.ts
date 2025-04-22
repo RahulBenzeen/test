@@ -23,6 +23,8 @@ export const productSchema = z.object({
   subcategory: z.string({
     required_error: "Please select a subcategory.",
   }),
+  bundle: z.boolean().default(false), 
+  gift: z.boolean().default(false), 
   stock: z.string().refine((val) => !isNaN(Number(val)) && Number(val) >= 0, {
     message: "Stock must be a non-negative number.",
   }),

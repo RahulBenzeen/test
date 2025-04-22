@@ -22,6 +22,8 @@ export interface Product {
   isSpecialOffer?: boolean;
   features?: string[];
   specifications?: string[];
+  bundle?: boolean;
+  gift?: boolean;
 }
 
 interface ProductState {

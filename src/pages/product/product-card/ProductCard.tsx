@@ -59,10 +59,10 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
     formattedDiscountedPrice,
     stockStatus
   } = useMemo(() => ({
-    isSpecialOffer: product.isSpecialOffer && (product.discountPercentage ?? 0) > 0,
-    formattedPrice: product.price?.toFixed(2),
-    formattedDiscountedPrice: product.discountedPrice?.toFixed(2),
-    stockStatus: product.stock === 0 ? 'out-of-stock' : product.stock <= 5 ? 'low-stock' : 'in-stock'
+    isSpecialOffer: product?.isSpecialOffer && (product?.discountPercentage ?? 0) > 0,
+    formattedPrice: product?.price?.toFixed(2),
+    formattedDiscountedPrice: product?.discountedPrice?.toFixed(2),
+    stockStatus: product?.stock === 0 ? 'out-of-stock' : product?.stock <= 5 ? 'low-stock' : 'in-stock'
   }), [product]);
 
   // Memoize event handlers
@@ -93,7 +93,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
       <Star
         key={i}
         className={`h-4 w-4 ${
-          i < Math.round(product.rating || 0)
+          i < Math.round(product?.rating || 0)
             ? 'text-yellow-400 fill-yellow-400'
             : 'text-gray-300'
         }`}
