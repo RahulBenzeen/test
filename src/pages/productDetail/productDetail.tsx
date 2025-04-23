@@ -350,7 +350,7 @@ export default function ProductDetailPage() {
                       onClick={() => navigate('/signin')} 
                       className="w-full mb-4 text-lg py-6"
                     >
-                      Sign In to Buy
+                      Add to Cart
                     </Button>
                   )}
 
@@ -395,14 +395,14 @@ export default function ProductDetailPage() {
 
         {/* Product Details Tabs */}
         <Tabs defaultValue="description" className="mb-8">
-          <TabsList className="w-full justify-start border-b">
-            <TabsTrigger value="description" className="text-lg">
+          <TabsList className="w-fit px-1.5 py-6 rounded-full justify-start border-b">
+            <TabsTrigger value="description" className="text-lg rounded-full">
               Description
             </TabsTrigger>
-            <TabsTrigger value="specifications" className="text-lg">
+            <TabsTrigger value="specifications" className="text-lg rounded-full">
               Specifications
             </TabsTrigger>
-            <TabsTrigger value="reviews" className="text-lg">
+            <TabsTrigger value="reviews" className="text-lg rounded-full">
               Reviews
             </TabsTrigger>
           </TabsList>

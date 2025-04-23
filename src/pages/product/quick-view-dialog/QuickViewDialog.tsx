@@ -287,7 +287,7 @@ const QuickViewDialog: React.FC<QuickViewDialogProps> = memo(({
                     size="lg"
                     onClick={onViewDetails}
                   >
-                    Sign in to Buy
+                    Add to Cart
                   </Button>
                 )}
                 

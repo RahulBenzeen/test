@@ -164,7 +164,6 @@ export default function Cart() {
   const { items: cartItems, status, error, gifts, bundleDiscounts, totalPrice:grandTotal} = useAppSelector((state) => state.cart);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  console.log(cartItems, 'cartItems')
 
   const handleRemoveFromCart = useCallback(async (productId: string) => {
     setIsLoading(true);

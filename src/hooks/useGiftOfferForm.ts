@@ -1,6 +1,7 @@
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import * as z from 'zod';
+import { createGiftOffer } from '../api/offer';
 
 const giftOfferSchema = z.object({
   name: z.string().min(3, { message: "Offer name must be at least 3 characters" }),
@@ -40,12 +41,15 @@ export const useGiftOfferForm = () => {
     // Here you would normally send the data to your API
     console.log("Submitting gift offer:", values);
     
-    // Simulate API call
-    return new Promise<void>((resolve) => {
-      setTimeout(() => {
-        resolve();
-      }, 500);
-    });
+      try {
+        const response = await createGiftOffer(values);
+    
+        console.log('Bundle offer saved:', response.data);
+        return response.data;
+      } catch (error) {
+        console.error('Failed to save bundle offer', error);
+        throw new Error("Failed to save bundle offer");
+      }
   };
 
   return {

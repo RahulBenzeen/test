@@ -15,7 +15,7 @@ const fetchCloudinaryImages = async () => {
 };
 
 export default function Banner() {
-  const [images, setImages] = useState([]);
+  const [images, setImages] = useState<{ url: string; alt: string }[]>([]);
   const [currentImage, setCurrentImage] = useState(0);
   const [touchStart, setTouchStart] = useState(0);
   const [touchEnd, setTouchEnd] = useState(0);
@@ -90,7 +90,7 @@ export default function Banner() {
     >
       {/* Background Images */}
       <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute inset-0 bg-black/40 z-10" />
+        <div className="absolute inset-0 z-10" />
         {images.map((image, index) => (
           <img
             key={index}

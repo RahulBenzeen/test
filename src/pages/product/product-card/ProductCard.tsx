@@ -109,13 +109,13 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
       animate={inView ? "visible" : "hidden"}
       whileHover="hover"
       onClick={onClick}
-      className="cursor-pointer transform-gpu"
+      className="h-full cursor-pointer transform-gpu"
       onMouseEnter={() => setIsHovered(true)}
       onMouseLeave={() => setIsHovered(false)}
     >
       <Card className={`
         ${view === 'grid' ? 'flex flex-col' : 'flex flex-col md:flex-row'}
-        overflow-hidden transition-all duration-300 hover:shadow-xl relative group
+        overflow-hidden transition-all duration-300 hover:shadow-xl relative
         ${isSpecialOffer ? 'ring-2 ring-red-500 ring-offset-2' : ''}
         will-change-transform
       `}>
@@ -196,38 +196,41 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
         </CardHeader>
 
         <CardContent className={`flex-grow p-4 ${view === 'list' ? 'md:flex-1' : ''}`}>
-          <div className="space-y-2">
-            {product.category && (
-              <Badge variant="outline" className="mb-2">
-                {product.category}
-              </Badge>
-            )}
+          <div className="flex h-full justify-between flex-col space-y-2">
+            <div>
+              {product.category && (
+                <Badge variant="outline" className="mb-2">
+                  {product.category}
+                </Badge>
+              )}
 
-            <h3 className="text-lg font-semibold line-clamp-2 group-hover:text-primary transition-colors duration-300">
-              {product.name}
-              <ArrowUpRight className="inline-block w-4 h-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
-            </h3>
-            
-            {product.brand && (
-              <p className="text-sm text-muted-foreground">{product.brand}</p>
-            )}
+              <h3 className="text-lg font-semibold line-clamp-2 group-hover:text-primary transition-colors duration-300">
+                {product.name}
+                <ArrowUpRight className="inline-block w-4 h-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+              </h3>
 
-            <div className="flex items-center gap-2">
-              {isSpecialOffer ? (
-                <>
-                  <p className="text-xl font-bold text-red-500">₹{formattedDiscountedPrice}</p>
-                  <p className="text-sm text-muted-foreground line-through">₹{formattedPrice}</p>
-                </>
-              ) : (
-                <p className="text-xl font-bold text-primary">₹{formattedPrice}</p>
+              {product.brand && (
+                <p className="text-sm text-muted-foreground">{product.brand}</p>
               )}
             </div>
+            <div>
+              <div className="flex items-center gap-2">
+                {isSpecialOffer ? (
+                  <>
+                    <p className="text-xl font-bold text-red-500">₹{formattedDiscountedPrice}</p>
+                    <p className="text-sm text-muted-foreground line-through">₹{formattedPrice}</p>
+                  </>
+                ) : (
+                  <p className="text-xl font-bold text-primary">₹{formattedPrice}</p>
+                )}
+              </div>
 
-            <div className="flex items-center">
-              {renderRatingStars}
-              <span className="ml-2 text-sm text-muted-foreground">
-                ({product.rating?.toFixed(1)})
-              </span>
+              <div className="flex items-center">
+                {renderRatingStars}
+                <span className="ml-2 text-sm text-muted-foreground">
+                  ({product.rating?.toFixed(1)})
+                </span>
+              </div>
             </div>
           </div>
         </CardContent>
@@ -235,7 +238,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
         <CardFooter className={`p-4 ${view === 'list' ? 'md:self-end' : ''}`}>
           {isAuthenticated ? (
             <Button
-              className={`w-full group relative overflow-hidden ${
+              className={`w-full relative overflow-hidden ${
                 isSpecialOffer ? 'bg-red-500 hover:bg-red-600' : ''
               }`}
               onClick={handleAddToCart}
@@ -247,14 +250,14 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
             </Button>
           ) : (
             <Button
-              className={`w-full group relative overflow-hidden ${
+              className={`w-full relative overflow-hidden ${
                 isSpecialOffer ? 'bg-red-500 hover:bg-red-600' : ''
               }`}
               onClick={() => router('/signin')}
               disabled={stockStatus === 'out-of-stock'}
             >
               <span className="absolute inset-0 bg-white/20 group-hover:translate-y-0 translate-y-full transition-transform duration-300" />
-              {stockStatus === 'out-of-stock' ? 'Out of Stock' : 'Sign in to Buy'}
+              {stockStatus === 'out-of-stock' ? 'Out of Stock' : 'Add to Cart'}
             </Button>
           )}
         </CardFooter>
