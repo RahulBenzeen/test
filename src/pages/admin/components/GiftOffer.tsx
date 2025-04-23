@@ -22,9 +22,16 @@ export default function GiftOfferForm() {
   const { form, onSubmit } = useGiftOfferForm();
   const { toast } = useToast();
 
-  const handleSubmit = async (values: any) => {
+  interface GiftOfferFormValues {
+    name: string;
+    minCartValue: string;
+    giftCount: number;
+    giftProducts: string[]; // Adjust types based on your form fields
+  }
+
+  const handleSubmit = async (values: GiftOfferFormValues) => {
     try {
-      await onSubmit(values);
+      await onSubmit({ ...values, minCartValue: values.minCartValue.toString() });
       toast({
         title: "Success!",
         description: "Gift offer has been saved successfully.",
@@ -103,7 +110,7 @@ export default function GiftOfferForm() {
                   <FormField
                     control={form.control}
                     name="giftCount"
-                    render={({ field: { value, onChange, ...field } }) => (
+                    render={({ field: { value, onChange } }) => (
                       <FormItem>
                         <FormLabel>Number of Gift Items</FormLabel>
                         <div className="space-y-2">

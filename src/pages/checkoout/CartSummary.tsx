@@ -2,28 +2,32 @@ import { Button } from "../../components/ui/button"
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "../../components/ui/card"
 import { ScrollArea } from "../../components/ui/scroll-area"
 import { Minus, Plus, Trash2 } from "lucide-react"
-import { CartItem } from "../../store/cartSlice"
+import { BundleDiscount, CartItem, Gifts } from "../../store/cartSlice"
+import GiftSelection from "../cart/offer/GiftSelection"
 
 interface CartSummaryProps {
   cartItems: CartItem[]
   onUpdateQuantity: (productId: string, newQuantity: number) => void
   onRemoveItem: (productId: string) => void
-  onClearCart: () => void,
-gifts:any,
-bundleDiscounts:any,
-totalPrice:any
+  onClearCart: () => void
+  gifts: Gifts
+  bundleDiscounts: BundleDiscount
+  totalPrice: number
+  onGiftSelect: (giftId: string) => void
+  selectedGiftId: string | null
 }
+
 
 export default function CartSummary({ 
   cartItems, 
-
   onUpdateQuantity, 
   onRemoveItem, 
   onClearCart,
-
-gifts,
-bundleDiscounts,
-totalPrice,
+  gifts,
+  bundleDiscounts,
+  totalPrice,
+  onGiftSelect,
+  selectedGiftId,
 }: CartSummaryProps) {
 
 
@@ -103,6 +107,13 @@ totalPrice,
             ))}
           </ul>
         </ScrollArea>
+              {Array.isArray(gifts) && gifts.length > 0 && (
+                <GiftSelection 
+                  gifts={gifts} 
+                  onGiftSelect={onGiftSelect}
+                  initialSelectedGiftId={selectedGiftId ?? undefined}
+                />
+              )}
       </CardContent>
       <CardFooter className="border-t pt-6 flex-col gap-4">
         <div className="w-full space-y-2">
@@ -113,7 +124,7 @@ totalPrice,
           {Number(bundleDiscounts) > 0 && (
             <div className="flex justify-between items-center text-sm text-green-600">
               <span>Total Savings</span>
-              <span>₹{bundleDiscounts}</span>
+              <span>₹{Number(bundleDiscounts)}</span>
             </div>
           )}
           <div className="flex justify-between items-center text-lg font-semibold pt-2 border-t">

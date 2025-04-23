@@ -68,7 +68,7 @@ export const fetchCart = createAsyncThunk(
             const response = await getCart();
             return {
                 items: response.data.data.items,
-                gifts: response.data.data.gifts || 0,
+                gifts: response.data.gifts || [],
                 bundleDiscounts: response.data.appliedOffers || [],
                 totalPrice: response.data.totalPrice || 0
             };
@@ -92,7 +92,7 @@ export const addToCartAsync = createAsyncThunk(
             const updatedCart = await getCart();
             return {
                 items: updatedCart.data.data.items,
-                gifts: updatedCart.data.data.gifts || 0,
+                gifts: updatedCart.data.gifts || [],
                 bundleDiscounts: updatedCart.data.appliedOffers || [],
                 totalPrice: updatedCart.data.totalPrice || 0
             };
@@ -110,7 +110,7 @@ export const removeFromCartAsync = createAsyncThunk(
             const updatedCart = await getCart();
             return {
                 items: updatedCart.data.data.items,
-                gifts: updatedCart.data.data.gifts || 0,
+                gifts: updatedCart.data.gifts || [],
                 bundleDiscounts: updatedCart.data.appliedOffers || [],
                 totalPrice: updatedCart.data.totalPrice || 0
             };
@@ -131,7 +131,7 @@ export const updateQuantityAsync = createAsyncThunk(
             const updatedCart = await getCart();
             return {
                 items: updatedCart.data.data.items,
-                gifts: updatedCart.data.gifts ,
+                gifts: updatedCart.data.gifts || [] ,
                 bundleDiscounts: updatedCart.data.appliedOffers || [],
                 totalPrice: updatedCart.data.totalPrice || 0
             };
