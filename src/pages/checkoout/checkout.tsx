@@ -10,7 +10,7 @@ import EmptyCart from './EmptyCart'
 import showToast from '../../utils/toast/toastUtils'
 
 export default function CheckoutPage() {
-  const cartItems = useAppSelector((state) => state.cart.items)
+  const { items: cartItems, status, error, gifts, bundleDiscounts, totalPrice:grandTotal} = useAppSelector((state) => state.cart);
   const savedAddresses = useAppSelector((state) => state.address.addresses)
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
@@ -57,6 +57,8 @@ export default function CheckoutPage() {
 
     const orderData = {
       products,
+      totalPrice: grandTotal,
+      discount:bundleDiscounts,
       shippingAddress: selectedAddress,
       paymentMethod: 'razorpay',
     }
@@ -91,6 +93,10 @@ export default function CheckoutPage() {
             onUpdateQuantity={handleUpdateQuantity}
             onRemoveItem={handleRemoveFromCart}
             onClearCart={handleClearCart}
+            gifts={gifts}
+            bundleDiscounts={bundleDiscounts}
+            totalPrice={grandTotal}
+           
           />
         </div>
 

@@ -9,14 +9,12 @@ interface Product {
 }
 
 interface OrderSummaryProps {
-  products: Product[];
+  products: Product[],
+  totalAmount: number;
 }
 
-export function OrderSummary({ products }: OrderSummaryProps) {
-  const totalAmount = products.reduce((total, product) => {
-    return total + product.price * product.quantity;
-  }, 0);
-
+export function OrderSummary({ products, totalAmount}: OrderSummaryProps ){
+  
   return (
     <Card>
       <CardHeader>

@@ -17,11 +17,7 @@ export default function PaymentPage() {
   const [isProcessing, setIsProcessing] = useState(false);
   const dispatch = useAppDispatch();
 
-  const totalAmount = orderData.order?.order.products?.reduce(
-    (total: number, product: { price: number; quantity: number }) => 
-      total + product.price * product.quantity,
-    0
-  );
+  const totalAmount = orderData.order?.order.totalPrice
 
   async function handlePayment() {
     setIsProcessing(true);
@@ -75,7 +71,7 @@ export default function PaymentPage() {
     <div className="min-h-screen bg-gray-50/50">
       <div className="container mx-auto px-4 py-8 sm:px-6 lg:px-8">
         <div className="max-w-2xl mx-auto space-y-8">
-          <OrderSummary products={orderData.order?.order.products || []} />
+          <OrderSummary products={orderData.order?.order.products || []} totalAmount = {totalAmount}  />
           <PaymentMethodForm
             onSubmit={handlePayment}
             totalAmount={totalAmount}

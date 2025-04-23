@@ -8,30 +8,24 @@ interface CartSummaryProps {
   cartItems: CartItem[]
   onUpdateQuantity: (productId: string, newQuantity: number) => void
   onRemoveItem: (productId: string) => void
-  onClearCart: () => void
+  onClearCart: () => void,
+gifts:any,
+bundleDiscounts:any,
+totalPrice:any
 }
 
 export default function CartSummary({ 
   cartItems, 
+
   onUpdateQuantity, 
   onRemoveItem, 
-  onClearCart 
-}: CartSummaryProps) {
-  const getTotalPrice = () => {
-    return cartItems.reduce((total, item) => {
-      const price = item.discountedPrice || item.price
-      return total + price * item.quantity
-    }, 0).toFixed(2)
-  }
+  onClearCart,
 
-  const getTotalSavings = () => {
-    return cartItems.reduce((total, item) => {
-      if (item.discountedPrice) {
-        return total + ((item.price - item.discountedPrice) * item.quantity)
-      }
-      return total
-    }, 0).toFixed(2)
-  }
+gifts,
+bundleDiscounts,
+totalPrice,
+}: CartSummaryProps) {
+
 
   return (
     <Card>
@@ -114,17 +108,17 @@ export default function CartSummary({
         <div className="w-full space-y-2">
           <div className="flex justify-between items-center text-sm">
             <span className="text-muted-foreground">Subtotal</span>
-            <span>₹{getTotalPrice()}</span>
+            <span>₹{totalPrice}</span>
           </div>
-          {Number(getTotalSavings()) > 0 && (
+          {Number(bundleDiscounts) > 0 && (
             <div className="flex justify-between items-center text-sm text-green-600">
               <span>Total Savings</span>
-              <span>₹{getTotalSavings()}</span>
+              <span>₹{bundleDiscounts}</span>
             </div>
           )}
           <div className="flex justify-between items-center text-lg font-semibold pt-2 border-t">
             <span>Total</span>
-            <span>₹{getTotalPrice()}</span>
+            <span>₹{totalPrice}</span>
           </div>
         </div>
       </CardFooter>

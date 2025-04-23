@@ -1,4 +1,4 @@
-import  { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Button } from '../../components/ui/button';
@@ -16,6 +16,14 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { ProductFormValues, productSchema } from '../../utils/schemas/productSchema';
 import { fetchProductDetails } from '../../store/productDetailSlice';
 import { uploadAndUpdateImage } from '../../utils/ProductImageUpload/cloudnaryUtils';
+
+
+interface ImageInfo {
+  url: string;
+  isExisting: boolean;
+  public_id?: string;
+  file?: File;
+}
 
 const categories = [
   { value: 'electronics', label: 'Electronics', subcategories: ['Smartphones', 'Laptops', 'Accessories'] },
@@ -35,15 +43,12 @@ export default function UpdateProductPage({
   onUpdateProduct,
   onCancel,
 }: UpdateProductPageProps) {
-  const [previewImages, setPreviewImages] = useState<string[]>([]);
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
-  const [existingImages, setExistingImages] = useState<Array<{ secure_url: string; public_id: string }>>([]);
+  const [images, setImages] = useState<ImageInfo[]>([]);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [selectedCategory, setSelectedCategory] = useState('');
   const dispatch = useAppDispatch();
 
   const { item: product, status, error } = useAppSelector((state) => state.productDetails);
-
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: {
@@ -81,11 +86,18 @@ export default function UpdateProductPage({
         dimensions: product.dimensions || '',
         isSpecialOffer: product.isSpecialOffer || false,
         discountPercentage: product.discountPercentage?.toString() || '',
+        bundle: product.bundle || false,
+        gift: product.gift || false,
       };
       
       form.reset(formValues);
-      setExistingImages(product.images || []);
-      setPreviewImages(product.images.map(img => img.secure_url) || []);
+      setImages(
+        product.images.map(img => ({
+          url: img.secure_url,
+          isExisting: true,
+          public_id: img.public_id
+        }))
+      );
       setSelectedCategory(product.category || '');
     }
   }, [product, form]);
@@ -99,41 +111,21 @@ export default function UpdateProductPage({
     }
   }, [selectedCategory, form]);
 
-  const handleImageUpload = (files: FileList | null) => {
-    if (files) {
-      const newPreviewImages: string[] = [];
-      const newUploadedFiles: File[] = [];
-      
-      Array.from(files).forEach((file) => {
-        const reader = new FileReader();
-        reader.onloadend = () => {
-          newPreviewImages.push(reader.result as string);
-          newUploadedFiles.push(file);
-          if (newPreviewImages.length === files.length) {
-            setPreviewImages((prev) => [...prev, ...newPreviewImages].slice(0, 5));
-            setUploadedFiles((prev) => [...prev, ...newUploadedFiles].slice(0, 5));
-          }
-        };
-        reader.readAsDataURL(file);
-      });
-    }
-  };
-
-  const removeImage = (index: number) => {
-    setPreviewImages((prev) => prev.filter((_, i) => i !== index));
-    setUploadedFiles((prev) => prev.filter((_, i) => i !== index));
-    setExistingImages((prev) => prev.filter((_, i) => i !== index));
-  };
-
   const onSubmit = async (values: ProductFormValues) => {
     try {
       setIsSubmitting(true);
 
-      const newImageData = await Promise.all(
-        uploadedFiles.map(file => uploadAndUpdateImage(file))
+      // Handle image updates
+      const finalImages = await Promise.all(
+        images.map(async (image) => {
+          if (image.isExisting) {
+            return { secure_url: image.url, public_id: image.public_id };
+          } else if (image.file) {
+            return await uploadAndUpdateImage(image.file);
+          }
+          return null;
+        })
       );
-
-      const allImages = [...existingImages, ...newImageData];
 
       const updatedProduct = {
         _id: productId,
@@ -142,7 +134,7 @@ export default function UpdateProductPage({
         price: parseFloat(values.price),
         stock: parseInt(values.stock),
         weight: values.weight ? parseFloat(values.weight) : undefined,
-        images: allImages,
+        images: finalImages.filter((img): img is { secure_url: string; public_id: string } => img !== null && img.public_id !== undefined),
         discountPercentage: values.isSpecialOffer && values.discountPercentage ? parseFloat(values.discountPercentage) : undefined,
       };
 
@@ -191,9 +183,8 @@ export default function UpdateProductPage({
             <ProductSpecialOffer form={form} />
             <ProductImageUpload
               form={form}
-              previewImages={previewImages}
-              handleImageUpload={handleImageUpload}
-              removeImage={removeImage}
+              images={images}
+              onImagesChange={setImages}
             />
 
             <div className="flex justify-between">

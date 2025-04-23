@@ -1,8 +1,8 @@
 import * as z from "zod";
 
-const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
-const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
-const MAX_IMAGES = 5;
+// const MAX_FILE_SIZE = 5 * 1024 * 1024; // 5MB
+// const ACCEPTED_IMAGE_TYPES = ["image/jpeg", "image/jpg", "image/png", "image/webp"];
+// const MAX_IMAGES = 5;
 
 export const productSchema = z.object({
   name: z.string().min(2, {
@@ -36,18 +36,18 @@ export const productSchema = z.object({
     .regex(/^\d+(\.\d+)?\s*[x*]\s*\d+(\.\d+)?\s*[x*]\s*\d+(\.\d+)?$/, {
       message: "Dimensions must be in the format 'L x W x H' or 'L * W * H' (e.g., '10 x 5 x 2' or '10 * 5 * 2').",
     }),
-  images: z
-    .custom<FileList>((val) => val instanceof FileList, "Please upload at least one image.")
-    .refine((files) => files.length > 0, "At least one image is required.")
-    .refine((files) => files.length <= MAX_IMAGES, `You can upload up to ${MAX_IMAGES} images.`)
-    .refine(
-      (files) => Array.from(files).every((file) => file.size <= MAX_FILE_SIZE),
-      `Each file size should be less than 5MB.`
-    )
-    .refine(
-      (files) => Array.from(files).every((file) => ACCEPTED_IMAGE_TYPES.includes(file.type)),
-      ".jpg, .jpeg, .png and .webp files are accepted."
-    ),
+  images: z.any().optional(),
+    // .custom<FileList>((val) => val instanceof FileList, "Please upload at least one image.")
+    // .refine((files) => files.length > 0, "At least one image is required.")
+    // .refine((files) => files.length <= MAX_IMAGES, `You can upload up to ${MAX_IMAGES} images.`)
+    // .refine(
+    //   (files) => Array.from(files).every((file) => file.size <= MAX_FILE_SIZE),
+    //   `Each file size should be less than 5MB.`
+    // )
+    // .refine(
+    //   (files) => Array.from(files).every((file) => ACCEPTED_IMAGE_TYPES.includes(file.type)),
+    //   ".jpg, .jpeg, .png and .webp files are accepted."
+    // ),
 
   // New fields
   isSpecialOffer: z.boolean().default(false), // Special product flag
