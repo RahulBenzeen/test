@@ -51,10 +51,10 @@ export default function ProductSelector({
   };
 
   useEffect(() => {
-    if (status === 'idle') {
-      dispatch(fetchProducts({page: 1, limit: 100}));
+    if (status === 'idle' || products.length === 0) {
+      dispatch(fetchProducts({ page: 1, limit: 100 }));
     }
-  }, [dispatch, status]);
+  }, [dispatch, status, products.length]);
 
 
   

@@ -3,7 +3,7 @@ import { ShoppingCart, X, Minus, Plus, Loader2, ShoppingBag, Gift, Package } fro
 import { Button } from "../../components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "../../components/ui/sheet";
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { fetchCart, removeFromCartAsync, updateQuantityAsync, clearCartAsync, CartItem, BundleDiscount } from '../../store/cartSlice';
+import { fetchCart, removeFromCartAsync, updateQuantityAsync, clearCartAsync, CartItem, BundleDiscount, Gifts } from '../../store/cartSlice';
 import { Link, useNavigate } from 'react-router-dom';
 import { Separator } from '../../components/ui/separator';
 import { ScrollArea } from '../../components/ui/scroll-area';
@@ -119,19 +119,29 @@ const CartItemComponent = memo(({
 
 CartItemComponent.displayName = 'CartItemComponent';
 
-const OffersSection = memo(({ gifts, bundleDiscounts }: { gifts: number; bundleDiscounts: BundleDiscount[] }) => (
-  <div className="space-y-3 mb-4">
+const OffersSection = memo(({ 
+  gifts, 
+  bundleDiscounts,
+  selectedGiftId,
+  onGiftSelect 
+}: { 
+  gifts: Gifts[]; 
+  bundleDiscounts: BundleDiscount[];
+  selectedGiftId: string | null;
+  onGiftSelect: (giftId: string) => void;
+}) => (
+  <div className="space-y-4 mt-6">
     {bundleDiscounts.length > 0 && (
-      <Card className="p-3 bg-primary/5 border-primary/10">
-        <div className="flex items-center gap-2 text-sm font-medium text-primary mb-2">
-          <Package className="h-4 w-4" />
-          <span>Bundle Discounts Applied</span>
+      <Card className="p-4 bg-primary/5 border-primary/10">
+        <div className="flex items-center gap-2 text-sm font-medium text-primary mb-3">
+          <Package className="h-5 w-5" />
+          <span className="text-base">Bundle Discounts Applied</span>
         </div>
-        <ul className="space-y-1 text-sm text-muted-foreground">
+        <ul className="space-y-2 text-sm text-muted-foreground">
           {bundleDiscounts.map((discount, i) => (
-            <li key={i} className="flex items-center gap-1">
-              <span>•</span>
-              <span>
+            <li key={i} className="flex items-start gap-2">
+              <span className="text-primary mt-0.5">•</span>
+              <span className="leading-relaxed">
                 {discount.discountType === 'percent' 
                   ? `${discount.discountValue}% off on ${discount.minQty}+ items`
                   : `₹${discount.discountAmount} off on ${discount.minQty}+ items`
@@ -143,15 +153,55 @@ const OffersSection = memo(({ gifts, bundleDiscounts }: { gifts: number; bundleD
       </Card>
     )}
     
-    {gifts > 0 && (
-      <Alert className="bg-accent/5 border-accent/10">
-        <div className="flex items-center gap-2">
-          <Gift className="h-4 w-4 text-accent" />
-          <AlertDescription className="text-sm font-medium text-accent-foreground">
-            Congratulations! You qualify for {gifts} free gift{gifts > 1 ? 's' : ''}!
-          </AlertDescription>
+    {gifts.length > 0 && (
+      <>
+        <Alert className="bg-accent/5 border-accent/10">
+          <div className="flex items-center gap-2 mb-1">
+            <Gift className="h-5 w-5 text-accent" />
+            <AlertDescription className="text-base font-medium text-accent-foreground">
+              Congratulations! You qualify for {gifts.length} free gift{gifts.length > 1 ? 's' : ''}!
+            </AlertDescription>
+          </div>
+          <p className="text-sm text-muted-foreground ml-7">
+            Select your preferred gift below.
+          </p>
+        </Alert>
+
+        <div className="grid grid-cols-2 sm:grid-cols-3 gap-4">
+          {gifts.map((gift) => {
+            const isSelected = selectedGiftId === gift._id;
+            return (
+              <div
+                key={gift._id}
+                className={`cursor-pointer border rounded-xl shadow-sm transition-all duration-200 overflow-hidden ${
+                  isSelected
+                    ? "ring-2 ring-accent border-accent bg-accent/5"
+                    : "hover:border-gray-300 hover:shadow-md"
+                }`}
+                onClick={() => onGiftSelect(gift._id)}
+              >
+                <div className="relative pb-[100%] overflow-hidden bg-gray-100">
+                  <img
+                    src={gift.images[0]?.secure_url}
+                    alt={gift.name}
+                    className="absolute top-0 left-0 w-full h-full object-cover transition-transform duration-300 hover:scale-105"
+                  />
+                  {isSelected && (
+                    <div className="absolute top-2 right-2 bg-accent text-white rounded-full p-1 shadow-md bg-green-500" >
+                      <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <polyline points="20 6 9 17 4 12"></polyline>
+                      </svg>
+                    </div>
+                  )}
+                </div>
+                <div className="p-3">
+                  <p className="text-sm font-medium text-center line-clamp-2 h-10">{gift.name}</p>
+                </div>
+              </div>
+            );
+          })}
         </div>
-      </Alert>
+      </>
     )}
   </div>
 ));
@@ -161,9 +211,14 @@ OffersSection.displayName = 'OffersSection';
 export default function Cart() {
   const dispatch = useAppDispatch();
   const navigate = useNavigate();
-  const { items: cartItems, status, error, gifts, bundleDiscounts, totalPrice:grandTotal} = useAppSelector((state) => state.cart);
+  const { items: cartItems, status, error, gifts, bundleDiscounts, totalPrice: grandTotal } = useAppSelector((state) => state.cart);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
+  const [selectedGiftId, setSelectedGiftId] = useState<string | null>(null);
+
+  const handleGiftSelect = useCallback((giftId: string) => {
+    setSelectedGiftId(giftId);
+  }, []);
 
   const handleRemoveFromCart = useCallback(async (productId: string) => {
     setIsLoading(true);
@@ -221,10 +276,6 @@ export default function Cart() {
   }, [error]);
 
   const totalItems = cartItems.reduce((total, item) => total + item.quantity, 0);
-  // const totalPrice = cartItems.reduce(
-  //   (total, item) => total + ((item.discountedPrice || item.price) * item.quantity),
-  //   0
-  // ).toFixed(2);
 
   if (status === 'loading') {
     return (
@@ -282,15 +333,20 @@ export default function Cart() {
               <div className="space-y-4">
                 {cartItems.map((item) => (
                   <CartItemComponent
-                  key={item._id}
-                  item={item}
-                  onRemove={handleRemoveFromCart}
-                  onUpdateQuantity={handleUpdateQuantity}
-                  isLoading={isLoading}
+                    key={item._id}
+                    item={item}
+                    onRemove={handleRemoveFromCart}
+                    onUpdateQuantity={handleUpdateQuantity}
+                    isLoading={isLoading}
                   />
                 ))}
               </div>
-                <OffersSection gifts={gifts} bundleDiscounts={bundleDiscounts} />
+              <OffersSection 
+                gifts={gifts || []} 
+                bundleDiscounts={bundleDiscounts}
+                selectedGiftId={selectedGiftId}
+                onGiftSelect={handleGiftSelect}
+              />
             </ScrollArea>
             <div className="space-y-4 pr-6">
               <Separator />
@@ -299,19 +355,19 @@ export default function Cart() {
                   <span className="text-sm">Subtotal</span>
                   <span className="text-sm font-medium">₹{grandTotal}</span>
                 </div>
-                 {
-                  bundleDiscounts.length > 0 &&
-                  (  <div className="flex justify-between text-green-600">
+                {bundleDiscounts.length > 0 && (
+                  <div className="flex justify-between text-green-600">
                     <span className="text-sm">Total Savings</span>
-                    <span className="text-sm font-medium">₹{bundleDiscounts.reduce((total, discount) => total + (Number(discount.discountAmount) || 0), 0)}</span>
-                  </div>)
-                 }
-                
-                
-                {gifts > 0 && (
+                    <span className="text-sm font-medium">
+                      ₹{bundleDiscounts.reduce((total, discount) => 
+                        total + (Number(discount.discountAmount) || 0), 0)}
+                    </span>
+                  </div>
+                )}
+                {gifts.length > 0 && (
                   <div className="flex justify-between text-accent">
                     <span className="text-sm">Free Gifts</span>
-                    <span className="text-sm font-medium">{gifts}</span>
+                    <span className="text-sm font-medium">{gifts.length}</span>
                   </div>
                 )}
                 <div className="flex justify-between">

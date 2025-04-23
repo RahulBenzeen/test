@@ -83,7 +83,7 @@ export default function GiftOfferForm() {
                 </div>
                 
                 <div className="space-y-6">
-                  <FormField
+                  {/* <FormField
                     control={form.control}
                     name="maxCartValue"
                     render={({ field }) => (
@@ -98,7 +98,7 @@ export default function GiftOfferForm() {
                         <FormMessage />
                       </FormItem>
                     )}
-                  />
+                  /> */}
                   
                   <FormField
                     control={form.control}
@@ -175,7 +175,7 @@ export default function GiftOfferForm() {
                       <div className="text-lg font-semibold">{form.watch("name") || "Summer Special Gift"}</div>
                       <div className="text-sm text-muted-foreground">
                         Spend ₹{form.watch("minCartValue") || "1000"}
-                        {form.watch("maxCartValue") ? ` - ₹${form.watch("maxCartValue")}` : ""}
+                        {/* {form.watch("maxCartValue") ? ` - ₹${form.watch("maxCartValue")}` : ""} */}
                       </div>
                       <div className="mt-2 flex flex-wrap gap-2">
                         {Array(form.watch("giftCount") || 1).fill(0).map((_, i) => (

@@ -10,6 +10,22 @@ export interface BundleDiscount {
     discountValue: number;
     discountAmount: string;
 }
+export interface GiftImage {
+    secure_url: string;
+    public_id: string;
+    _id: string;
+    id: string;
+}
+
+export interface Gifts {
+    _id: string;
+    name: string;
+    price: number;
+    discountedPrice: number;
+    images: GiftImage[];
+    isGift: boolean;
+}
+
 
 export interface CartItem {
     _id: string;
@@ -24,7 +40,7 @@ interface CartState {
     items: CartItem[];
     status: 'idle' | 'loading' | 'succeeded' | 'failed';
     error: string | null;
-    gifts: number;
+    gifts: Gifts[];
     bundleDiscounts: BundleDiscount[];
     totalPrice: number;
 }
@@ -33,7 +49,7 @@ const initialState: CartState = {
     items: [],
     status: 'idle',
     error: null,
-    gifts: 0,
+    gifts: [],
     bundleDiscounts: [],
     totalPrice: 0
 };
@@ -115,7 +131,7 @@ export const updateQuantityAsync = createAsyncThunk(
             const updatedCart = await getCart();
             return {
                 items: updatedCart.data.data.items,
-                gifts: updatedCart.data.data.gifts || 0,
+                gifts: updatedCart.data.gifts ,
                 bundleDiscounts: updatedCart.data.appliedOffers || [],
                 totalPrice: updatedCart.data.totalPrice || 0
             };
@@ -204,7 +220,7 @@ export const cartSlice = createSlice({
             })
             .addCase(clearCartAsync.fulfilled, (state) => {
                 state.items = [];
-                state.gifts = 0;
+                state.gifts = [];
                 state.bundleDiscounts = [];
                 state.totalPrice = 0;
                 state.error = null;
