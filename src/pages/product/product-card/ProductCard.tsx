@@ -206,7 +206,7 @@ const ProductCard: React.FC<ProductCardProps> = React.memo(({
 
               <h3 className="text-lg font-semibold line-clamp-2 group-hover:text-primary transition-colors duration-300">
                 {product.name}
-                <ArrowUpRight className="inline-block w-4 h-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" />
+                {/* <ArrowUpRight className="inline-block w-4 h-4 ml-1 opacity-0 group-hover:opacity-100 transition-opacity" /> */}
               </h3>
 
               {product.brand && (

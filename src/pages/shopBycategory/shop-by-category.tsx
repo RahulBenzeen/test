@@ -23,14 +23,6 @@ const categories = [
     image: 'https://res.cloudinary.com/dkii6mubi/image/upload/v1733893373/ecommerce/xvph69a7enqwws0uec07'
   },
   { 
-    id: 5, 
-    name: 'Beauty', 
-    description: 'Feel confident, fresh, and fabulous', 
-    icon: SmilePlus, 
-    featured: ['Makeup', 'Skincare', 'Hair Care'], 
-    image: 'https://indian-retailer.s3.ap-south-1.amazonaws.com/s3fs-public/article5874.jpg' 
-  },
-  { 
     id: 3, 
     name: 'Home', 
     description: 'Beautiful items for your living spaces',
@@ -45,6 +37,14 @@ const categories = [
     icon: Laptop,
     featured: ['Fiction', 'Non-Fiction', 'Educational'],
     image: 'https://res.cloudinary.com/dkii6mubi/image/upload/v1733893373/ecommerce/xarqudmzihm2dsc9dzpm'
+  },
+  { 
+    id: 5, 
+    name: 'Beauty', 
+    description: 'Feel confident, fresh, and fabulous', 
+    icon: SmilePlus, 
+    featured: ['Makeup', 'Skincare', 'Hair Care'], 
+    image: 'https://indian-retailer.s3.ap-south-1.amazonaws.com/s3fs-public/article5874.jpg' 
   }
 ]
 
@@ -69,7 +69,7 @@ export default function ShopByCategory() {
                     alt={category.name}
                     className="w-full h-48 object-cover transition-transform duration-300 group-hover:scale-105"
                   />
-                  <div className="absolute inset-0 bg-black bg-opacity-40 transition-opacity duration-300 opacity-0 group-hover:opacity-100 flex items-center justify-center">
+                  <div className="absolute inset-0 bg-black bg-opacity-40 transition-transform  group-hover:scale-105 duration-300 opacity-0 group-hover:opacity-100 flex items-center justify-center">
                     <Button variant="secondary" size="sm" onClick={() =>{handleCategoryClick(category.name?.toLowerCase())}}>
                       Explore {category.name}
                     </Button>
@@ -95,7 +95,7 @@ export default function ShopByCategory() {
               <CardFooter className="bg-secondary">
                 <Link 
                   to={`/product?category=${encodeURIComponent(category.name?.toLowerCase())}`} 
-                  className="text-primary hover:underline inline-flex items-center w-full justify-between"
+                  className="p-2 text-primary hover:underline inline-flex items-center w-full justify-between"
                 >
                   View All {category.name}
                   <ArrowRight className="h-4 w-4" />
