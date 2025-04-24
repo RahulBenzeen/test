@@ -1,20 +1,25 @@
+// api/offers.ts
+import api from "./index"; // your axios instance
 import { BundleRule } from "../hooks/useBundleOffer";
-import api from "./index"; // axios instance
 
+// BUNDLE OFFERS
 
-
-// Create multiple bundle offers
 export const createBundleOffers = (offers: BundleRule[]) => 
   api.post("/api/offers/bundle/add", offers);
 
-// Get all bundle offers
 export const getAllBundleOffers = () => 
-  api.get("/api/bundle-offers");
+  api.get("/api/offers/bundle/all");
 
-// Delete a specific bundle offer by ID
 export const deleteBundleOffer = (offerId: string) => 
-  api.delete(`/api/bundle-offers/${offerId}`);
+  api.delete(`/api/offers/bundle/${offerId}`);
 
+// GIFT OFFERS
 
 export const createGiftOffer = (offers: any) => 
   api.post("/api/offers/gift/add", offers);
+
+export const getAllGiftOffers = () => 
+  api.get("/api/offers/gift/all");
+
+export const deleteGiftOffer = (offerId: string) => 
+  api.delete(`/api/offers/gift/${offerId}`);

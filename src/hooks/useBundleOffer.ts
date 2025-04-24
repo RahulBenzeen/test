@@ -1,7 +1,7 @@
 import { useState } from 'react';
 import { createBundleOffers } from '../api/offer';
 
-interface BundleRule  {
+export interface BundleRule  {
   minQty: string;
   maxQty: string;
   discountType: string;
