@@ -1,22 +1,22 @@
 import React, { useState } from 'react';
 import { CardContent, CardFooter } from '../../../components/ui/card';
 import { Button } from '../../../components/ui/button';
-import { Plus } from 'lucide-react';
+import { Plus, Loader2 } from 'lucide-react';
 import RuleItem from './RuleItem';
-import { useBundleOfferForm } from '../../../hooks/useBundleOffer';
 import { useToast } from '../../../hooks/use-toast';
 import { motion, AnimatePresence } from '../../../components/ui/motion';
 import OfferPreview from './OfferPreview';
+import { useBundleOfferForm } from '../../../hooks/useBundleOffer';
 
 export default function BundleOfferForm() {
+  const [isSubmitting, setIsSubmitting] = useState(false);
   const { bundleRules, addNewRule, updateRule, removeRule, validateAndSubmit } = useBundleOfferForm();
   const { toast } = useToast();
-  const [loading, setLoading] = useState(false);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    setLoading(true);
     try {
+      setIsSubmitting(true);
       await validateAndSubmit();
       toast({
         title: "Success!",
@@ -30,7 +30,7 @@ export default function BundleOfferForm() {
         variant: "destructive",
       });
     } finally {
-      setLoading(false);
+      setIsSubmitting(false);
     }
   };
 
@@ -46,6 +46,7 @@ export default function BundleOfferForm() {
                   type="button"
                   variant="outline"
                   onClick={addNewRule}
+                  disabled={isSubmitting}
                   className="flex items-center gap-2 transition-all hover:bg-primary hover:text-primary-foreground"
                 >
                   <Plus className="h-4 w-4" />
@@ -76,6 +77,7 @@ export default function BundleOfferForm() {
                         index={index}
                         updateRule={updateRule}
                         removeRule={removeRule}
+                        disabled={isSubmitting}
                       />
                     </motion.div>
                   ))}
@@ -89,6 +91,7 @@ export default function BundleOfferForm() {
                       variant="ghost"
                       className="mt-2"
                       onClick={addNewRule}
+                      disabled={isSubmitting}
                     >
                       Add your first rule
                     </Button>
@@ -103,13 +106,32 @@ export default function BundleOfferForm() {
           </div>
         </div>
       </CardContent>
-
+      
       <CardFooter className="flex justify-end gap-2 p-6 pt-0">
-        <Button variant="outline" type="button">Cancel</Button>
-        <Button type="submit" disabled={loading}>
-          {loading ? "Saving..." : "Save Bundle Offer"}
+        <Button 
+          variant="outline" 
+          type="button" 
+          disabled={isSubmitting}
+          onClick={() => {
+            // Reset form
+            while (bundleRules.length > 0) {
+              removeRule(0);
+            }
+            addNewRule();
+          }}
+        >
+          Cancel
         </Button>
-
+        <Button type="submit" disabled={isSubmitting}>
+          {isSubmitting ? (
+            <>
+              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              Saving Bundle Offer...
+            </>
+          ) : (
+            'Save Bundle Offer'
+          )}
+        </Button>
       </CardFooter>
     </form>
   );

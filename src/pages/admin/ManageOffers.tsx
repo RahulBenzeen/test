@@ -49,7 +49,7 @@ export default function OfferManagement() {
               >
                 <div className="flex items-center gap-2">
                   <List className="h-5 w-5" />
-                  <span>View Offers</span>
+                  <span>Manage Offers</span>
                 </div>
               </TabsTrigger>
             </TabsList>

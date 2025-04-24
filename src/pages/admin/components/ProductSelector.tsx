@@ -1,6 +1,6 @@
 import  { useState, useEffect } from 'react';
 import { useAppSelector } from '../../../store/hooks';
-import { Check, ChevronsUpDown, Search, X } from 'lucide-react';
+import { Check, ChevronsUpDown, X } from 'lucide-react';
 import { Button } from '../../../components/ui/button';
 import {
   Command,
@@ -16,11 +16,9 @@ import {
   PopoverTrigger,
 } from '../../../components/ui/popover';
 import { Badge } from '../../../components/ui/badge';
-import { ScrollArea } from '../../../components/ui/scroll-area';
 import { Skeleton } from '../../../components/ui/skeleton';
 import { cn } from '../../../lib/utils';
-import { fetchProducts } from '../../../store/productSlice';
-import { useAppDispatch } from '../../../store/hooks';
+
 type ProductSelectorProps = {
   selectedProducts: string[];
   onChange: (value: string[]) => void;
@@ -34,13 +32,30 @@ export default function ProductSelector({
 }: ProductSelectorProps) {
   const [open, setOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
+  const [debouncedQuery, setDebouncedQuery] = useState('');
   
   const products = useAppSelector((state) => state.products.items);
-  const status = useAppSelector((state) => state.products.status);
-  const dispatch = useAppDispatch();
-  const filteredProducts = products.filter(product => 
-    product.name.toLowerCase().includes(searchQuery.toLowerCase())
-  );
+  const loading = useAppSelector((state) => state.products.status);
+  
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedQuery(searchQuery);
+    }, 300);
+    return () => clearTimeout(timer);
+  }, [searchQuery]);
+  
+  const filteredProducts = products.filter(product => {
+    const searchTerms = debouncedQuery.toLowerCase().split(' ');
+    const productName = product.name.toLowerCase();
+    const productBrand = (product.brand || '').toLowerCase();
+    const productCategory = (product.category || '').toLowerCase();
+    
+    return searchTerms.every(term => 
+      productName.includes(term) || 
+      productBrand.includes(term) || 
+      productCategory.includes(term)
+    );
+  });
   
   const handleSelect = (productId: string) => {
     if (selectedProducts.includes(productId)) {
@@ -49,20 +64,11 @@ export default function ProductSelector({
       onChange([...selectedProducts, productId]);
     }
   };
-
-  useEffect(() => {
-    if (status === 'idle' || products.length === 0) {
-      dispatch(fetchProducts({ page: 1, limit: 100 }));
-    }
-  }, [dispatch, status, products.length]);
-
-
   
   const handleRemove = (productId: string) => {
     onChange(selectedProducts.filter(id => id !== productId));
   };
   
-  // Find product by ID
   const getProductById = (id: string) => {
     return products.find(product => product._id === id);
   };
@@ -73,6 +79,7 @@ export default function ProductSelector({
       id,
       name: product?.name || 'Unknown Product',
       image: product?.images?.[0]?.secure_url || '',
+      price: product?.price || 0,
     };
   });
 
@@ -97,9 +104,9 @@ export default function ProductSelector({
         <PopoverContent className="w-[300px] p-0 md:w-[400px]">
           <Command className="w-full">
             <div className="flex items-center border-b px-3">
-              <Search className="mr-2 h-4 w-4 shrink-0 opacity-50" />
+   
               <CommandInput
-                placeholder="Search products..."
+                placeholder="Search by name, brand, category..."
                 className="h-9 flex-1"
                 value={searchQuery}
                 onValueChange={setSearchQuery}
@@ -108,8 +115,8 @@ export default function ProductSelector({
             <CommandList>
               <CommandEmpty>No products found.</CommandEmpty>
               <CommandGroup>
-                <ScrollArea className="h-[300px]">
-                  {status ==='loading'? (
+
+                  {loading === 'loading' ? (
                     Array(5).fill(0).map((_, i) => (
                       <div key={i} className="flex items-center gap-2 p-2">
                         <Skeleton className="h-10 w-10 rounded-md" />
@@ -143,7 +150,10 @@ export default function ProductSelector({
                         </div>
                         <div className="flex-1 overflow-hidden">
                           <p className="text-sm truncate">{product.name}</p>
-                          <p className="text-xs text-muted-foreground">₹{product.price}</p>
+                          <p className="text-xs text-muted-foreground">
+                            {product.brand && <span className="mr-2">{product.brand}</span>}
+                            ₹{product.price}
+                          </p>
                         </div>
                         <Check
                           className={cn(
@@ -156,7 +166,7 @@ export default function ProductSelector({
                       </CommandItem>
                     ))
                   )}
-                </ScrollArea>
+      
               </CommandGroup>
             </CommandList>
             {maxSelections < Infinity && (

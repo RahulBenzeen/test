@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import  { useState } from 'react';
 import { Input } from '../../../components/ui/input';
 import {
   Select,
@@ -16,7 +16,7 @@ import { cn } from '../../../lib/utils';
 type RuleItemProps = {
   rule: {
     minQty: string;
-
+    maxQty: string;
     discountType: string;
     discountValue: string;
     products: string[];
@@ -24,9 +24,16 @@ type RuleItemProps = {
   index: number;
   updateRule: (index: number, field: string, value: any) => void;
   removeRule: (index: number) => void;
+  disabled?: boolean;
 };
 
-export default function RuleItem({ rule, index, updateRule, removeRule }: RuleItemProps) {
+export default function RuleItem({ 
+  rule, 
+  index, 
+  updateRule, 
+  removeRule,
+  disabled = false 
+}: RuleItemProps) {
   const [expanded, setExpanded] = useState(false);
   
   const handleNumberInput = (field: string, value: string) => {
@@ -44,21 +51,14 @@ export default function RuleItem({ rule, index, updateRule, removeRule }: RuleIt
             value={rule.minQty}
             onChange={(e) => handleNumberInput('minQty', e.target.value)}
             className="w-full"
+            disabled={disabled}
           />
         </div>
-        {/* <div className="col-span-2">
-          <Input
-            type="number"
-            placeholder="Max"
-            value={rule.maxQty}
-            onChange={(e) => handleNumberInput('maxQty', e.target.value)}
-            className="w-full"
-          />
-        </div> */}
         <div className="col-span-3">
           <Select
             value={rule.discountType}
             onValueChange={(value) => updateRule(index, 'discountType', value)}
+            disabled={disabled}
           >
             <SelectTrigger>
               <SelectValue placeholder="Discount Type" />
@@ -77,6 +77,7 @@ export default function RuleItem({ rule, index, updateRule, removeRule }: RuleIt
             value={rule.discountValue}
             onChange={(e) => handleNumberInput('discountValue', e.target.value)}
             className="w-full"
+            disabled={disabled}
           />
         </div>
         <div className="col-span-2">
@@ -86,6 +87,7 @@ export default function RuleItem({ rule, index, updateRule, removeRule }: RuleIt
             size="sm"
             className="w-full justify-between"
             onClick={() => setExpanded(!expanded)}
+            disabled={disabled}
           >
             <span>{rule.products.length || 0} selected</span>
             {expanded ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
@@ -96,6 +98,7 @@ export default function RuleItem({ rule, index, updateRule, removeRule }: RuleIt
             variant="ghost"
             type="button"
             onClick={() => removeRule(index)}
+            disabled={disabled}
             className="h-8 w-8 p-0 text-destructive hover:text-destructive/80 hover:bg-destructive/10"
           >
             <Trash2 className="h-4 w-4" />
