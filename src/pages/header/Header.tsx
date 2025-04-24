@@ -9,12 +9,13 @@ import DesktopNav from './DesktopNav'
 import UserActions from './UserActions'
 import BottomNav from './BottomNav'
 import { CategoryType } from '../../utils/type/category'
-import NothingLogo from '../../assets/nothinglogo.svg'
+import NothingLogo from '../../../public/icons/myhues_new_logo_file_20230707_2.svg'
 const categories: CategoryType[] = [
   { value: 'electronics', name: 'Electronics', subcategories: ['Smartphones', 'Laptops', 'Accessories'] },
   { value: 'clothing', name: 'Clothing', subcategories: ['Men', 'Women', 'Kids'] },
   { value: 'home', name: 'Home & Garden', subcategories: ['Furniture', 'Decor', 'Kitchen'] },
   { value: 'books', name: 'Books', subcategories: ['Fiction', 'Non-fiction', 'Educational'] },
+  { value: 'beauty', name: 'Beauty & Personal Care', subcategories: ['Makeup', 'Skincare', 'Hair', 'Fragrance', 'Bath', 'Grooming', 'Tools'] }
 ]
 
 export default function Header() {
@@ -66,7 +67,7 @@ export default function Header() {
             
             <Link to="/" className="flex items-center space-x-2">
               {/* <span className="text-xl font-bold hidden sm:inline-block">NOTHING.</span> */}
-              <img src={NothingLogo} alt="Nothing Logo" title='Nothing.' className="w-10 h-10 sm:w-12 sm:h-12" />
+              <img src={NothingLogo} alt="Nothing Logo" title='Nothing.' className="w-8 h-8 sm:w-20 sm:h-12" />
               {/* <span className="text-xl font-bold sm:hidden">N.</span> */}
             </Link>
 

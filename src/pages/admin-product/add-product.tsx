@@ -21,6 +21,7 @@ const categories = [
   { value: 'clothing', label: 'Clothing', subcategories: ['Men', 'Women', 'Kids'] },
   { value: 'home', label: 'Home & Garden', subcategories: ['Furniture', 'Decor', 'Kitchen'] },
   { value: 'books', label: 'Books', subcategories: ['Fiction', 'Non-fiction', 'Educational'] },
+  { value: 'beauty', label: 'Beauty & Personal Care', subcategories: ['Makeup', 'Skincare', 'Hair', 'Fragrance', 'Bath', 'Grooming', 'Tools'] }
 ];
 
 interface AddProductPageProps {

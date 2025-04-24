@@ -1,6 +1,6 @@
 
 import { Link } from 'react-router-dom'
-import { ArrowRight, Smartphone, Laptop, Shirt, Coffee } from 'lucide-react'
+import { ArrowRight, Smartphone, Laptop, Shirt, Coffee, SmilePlus } from 'lucide-react'
 import { Button } from '../../components/ui/button'
 import { Card, CardContent, CardFooter } from '../../components/ui/card'
 
@@ -21,6 +21,14 @@ const categories = [
     icon: Shirt,
     featured: ['Men\'s Wear', 'Women\'s Fashion', 'Kids\' Clothing'],
     image: 'https://res.cloudinary.com/dkii6mubi/image/upload/v1733893373/ecommerce/xvph69a7enqwws0uec07'
+  },
+  { 
+    id: 5, 
+    name: 'Beauty', 
+    description: 'Feel confident, fresh, and fabulous', 
+    icon: SmilePlus, 
+    featured: ['Makeup', 'Skincare', 'Hair Care'], 
+    image: 'https://indian-retailer.s3.ap-south-1.amazonaws.com/s3fs-public/article5874.jpg' 
   },
   { 
     id: 3, 

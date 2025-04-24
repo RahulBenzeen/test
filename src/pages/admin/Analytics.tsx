@@ -398,6 +398,7 @@ export default function Analytics() {
                       { category: 'Clothing', value: 28 },
                       { category: 'Home & Garden', value: 22 },
                       { category: 'Books', value: 15 },
+                      { category: 'Beauty & Personal Care', value: 10 },
                     ]}
                     index="category"
                     categories={['value']}

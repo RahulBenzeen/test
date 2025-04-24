@@ -83,7 +83,7 @@ export default function Banner() {
 
   return (
     <section 
-      className="relative h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] xl:h-[800px] bg-gradient-to-r from-gray-900 to-gray-800 text-white overflow-hidden"
+      className="relative h-[400px] sm:h-[500px] md:h-[600px] lg:h-[700px] bg-gradient-to-r from-gray-900 to-gray-800 text-white overflow-hidden"
       onTouchStart={handleTouchStart}
       onTouchMove={handleTouchMove}
       onTouchEnd={handleTouchEnd}
@@ -107,7 +107,7 @@ export default function Banner() {
       </div>
 
       {/* Content */}
-      <div className="relative z-20 container mx-auto px-4 h-full flex flex-col justify-center items-center text-center">
+      {/* <div className="relative z-20 container mx-auto px-4 h-full flex flex-col justify-center items-center text-center">
         <h1 className="text-2xl xs:text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mb-3 sm:mb-4 md:mb-6 tracking-tight">
           There's something in Nothing.
         </h1>
@@ -133,7 +133,7 @@ export default function Banner() {
             </Button>
           </Link>
         </div>
-      </div>
+      </div> */}
 
       {/* Navigation Buttons - Hidden on mobile, shown on larger screens */}
       <div className="hidden sm:block">
