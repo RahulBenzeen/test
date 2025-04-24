@@ -3,7 +3,7 @@ import { ShoppingCart, Loader2 } from 'lucide-react';
 import { Button } from "../../components/ui/button";
 import { Sheet, SheetContent, SheetTrigger } from "../../components/ui/sheet";
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
-import { fetchCart, removeFromCartAsync, updateQuantityAsync, clearCartAsync } from '../../store/cartSlice';
+import { fetchCart, removeFromCartAsync, updateQuantityAsync, clearCartAsync, setSelectedGiftId } from '../../store/cartSlice';
 import { useNavigate } from 'react-router-dom';
 import { Separator } from "../../components/ui/separator";
 import { ScrollArea } from "../../components/ui/scroll-area";
@@ -20,11 +20,11 @@ export default function Cart() {
   const { items: cartItems, status, error, gifts, bundleDiscounts, totalPrice: grandTotal } = useAppSelector((state) => state.cart);
   const [isLoading, setIsLoading] = useState(false);
   const [isOpen, setIsOpen] = useState(false);
-  const [selectedGiftId, setSelectedGiftId] = useState<string | undefined>(undefined);
+
 
   const handleGiftSelect = useCallback((giftId: string) => {
-    setSelectedGiftId(giftId);
-  }, []);
+    dispatch(setSelectedGiftId(giftId));
+  }, [dispatch]);
 
   const handleRemoveFromCart = useCallback(async (productId: string) => {
     setIsLoading(true);
@@ -143,7 +143,6 @@ export default function Cart() {
               <OffersSection 
                 gifts={gifts || []} 
                 bundleDiscounts={bundleDiscounts}
-                selectedGiftId={selectedGiftId}
                 onGiftSelect={handleGiftSelect}
               />
             </ScrollArea>

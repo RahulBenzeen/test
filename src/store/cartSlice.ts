@@ -43,6 +43,7 @@ interface CartState {
     gifts: Gifts[];
     bundleDiscounts: BundleDiscount[];
     totalPrice: number;
+    selectedGiftId: string | null; // <- new field
 }
 
 const initialState: CartState = {
@@ -51,7 +52,8 @@ const initialState: CartState = {
     error: null,
     gifts: [],
     bundleDiscounts: [],
-    totalPrice: 0
+    totalPrice: 0,
+    selectedGiftId: null // <- initial state for selected gift
 };
 
 const handleError = (error: unknown): string => {
@@ -162,6 +164,10 @@ export const cartSlice = createSlice({
             if (item) {
                 item.quantity = action.payload.quantity;
             }
+        },
+
+        setSelectedGiftId: (state, action: PayloadAction<string | null>) => {
+            state.selectedGiftId = action.payload;
         }
     },
     extraReducers: (builder) => {
@@ -231,5 +237,5 @@ export const cartSlice = createSlice({
     },
 });
 
-export const { updateLocalQuantity } = cartSlice.actions;
+export const { updateLocalQuantity, setSelectedGiftId } = cartSlice.actions;
 export default cartSlice.reducer;

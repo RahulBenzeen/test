@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react'
 import { useAppSelector, useAppDispatch } from '../../store/hooks'
 import { removeFromCartAsync, updateQuantityAsync, clearCartAsync } from '../../store/cartSlice'
 import { fetchAddresses } from '../../store/addressSlice'
-import { useNavigate } from 'react-router-dom'
+import {  useNavigate } from 'react-router-dom'
 import { createOrder } from '../../store/orderSlice'
 import CartSummary from './CartSummary'
 import ShippingAddress from './ShippingAddress'
@@ -10,11 +10,13 @@ import EmptyCart from './EmptyCart'
 import showToast from '../../utils/toast/toastUtils'
 
 export default function CheckoutPage() {
-  const { items: cartItems, gifts, bundleDiscounts, totalPrice:grandTotal} = useAppSelector((state) => state.cart);
+  const { items: cartItems, gifts, bundleDiscounts, totalPrice:grandTotal, selectedGiftId} = useAppSelector((state) => state.cart);
   const savedAddresses = useAppSelector((state) => state.address.addresses)
   const dispatch = useAppDispatch()
   const navigate = useNavigate()
-  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null)
+  const [selectedAddressId, setSelectedAddressId] = useState<string | null>(null);
+
+ 
 
   useEffect(() => {
     dispatch(fetchAddresses())
@@ -38,44 +40,60 @@ export default function CheckoutPage() {
 
   const handlePlaceOrder = () => {
     if (!selectedAddressId) {
-      showToast('Please select a shipping address.', 'error')
-      return
+      showToast('Please select a shipping address.', 'error');
+      return;
     }
-
-    const selectedAddress = savedAddresses.find((addr) => addr._id === selectedAddressId)
+  
+    const selectedAddress = savedAddresses.find((addr) => addr._id === selectedAddressId);
     if (!selectedAddress) {
-      showToast('Selected address not found.', 'error')
-      return
+      showToast('Selected address not found.', 'error');
+      return;
     }
-
-    const products = cartItems.map((item) => ({
+  
+    const products: Array<{ product: string; name: string; price: number; quantity: number; isGift?: boolean }> = cartItems.map((item) => ({
       product: item.product._id,
       name: item.product.name,
       price: item.discountedPrice || item.price,
       quantity: item.quantity,
-    }))
+    }));
+  
+    // 🆕 Add gift product if selected
+    if (selectedGiftId && gifts?.length > 0) {
+      const selectedGift = gifts.find((gift) => gift._id === selectedGiftId);
+      if (selectedGift) {
+        products.push({
+          product: selectedGift._id,
+          name: selectedGift.name,
+          price: 0,
+          quantity: 1,
+          isGift: true,
 
+        });
+      }
+    }
+  
     const orderData = {
       products,
       totalPrice: grandTotal,
-      discount:bundleDiscounts,
+      discount: bundleDiscounts,
       shippingAddress: selectedAddress,
       paymentMethod: 'razorpay',
-    }
-
+    };
+  
     dispatch(createOrder(orderData))
       .then((response) => {
         if (response.payload?.success) {
-          navigate('/checkout/place-order', { state: { order: response.payload } })
+          navigate('/checkout/place-order', { state: { order: response.payload } });
         } else {
-          showToast(response.payload?.message || 'Order creation failed', 'error')
+          showToast(response.payload?.message || 'Order creation failed', 'error');
         }
       })
       .catch((error) => {
-        showToast('Error while creating order', 'error')
-        console.error('Error while creating order:', error)
-      })
-  }
+        showToast('Error while creating order', 'error');
+        console.error('Error while creating order:', error);
+      });
+  };
+  
 
   if (cartItems.length === 0) {
     return <EmptyCart onContinueShopping={() => navigate('/')} />
@@ -93,7 +111,7 @@ export default function CheckoutPage() {
             onUpdateQuantity={handleUpdateQuantity}
             onRemoveItem={handleRemoveFromCart}
             onClearCart={handleClearCart}
-            gifts={gifts}
+            gifts={gifts.filter((gift) => gift._id ===selectedGiftId)}
             bundleDiscounts={bundleDiscounts || []}
             totalPrice={grandTotal}
            
