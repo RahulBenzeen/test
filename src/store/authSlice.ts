@@ -52,6 +52,7 @@ export const checkAuthToken = createAsyncThunk<AuthResponse, void, { rejectValue
       return response.data.data;
     } catch (error) {
       localStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('id');
       return rejectWithValue((error as Error).message);
     }
@@ -66,8 +67,10 @@ export const registerUserThunk = createAsyncThunk<
   try {
     const response = await registerUser(userData);
     const data = response.data.data;
-    localStorage.setItem('authToken', data.token);
-    localStorage.setItem('id', data.id);
+     localStorage.setItem('authToken', data.token);
+     localStorage.setItem('refreshToken', data.refreshToken); // Save refresh token
+     localStorage.setItem('id', data.id);
+
     return data;
   } catch (error) {
     return rejectWithValue((error as Error).message);
@@ -82,8 +85,10 @@ export const loginUserThunk = createAsyncThunk<
   try {
     const response = await loginUser(credentials);
     const data = response.data.data;
-    localStorage.setItem('authToken', data.token);
-    localStorage.setItem('id', data.id);
+   localStorage.setItem('authToken', data.token);
+   localStorage.setItem('refreshToken', data.refreshToken); // Save refresh token
+   localStorage.setItem('id', data.id);
+
     await dispatch(fetchCart())
     return data;
   } catch (error) {
@@ -96,6 +101,7 @@ export const logoutUserThunk = createAsyncThunk<void, void, { rejectValue: strin
   async (_, { rejectWithValue  }) => {
     try {
       localStorage.removeItem('authToken');
+      localStorage.removeItem('refreshToken');
       localStorage.removeItem('id');
       localStorage.removeItem('user');
 
