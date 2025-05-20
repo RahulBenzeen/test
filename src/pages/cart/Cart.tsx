@@ -1,12 +1,12 @@
 import { useEffect, useState, useCallback } from 'react';
 import { ShoppingCart, Loader2 } from 'lucide-react';
-import { Button } from "../../components/ui/button";
-import { Sheet, SheetContent, SheetTrigger } from "../../components/ui/sheet";
+import { Button } from "@/components/ui/button";
+import { Sheet, SheetContent, SheetTrigger } from "@/components/ui/sheet";
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchCart, removeFromCartAsync, updateQuantityAsync, clearCartAsync, setSelectedGiftId } from '../../store/cartSlice';
 import { useNavigate } from 'react-router-dom';
-import { Separator } from "../../components/ui/separator";
-import { ScrollArea } from "../../components/ui/scroll-area";
+import { Separator } from "@/components/ui/separator";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import showToast from '../../components/../utils/toast/toastUtils';
 import CartItem from './components/CartItem';
 import CartSummary from './components/CartSummary';

@@ -1,13 +1,13 @@
 
-import { Input } from '../../../components/ui/input';
-import { Textarea } from '../../../components/ui/textarea';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from '../../../components/ui/form';
+} from '@/components/ui/form';
 import { UseFormReturn } from 'react-hook-form';
 import { ProductFormValues } from '../../../utils/schemas/productSchema';
 

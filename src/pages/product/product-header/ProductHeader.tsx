@@ -1,10 +1,10 @@
 import React from 'react';
 import { Grid, List, SlidersHorizontal } from 'lucide-react';
-import { Button } from '../../../components/ui/button';
-import { ToggleGroup, ToggleGroupItem } from '../../../components/ui/toggle-group';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '../../../components/ui/select';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../../../components/ui/sheet';
-import { Badge } from '../../../components/ui/badge';
+import { Button } from '@/components/ui/button';
+import { ToggleGroup, ToggleGroupItem } from '@/components/ui/toggle-group';
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { Badge } from '@/components/ui/badge';
 import ProductFilter from '../../filterProduct/filterProduct';
 
 interface ProductHeaderProps {

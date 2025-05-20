@@ -1,6 +1,6 @@
 import { memo } from 'react';
-import { Button } from "../../../components/ui/button";
-import { Separator } from "../../../components/ui/separator";
+import { Button } from "@/components/ui/button";
+import { Separator } from "@/components/ui/separator";
 import { BundleDiscount } from '../../../store/cartSlice';
 
 

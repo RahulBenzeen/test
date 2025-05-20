@@ -2,7 +2,7 @@
 
 import React from "react"
 import { Truck, Shield, RefreshCcw, Clock } from "lucide-react"
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../../components/ui/tooltip"
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip"
 
 const features = [
   {

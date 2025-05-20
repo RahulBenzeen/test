@@ -1,6 +1,6 @@
 import { User, Package, LogOut, Heart } from 'lucide-react'
-import { Button } from '../../components/ui/button'
-import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "../../components/ui/dropdown-menu"
+import { Button } from '@/components/ui/button'
+import { DropdownMenu, DropdownMenuContent, DropdownMenuItem, DropdownMenuLabel, DropdownMenuSeparator, DropdownMenuTrigger } from "@/components/ui/dropdown-menu"
 import Cart from '../cart/Cart'
 import { useNavigate } from 'react-router-dom'
 import {User as Users} from '../../store/authSlice'

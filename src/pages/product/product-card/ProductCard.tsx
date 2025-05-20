@@ -1,10 +1,10 @@
 import React, { useState, useCallback, useMemo } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Eye, ShoppingCart, Share2, Percent, ArrowUpRight, Star } from 'lucide-react';
-import { Button } from '../../../components/ui/button';
-import { Card, CardContent, CardFooter, CardHeader } from '../../../components/ui/card';
-import { Badge } from '../../../components/ui/badge';
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '../../../components/ui/tooltip';
+import { Eye, ShoppingCart, Share2, Percent, Star } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardFooter, CardHeader } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from '@/components/ui/tooltip';
 import WishlistButton from '../../wishlistButton/wishlistButton';
 import { Product } from '../../../store/productSlice';
 import { useNavigate } from 'react-router-dom';

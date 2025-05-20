@@ -1,10 +1,10 @@
 import { useState, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Button } from '../../components/ui/button';
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Loader2 } from 'lucide-react';
-import { Form } from '../../components/ui/form';
+import { Form } from '@/components/ui/form';
 import { ProductBasicInfo } from './update-product/ProductBasicInfo';
 import { ProductCategories } from './update-product/ProductCategories';
 import { ProductSpecifications } from './update-product/ProductSpecifications';

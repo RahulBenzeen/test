@@ -1,6 +1,6 @@
 import { useState, useEffect, useCallback } from 'react';
-import { Button } from '../../components/ui/button';
-import { Link } from 'react-router-dom';
+// import { Button } from '@/components/ui/button';
+// import { Link } from 'react-router-dom';
 import { ChevronLeft, ChevronRight } from 'lucide-react';
 
 const fetchCloudinaryImages = async () => {

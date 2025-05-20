@@ -1,10 +1,10 @@
 import { DollarSign } from 'lucide-react'
-import { Slider } from "../../components/ui/slider"
+import { Slider } from "@/components/ui/slider"
 import {
   AccordionItem,
   AccordionTrigger,
   AccordionContent,
-} from "../../components/ui/accordion"
+} from "@/components/ui/accordion"
 
 interface PriceFilterProps {
   priceRange: [number, number]

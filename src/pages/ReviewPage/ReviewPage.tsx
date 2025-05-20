@@ -4,10 +4,10 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { fetchReviews, addReview, Review, updateReview } from '../../store/reviewSlice';
 import { fetchProductDetails } from '../../store/productDetailSlice';
 import { fetchOrdersByUser } from '../../store/orderSlice'; // Assuming an action to fetch user orders
-import { Button } from "../../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
-import { Textarea } from "../../components/ui/textarea";
-import { Label } from "../../components/ui/label";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Textarea } from "@/components/ui/textarea";
+import { Label } from "@/components/ui/label";
 import { Star, Loader2 } from 'lucide-react';
 import { motion } from "framer-motion";
 import showToast from '../../utils/toast/toastUtils';

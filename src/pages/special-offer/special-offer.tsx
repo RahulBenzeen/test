@@ -1,9 +1,9 @@
 import { useEffect } from "react";
 import { ArrowRight } from "lucide-react";
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Card, CardContent, CardFooter } from "../../components/ui/card";
-import { Skeleton } from "../../components/ui/skeleton";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
+import { Skeleton } from "@/components/ui/skeleton";
 import { useAppDispatch, useAppSelector } from "../../store/hooks";
 import { fetchSpecialOffers } from "../../store/specialProductSlice";
 import { useNavigate } from "react-router-dom";

@@ -2,8 +2,8 @@ import React from 'react'
 import { useAppDispatch, useAppSelector } from "../../store/hooks"
 import { fetchWishlist, removeFromWishlist } from "../../store/whislistSlice"
 import { addToCartAsync } from "../../store/cartSlice"
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
-import { Button } from "../../components/ui/button"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Button } from "@/components/ui/button"
 import { Heart } from 'lucide-react'
 import { motion, AnimatePresence } from 'framer-motion'
 import showToast from "../../utils/toast/toastUtils"

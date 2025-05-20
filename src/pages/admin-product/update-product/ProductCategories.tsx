@@ -5,14 +5,14 @@ import {
   SelectItem,
   SelectTrigger,
   SelectValue,
-} from '../../../components/ui/select';
+} from '@/components/ui/select';
 import {
   FormControl,
   FormField,
   FormItem,
   FormLabel,
   FormMessage,
-} from '../../../components/ui/form';
+} from '@/components/ui/form';
 import { UseFormReturn } from 'react-hook-form';
 import { ProductFormValues } from '../../../utils/schemas/productSchema';
 

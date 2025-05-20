@@ -1,4 +1,4 @@
-import { Button } from "../../components/ui/button"
+import { Button } from "@/components/ui/button"
 import { ShoppingBag } from "lucide-react"
 
 interface EmptyCartProps {

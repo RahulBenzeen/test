@@ -1,7 +1,7 @@
 import { useEffect, useState } from 'react'
-import { Button } from '../../components/ui/button'
-import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '../../components/ui/table'
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table'
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card'
 import { Edit, Trash2, Plus, ChevronLeft, ChevronRight, ImageIcon, ArrowLeft, Loader2 } from 'lucide-react'
 import AddProduct from '../admin-product/add-product'
 import UpdateProductPage from '../admin-product/update-product'
@@ -12,7 +12,7 @@ import {
   DialogFooter,
   DialogHeader,
   DialogTitle,
-} from '../../components/ui/dialog'
+} from '@/components/ui/dialog'
 import { useDispatch, useSelector } from 'react-redux'
 import { fetchProducts, deleteProductThunk } from '../../store/productSlice'
 import { RootState, AppDispatch } from '../../store/store'

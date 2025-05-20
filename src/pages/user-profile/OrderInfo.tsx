@@ -3,8 +3,8 @@
 import { useState, useEffect } from 'react'
 import { useAppDispatch, useAppSelector } from "../../store/hooks"
 import { fetchOrdersByUser } from "../../store/orderSlice"
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card"
-import { Input } from "../../components/ui/input"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Input } from "@/components/ui/input"
 import { Search } from 'lucide-react'
 import OrderList from './order/OrderList'
 import EmptyOrderState from './order/EmptyOrderState'

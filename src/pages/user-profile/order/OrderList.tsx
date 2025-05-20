@@ -1,5 +1,5 @@
 import React from 'react'
-import { Accordion } from "../../../components/ui/accordion"
+import { Accordion } from "@/components/ui/accordion"
 import OrderItem from './OrderItem'
 
 interface OrderListProps {

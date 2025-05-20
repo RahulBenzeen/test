@@ -24,9 +24,9 @@ import ProductHeader from './product-header/ProductHeader';
 import ProductSkeleton from './product-skeleton/ProductSkeleton';
 import ProductEmptyState from './empty-state/ProductEmptyState';
 import ProductErrorState from './error-state/ProductErrorState';
-import { Button } from '../../components/ui/button';
+import { Button } from '@/components/ui/button';
 import { Loader2, Filter, X } from 'lucide-react';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '../../components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
 
 
 // Constants

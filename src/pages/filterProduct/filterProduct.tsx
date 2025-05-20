@@ -3,8 +3,8 @@ import { useAppDispatch, useAppSelector } from '../../store/hooks'
 import { setCategory, setBrand, setPriceRange, setRating, clearFilters } from '../../store/filterSlice'
 import { fetchProducts } from '../../store/productSlice'
 import { useLocation, useNavigate } from 'react-router-dom'
-import { Button } from "../../components/ui/button"
-import { Accordion } from "../../components/ui/accordion"
+import { Button } from "@/components/ui/button"
+import { Accordion } from "@/components/ui/accordion"
 import { FilterHeader } from './FIlterHeader'
 import { ActiveFilters } from './ActiveFilters'
 import { CategoryFilter } from './CategoryFilter'

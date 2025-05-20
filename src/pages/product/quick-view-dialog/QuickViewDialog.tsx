@@ -1,12 +1,12 @@
 import React, { useState, useCallback, memo } from 'react';
 import { ShoppingCart, Star, Heart, ChevronLeft, ChevronRight, Truck, Shield } from 'lucide-react';
-import { Dialog, DialogContent, DialogHeader, DialogTitle } from '../../../components/ui/dialog';
-import { Button } from '../../../components/ui/button';
-import { Badge } from '../../../components/ui/badge';
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from '@/components/ui/dialog';
+import { Button } from '@/components/ui/button';
+import { Badge } from '@/components/ui/badge';
 import { Product } from '../../../store/productSlice';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Separator } from '../../../components/ui/separator';
-import { ScrollArea } from '../../../components/ui/scroll-area';
+import { Separator } from '@/components/ui/separator';
+import { ScrollArea } from '@/components/ui/scroll-area';
 import { useMediaQuery } from '../../../hooks/useMediaQuery';
 
 interface QuickViewDialogProps {

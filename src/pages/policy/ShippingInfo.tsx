@@ -1,5 +1,5 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Truck, Clock, Globe, Shield } from 'lucide-react';
 
 export default function ShippingInfo() {

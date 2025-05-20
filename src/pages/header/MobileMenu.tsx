@@ -1,6 +1,6 @@
 import { User, Package, LogOut, Heart } from 'lucide-react'
-import { Button } from '../../components/ui/button'
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "../../components/ui/sheet"
+import { Button } from '@/components/ui/button'
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger, SheetClose } from "@/components/ui/sheet"
 import { Menu } from 'lucide-react'
 import { CategoryType } from '../../utils/type/category'
 import {User as Users} from '../../store/authSlice'

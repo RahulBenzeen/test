@@ -1,8 +1,8 @@
-import { Tabs, TabsList, TabsTrigger, TabsContent } from '../../components/ui/tabs';
-import { Card, CardHeader, CardTitle, CardDescription } from '../../components/ui/card';
+import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs';
+import { Card, CardHeader, CardTitle, CardDescription } from '@/components/ui/card';
 import BundleOfferForm from './components/BundleOfferForm';
 
-import { motion } from '../../components/ui/motion';
+import { motion } from '@/components/ui/motion';
 import { Package, Gift, List } from 'lucide-react';
 import GiftOfferForm from './components/GiftOffer';
 import OfferList from './components/OfferList';

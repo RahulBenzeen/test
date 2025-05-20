@@ -1,8 +1,8 @@
 import { memo } from 'react';
 import { X, Minus, Plus } from 'lucide-react';
 import { Link } from 'react-router-dom';
-import { Button } from "../../../components/ui/button";
-import { Badge } from "../../../components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
 import { CartItem as CartItems } from '../../../store/cartSlice';
 
 interface CartItemProps {

@@ -1,8 +1,8 @@
 import { useState } from 'react';
 
-import { CardContent, CardFooter } from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
-import { Input } from '../../../components/ui/input';
+import { CardContent, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
 import { Loader2 } from 'lucide-react';
 import { 
   Form,
@@ -12,13 +12,13 @@ import {
   FormItem,
   FormLabel,
   FormMessage
-} from '../../../components/ui/form';
+} from '@/components/ui/form';
 import ProductSelector from './ProductSelector';
-import { motion } from '../../../components/ui/motion';
+import { motion } from '@/components/ui/motion';
 import { useToast } from '../../../hooks/use-toast';
-import { Slider } from '../../../components/ui/slider';
-import { Badge } from '../../../components/ui/badge';
-import { Card } from '../../../components/ui/card';
+import { Slider } from '@/components/ui/slider';
+import { Badge } from '@/components/ui/badge';
+import { Card } from '@/components/ui/card';
 import { useAppSelector } from '../../../store/hooks';
 import { useGiftOfferForm } from '../../../hooks/useGiftOfferForm';
 

@@ -1,13 +1,13 @@
 import React from 'react';
-import { Button } from "../../components/ui/button";
-import { Card, CardContent, CardHeader, CardTitle } from "../../components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { UserIcon, Package, MapPin, ChevronRight, Menu, Home } from "lucide-react";
 import UserProfile from "./ProfileInfo";
 import AddressManagement from "./AddressInfo";
 import { useEffect, useState } from "react";
 import CustomerOrderHistory from "./OrderInfo";
 import { useLocation } from "react-router-dom";
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "../../components/ui/sheet";
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 
 export default function ProfilePage() {
   const location = useLocation();

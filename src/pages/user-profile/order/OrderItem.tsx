@@ -1,8 +1,8 @@
 import React, { useState } from 'react'
-import { AccordionItem, AccordionTrigger, AccordionContent } from "../../../components/ui/accordion"
-import { Badge } from "../../../components/ui/badge"
+import { AccordionItem, AccordionTrigger, AccordionContent } from "@/components/ui/accordion"
+import { Badge } from "@/components/ui/badge"
 import { Package, Truck, CheckCircle, AlertCircle, Clock, Ban } from 'lucide-react'
-import { Button } from "../../../components/ui/button"
+import { Button } from "@/components/ui/button"
 import OrderProgress from './OrderProgress'
 import CancelOrderDialog from './CancelOrderDialog'
 import { useAppDispatch } from "../../../store/hooks"

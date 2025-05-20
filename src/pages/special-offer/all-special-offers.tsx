@@ -1,7 +1,7 @@
 
-import { Button } from "../../components/ui/button";
-import { Badge } from "../../components/ui/badge";
-import { Card, CardContent, CardFooter } from "../../components/ui/card";
+import { Button } from "@/components/ui/button";
+import { Badge } from "@/components/ui/badge";
+import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { useAppDispatch, useAppSelector } from '../../store/hooks'; // Combined imports
 import { useEffect } from 'react';
 import { fetchSpecialOffers } from '../../store/specialProductSlice'; // Import the correct thunk

@@ -1,8 +1,8 @@
 
 import { Link } from 'react-router-dom'
 import { ArrowRight, Smartphone, Laptop, Shirt, Coffee, SmilePlus } from 'lucide-react'
-import { Button } from '../../components/ui/button'
-import { Card, CardContent, CardFooter } from '../../components/ui/card'
+import { Button } from '@/components/ui/button'
+import { Card, CardContent, CardFooter } from '@/components/ui/card'
 
 import { useNavigate } from 'react-router-dom'
 const categories = [

@@ -1,7 +1,7 @@
 import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { SearchIcon } from 'lucide-react';
-import { Input } from '../../components/ui/input';
+import { Input } from '@/components/ui/input';
 import { useAppDispatch, useAppSelector } from '../../store/hooks';
 import { searchProducts } from '../../store/productDetailSlice';
 import debounce from 'lodash/debounce';

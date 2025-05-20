@@ -1,5 +1,5 @@
 
-import { Card, CardContent, CardHeader, CardTitle } from '../../components/ui/card';
+import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { RefreshCw, Calendar, CheckCircle2, AlertCircle } from 'lucide-react';
 
 export default function ReturnsExchanges() {

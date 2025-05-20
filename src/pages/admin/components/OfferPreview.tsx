@@ -1,6 +1,6 @@
-import { Card, CardHeader, CardTitle, CardContent } from '../../../components/ui/card';
-import { Badge } from '../../../components/ui/badge';
-import { motion } from '../../../components/ui/motion';
+import { Card, CardHeader, CardTitle, CardContent } from '@/components/ui/card';
+import { Badge } from '@/components/ui/badge';
+import { motion } from '@/components/ui/motion';
 
 type BundleRule = {
   minQty: string;

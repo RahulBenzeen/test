@@ -1,6 +1,6 @@
 import React, { memo } from "react";
-import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "../../components/ui/tooltip";
-import { Button } from "../../components/ui/button";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { Button } from "@/components/ui/button";
 import { Heart } from "lucide-react";
 import { useAppSelector } from "../../store/hooks";
 

@@ -1,10 +1,10 @@
 import React, { useState } from 'react';
-import { CardContent, CardFooter } from '../../../components/ui/card';
-import { Button } from '../../../components/ui/button';
+import { CardContent, CardFooter } from '@/components/ui/card';
+import { Button } from '@/components/ui/button';
 import { Plus, Loader2 } from 'lucide-react';
 import RuleItem from './RuleItem';
 import { useToast } from '../../../hooks/use-toast';
-import { motion, AnimatePresence } from '../../../components/ui/motion';
+import { motion, AnimatePresence } from '@/components/ui/motion';
 import OfferPreview from './OfferPreview';
 import { useBundleOfferForm } from '../../../hooks/useBundleOffer';
 

@@ -6,13 +6,13 @@ import { addToWishlist, fetchWishlist, removeFromWishlist } from '../../store/wh
 import { Link, useNavigate } from 'react-router-dom';
 import { Eye } from 'lucide-react';
 import { motion } from 'framer-motion';
-import { Button } from '../../components/ui/button';
+import { Button } from '@/components/ui/button';
 import showToast from '../../utils/toast/toastUtils';
 import ProductCard from '../product/product-card/ProductCard';
 import QuickViewDialog from '../product/quick-view-dialog/QuickViewDialog';
 import { useMediaQuery } from '../../hooks/useMediaQuery';
-import { Card } from '../../components/ui/card';
-import { Skeleton } from '../../components/ui/skeleton';
+import { Card } from '@/components/ui/card';
+import { Skeleton } from '@/components/ui/skeleton';
 
 export default function FeaturedProducts() {
   const dispatch = useAppDispatch();

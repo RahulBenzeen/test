@@ -1,10 +1,10 @@
 import { Building2 } from 'lucide-react'
-import { ScrollArea } from "../../components/ui/scroll-area"
+import { ScrollArea } from "@/components/ui/scroll-area"
 import {
   AccordionItem,
   AccordionTrigger,
   AccordionContent,
-} from "../../components/ui/accordion"
+} from "@/components/ui/accordion"
 import { FilterOption } from './FilterOption'
 
 interface BrandFilterProps {
